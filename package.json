@@ -1,0 +1,11 @@
+{
+  "name": "advent-of-code-2022",
+  "version": "1.0.0",
+  "description": "",
+  "main": "aoc2022.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Dylan Barkowsky",
+  "license": "ISC"
+}
