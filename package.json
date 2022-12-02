@@ -4,8 +4,10 @@
   "description": "",
   "main": "aoc2022.js",
   "scripts": {
+    "start": "node aoc2022.js",
     "test": "test"
   },
   "author": "Dylan Barkowsky",
-  "license": "ISC"
+  "license": "ISC",
+  "type": "module"
 }
