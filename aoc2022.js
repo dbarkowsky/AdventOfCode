@@ -1,5 +1,6 @@
 import ElfCalories from "./01/ElfCalories.js";
 import RockPaperScissors from "./02/RockPaperScissors.js";
+import Rucksack from "./03/Rucksack.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -23,4 +24,14 @@ const day02 = async () => {
     console.log(scores.totalScore);
 }
 
-day02();
+// Day 03
+const day03 = async () => {
+    const sack = new Rucksack();
+    sack.contents = await DataManager.loadDataToList('./03/contents.txt');
+    sack.compareCompartments();
+    console.log(sack.sum);
+    sack.findBadges();
+    console.log(sack.sum);
+}
+
+day03();
