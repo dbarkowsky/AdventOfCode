@@ -29,12 +29,10 @@ export default class Rucksack{
 
     // Splits single rucksack string into two compartments
     splitContents = () => {
-        this.separatedContents = this.contents.map(rucksack => {
-            const list = [];
-            list.push(rucksack.substring(0, rucksack.length/2)); // First half
-            list.push(rucksack.substring(rucksack.length/2)); // Second half
-            return list;
-        })
+        this.separatedContents = this.contents.map(rucksack => [
+            rucksack.substring(0, rucksack.length/2), // First half
+            rucksack.substring(rucksack.length/2) // Second half
+        ])
     }
 
     // Compares two compartments in a rucksack.
@@ -46,12 +44,12 @@ export default class Rucksack{
             const compartment1 = rucksack[0];
             const compartment2 = rucksack[1];
             // for each letter in compartment1
-            let alreadyFound = false;
-            compartment1.split('').forEach(letter => {
-                if (compartment2.includes(letter) && !alreadyFound){
-                    alreadyFound = true; // to stop same letter from being added multiple times
+            compartment1.split('').every(letter => {
+                if (compartment2.includes(letter)){
                     this.sum += this.getCharValue(letter);
+                    return false;
                 }
+                return true;
             });
         })
     }
@@ -65,16 +63,15 @@ export default class Rucksack{
             const sack2 = this.contents[i+1];
             const sack3 = this.contents[i+2];
 
-            let alreadyFound = false;
-            sack1.split('').forEach(letter => {
+            sack1.split('').every(letter => {
                 if (
                     sack2.includes(letter) &&
-                    sack3.includes(letter) &&
-                    !alreadyFound
+                    sack3.includes(letter)
                 ){
-                    alreadyFound = true;
                     this.sum += this.getCharValue(letter);
+                    return false;
                 }
+                return true;
             });
         }
     }
