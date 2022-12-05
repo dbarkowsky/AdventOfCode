@@ -1,6 +1,7 @@
 import ElfCalories from "./01/ElfCalories.js";
 import RockPaperScissors from "./02/RockPaperScissors.js";
 import Rucksack from "./03/Rucksack.js";
+import ElfAssignments from "./04/ElfAssignments.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -34,4 +35,13 @@ const day03 = async () => {
     console.log(sack.sum);
 }
 
-day03();
+// Day 04
+const day04 = async () => {
+    const shifts = new ElfAssignments();
+    shifts.shifts = await DataManager.loadDataToList('./04/pairs.txt');
+    shifts.splitShifts();
+    console.log(shifts.countOverlap(true)); // Full overlap
+    console.log(shifts.countOverlap()); // Partial overlap
+}
+
+day04();
