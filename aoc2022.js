@@ -2,6 +2,7 @@ import ElfCalories from "./01/ElfCalories.js";
 import RockPaperScissors from "./02/RockPaperScissors.js";
 import Rucksack from "./03/Rucksack.js";
 import ElfAssignments from "./04/ElfAssignments.js";
+import CrateStacking from "./05/CrateStacking.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -44,4 +45,19 @@ const day04 = async () => {
     console.log(shifts.countOverlap()); // Partial overlap
 }
 
-day04();
+// Day 05
+const day05 = async () => {
+    const crateStack = new CrateStacking();
+    crateStack.crateStacks = await DataManager.loadDataToList('./05/startingPositions.txt');
+    crateStack.instructions = await DataManager.loadDataToList('./05/instructions.txt');
+    crateStack.splitStacks();
+    crateStack.performInstructionsCrane3000();
+    console.log(crateStack.getTopCrates());
+    // Part 2
+    crateStack.crateStacks = await DataManager.loadDataToList('./05/startingPositions.txt');
+    crateStack.splitStacks();
+    crateStack.performInstructionsCrane3001();
+    console.log(crateStack.getTopCrates());
+}
+
+day05();
