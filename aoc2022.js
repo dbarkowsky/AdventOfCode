@@ -3,6 +3,7 @@ import RockPaperScissors from "./02/RockPaperScissors.js";
 import Rucksack from "./03/Rucksack.js";
 import ElfAssignments from "./04/ElfAssignments.js";
 import CrateStacking from "./05/CrateStacking.js";
+import SignalCode from "./06/SignalCode.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -60,4 +61,14 @@ const day05 = async () => {
     console.log(crateStack.getTopCrates());
 }
 
-day05();
+// Day 06
+const day06 = async () => {
+    const signal = new SignalCode();
+    signal.signal = await DataManager.loadData('./06/signal.txt');
+    signal.splitSignal();
+    console.log(signal.signal);
+    console.log(signal.getSignalIndex(4));
+    console.log(signal.getSignalIndex(14));
+}
+
+day06();
