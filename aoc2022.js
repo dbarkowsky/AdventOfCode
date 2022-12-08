@@ -4,6 +4,7 @@ import Rucksack from "./03/Rucksack.js";
 import ElfAssignments from "./04/ElfAssignments.js";
 import CrateStacking from "./05/CrateStacking.js";
 import SignalCode from "./06/SignalCode.js";
+import FileStructure from "./07/FileStructure.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -71,4 +72,12 @@ const day06 = async () => {
     console.log(signal.getSignalIndex(14));
 }
 
-day06();
+// Day 07
+const day07 = async () => {
+    const files = new FileStructure();
+    files.commands = await DataManager.loadDataToList('./07/commands.txt');
+    console.log(files.commands);
+    console.log(files.getSize());
+}
+
+day07();
