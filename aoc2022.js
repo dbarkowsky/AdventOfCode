@@ -94,8 +94,9 @@ const day08 = async () => {
     const treehouse = new TreeHouse();
     treehouse.trees = await DataManager.loadDataToList('./08/trees.txt');
     treehouse.splitData();
-    console.log(treehouse.trees);
     console.log(treehouse.countVisibleTrees());
+
+    // Part 2
     console.log(treehouse.largestScenicScore);
 }
 
