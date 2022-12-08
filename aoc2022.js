@@ -69,15 +69,23 @@ const day06 = async () => {
     signal.splitSignal();
     console.log(signal.signal);
     console.log(signal.getSignalIndex(4));
-    console.log(signal.getSignalIndex(14));
+    console.log(signal.getSignalIndex(14)); // Part 2
 }
 
 // Day 07
 const day07 = async () => {
     const files = new FileStructure();
     files.commands = await DataManager.loadDataToList('./07/commands.txt');
-    console.log(files.commands);
-    console.log(files.getSize());
+    files.processCommands();
+    console.log(files.sumDirsUnder(100000));
+
+    // Part 2
+    const diskSize = 70000000;
+    const neededSpace = 30000000;
+    const usedSpace = files.root.calculateSize();
+    const unusedSpace = diskSize - usedSpace;
+    const amountToDelete = neededSpace - unusedSpace;
+    console.log(files.findSmallestDirOver(amountToDelete).size);
 }
 
 day07();
