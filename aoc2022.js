@@ -5,6 +5,7 @@ import ElfAssignments from "./04/ElfAssignments.js";
 import CrateStacking from "./05/CrateStacking.js";
 import SignalCode from "./06/SignalCode.js";
 import FileStructure from "./07/FileStructure.js";
+import TreeHouse from "./08/TreeHouse.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -88,4 +89,13 @@ const day07 = async () => {
     console.log(files.findSmallestDirOver(amountToDelete).size);
 }
 
-day07();
+// Day 08
+const day08 = async () => {
+    const treehouse = new TreeHouse();
+    treehouse.trees = await DataManager.loadDataToList('./08/trees.txt');
+    treehouse.splitData();
+    console.log(treehouse.trees);
+    console.log(treehouse.countVisibleTrees());
+}
+
+day08();
