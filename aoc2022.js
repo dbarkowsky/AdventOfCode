@@ -96,6 +96,7 @@ const day08 = async () => {
     treehouse.splitData();
     console.log(treehouse.trees);
     console.log(treehouse.countVisibleTrees());
+    console.log(treehouse.largestScenicScore);
 }
 
 day08();
