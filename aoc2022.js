@@ -6,6 +6,7 @@ import CrateStacking from "./05/CrateStacking.js";
 import SignalCode from "./06/SignalCode.js";
 import FileStructure from "./07/FileStructure.js";
 import TreeHouse from "./08/TreeHouse.js";
+import RopeBridge from "./09/RopeBridge.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -100,4 +101,18 @@ const day08 = async () => {
     console.log(treehouse.largestScenicScore);
 }
 
-day08();
+// Day 09
+const day09 = async () => {
+    const rope = new RopeBridge(0);
+    rope.instructions = await DataManager.loadDataToList('./09/instructions.txt');
+    rope.giveInstructions();
+    console.log(rope.tailLocations.size);
+
+    // Part 2
+    const bigRope = new RopeBridge(8);
+    bigRope.instructions = await DataManager.loadDataToList('./09/instructions.txt');
+    bigRope.giveInstructions();
+    console.log(bigRope.tailLocations.size);
+}
+
+day09();
