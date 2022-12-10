@@ -26,6 +26,8 @@ const day02 = async () => {
     scores.refineData();
     scores.calculateTotalScore();
     console.log(scores.totalScore);
+
+    // Part 2
     scores.calculateTotalScore(true);
     console.log(scores.totalScore);
 }
@@ -36,6 +38,8 @@ const day03 = async () => {
     sack.contents = await DataManager.loadDataToList('./03/contents.txt');
     sack.compareCompartments();
     console.log(sack.sum);
+
+    // Part 2
     sack.findBadges();
     console.log(sack.sum);
 }
@@ -46,6 +50,8 @@ const day04 = async () => {
     shifts.shifts = await DataManager.loadDataToList('./04/pairs.txt');
     shifts.splitShifts();
     console.log(shifts.countOverlap(true)); // Full overlap
+
+    // Part 2
     console.log(shifts.countOverlap()); // Partial overlap
 }
 
@@ -57,6 +63,7 @@ const day05 = async () => {
     crateStack.splitStacks();
     crateStack.performInstructionsCrane3000();
     console.log(crateStack.getTopCrates());
+
     // Part 2
     crateStack.crateStacks = await DataManager.loadDataToList('./05/startingPositions.txt');
     crateStack.splitStacks();
@@ -71,7 +78,9 @@ const day06 = async () => {
     signal.splitSignal();
     console.log(signal.signal);
     console.log(signal.getSignalIndex(4));
-    console.log(signal.getSignalIndex(14)); // Part 2
+    
+    // Part 2
+    console.log(signal.getSignalIndex(14)); 
 }
 
 // Day 07
