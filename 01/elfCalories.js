@@ -22,7 +22,7 @@ export default class ElfCalories{
     }
     
     // sorts biggest to smallest
-    sortCalories = async () => {
+    sortCalories = () => {
         this.elfList.sort((a, b) => b - a);
     }
 }
