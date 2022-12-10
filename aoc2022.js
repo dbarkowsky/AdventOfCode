@@ -7,6 +7,7 @@ import SignalCode from "./06/SignalCode.js";
 import FileStructure from "./07/FileStructure.js";
 import TreeHouse from "./08/TreeHouse.js";
 import RopeBridge from "./09/RopeBridge.js";
+import CathodeRayTube from "./10/CathodeRayTube.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -124,4 +125,15 @@ const day09 = async () => {
     console.log(bigRope.tailLocations.size);
 }
 
-day09();
+// Day 10
+const day10 = async () => {
+    const tube = new CathodeRayTube(20, 40);
+    tube.instructions = await DataManager.loadDataToList('./10/instructions.txt');
+    tube.executeInstructions();
+    console.log(tube.getSignalStrengthSum());
+    
+    // Part 2
+    console.log(tube.drawScreen());
+}
+
+day10();
