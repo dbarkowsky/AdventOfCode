@@ -8,6 +8,7 @@ import FileStructure from "./07/FileStructure.js";
 import TreeHouse from "./08/TreeHouse.js";
 import RopeBridge from "./09/RopeBridge.js";
 import CathodeRayTube from "./10/CathodeRayTube.js";
+import KeepAway from "./11/KeepAway.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -136,4 +137,21 @@ const day10 = async () => {
     console.log(tube.drawScreen());
 }
 
-day10();
+// Day 11
+const day11 = async () => {
+    const keepaway = new KeepAway();
+    keepaway.monkeys = await DataManager.loadDataToList('./11/monkeys.txt');
+    keepaway.convertMonkeys();
+    keepaway.playKeepAway(20);
+    console.log(keepaway.monkeys);
+    console.log(keepaway.getMonkeyBusiness(2));
+
+    // Part 2
+    const keepawayPt2 = new KeepAway();
+    keepawayPt2.monkeys = await DataManager.loadDataToList('./11/monkeys.txt');
+    keepawayPt2.convertMonkeys();
+    keepawayPt2.playKeepAway(10000, false);
+    console.log(keepawayPt2.getMonkeyBusiness(2));
+}
+
+day11();
