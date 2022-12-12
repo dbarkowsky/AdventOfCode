@@ -85,7 +85,7 @@ export default class KeepAway {
 
   // Calculates a common multiple of all items to start.
   calcCM = () => {
-    this.commonMultiple = this.monkeys.reduce((a, b) => a * b.testDivisor, 1);
+    this.commonMultiple = this.monkeys.reduce((product, monkey) => product * monkey.testDivisor, 1);
   }
 
   // Monkeys play the game.
