@@ -10,6 +10,7 @@ import RopeBridge from "./09/RopeBridge.js";
 import CathodeRayTube from "./10/CathodeRayTube.js";
 import KeepAway from "./11/KeepAway.js";
 import Heightmap from "./12/Heightmap.js";
+import DistressSignal from "./13/DistressSignal.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -168,4 +169,13 @@ const day12 = async () => {
     console.log(map.findShortestAPath());
 }
 
-day12();
+// Day 13
+const day13 = async () => {
+    const signal = new DistressSignal();
+    signal.data = await DataManager.loadDataToList('./13/input.txt');
+    signal.cleanData();
+    console.log(signal.data);
+    console.log(signal.countRightPairs());
+}
+
+day13();
