@@ -9,6 +9,7 @@ import TreeHouse from "./08/TreeHouse.js";
 import RopeBridge from "./09/RopeBridge.js";
 import CathodeRayTube from "./10/CathodeRayTube.js";
 import KeepAway from "./11/KeepAway.js";
+import Heightmap from "./12/Heightmap.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -154,4 +155,14 @@ const day11 = async () => {
     console.log(keepawayPt2.getMonkeyBusiness(2));
 }
 
-day11();
+// Day 12
+const day12 = async () => {
+    const map = new Heightmap();
+    map.map = await DataManager.loadDataToList('./12/map.txt');
+    map.splitMapRows();
+    console.log(map.map);
+    map.findStartingNode();
+    console.log(map.findPath(map.startingNode));
+}
+
+day12();
