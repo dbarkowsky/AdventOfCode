@@ -160,9 +160,12 @@ const day12 = async () => {
     const map = new Heightmap();
     map.map = await DataManager.loadDataToList('./12/map.txt');
     map.splitMapRows();
-    console.log(map.map);
+    //console.log(map.map);
     map.findStartingNode();
-    console.log(map.findPath(map.startingNode));
+    console.log(map.findPathLength(map.startingNode));
+
+    // Part 2
+    console.log(map.findShortestAPath());
 }
 
 day12();
