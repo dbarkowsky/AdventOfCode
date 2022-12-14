@@ -174,8 +174,11 @@ const day13 = async () => {
     const signal = new DistressSignal();
     signal.data = await DataManager.loadDataToList('./13/input.txt');
     signal.cleanData();
-    console.log(signal.data);
     console.log(signal.countRightPairs());
+
+    // Part 2
+    signal.populateOrderingList();
+    console.log(signal.sortPackets());
 }
 
 day13();

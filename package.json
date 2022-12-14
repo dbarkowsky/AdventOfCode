@@ -9,5 +9,8 @@
   },
   "author": "Dylan Barkowsky",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "string-array": "^1.0.1"
+  }
 }
