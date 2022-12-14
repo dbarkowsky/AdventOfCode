@@ -11,6 +11,7 @@ import CathodeRayTube from "./10/CathodeRayTube.js";
 import KeepAway from "./11/KeepAway.js";
 import Heightmap from "./12/Heightmap.js";
 import DistressSignal from "./13/DistressSignal.js";
+import SandTrap from "./14/SandTrap.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -181,4 +182,14 @@ const day13 = async () => {
     console.log(signal.sortPackets());
 }
 
-day13();
+// Day 14
+const day14 = async () => {
+    const trap = new SandTrap();
+    trap.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
+    trap.parseInput();
+    console.log(trap.rockInstructions);
+    console.log(trap.lowestY, trap.highestY, trap.highestX);
+    trap.printGrid();
+}
+
+day14();
