@@ -22,6 +22,7 @@ export default class SandTrap{
     highestX;
     sandStart;
     yOffset;
+    sandCounter;
 
     constructor(sandStartLocation) {
         this.grid = [];
@@ -30,6 +31,7 @@ export default class SandTrap{
         this.highestY = 0;
         this.highestX = 0;
         this.sandStart = sandStartLocation;
+        this.sandCounter = 0;
     }
 
     parseInput = () => {
@@ -96,7 +98,7 @@ export default class SandTrap{
         const Y = 0;
         const X = 1;
         // For each instruction
-        this.rockInstructions.forEach((line, lineIndex) => {
+        this.rockInstructions.forEach(line => {
             // Start with first and second pair, so start at 1
             for (let currentPair = 1; currentPair < line.length; currentPair++){
                 let previousPair = currentPair -1;
@@ -134,5 +136,72 @@ export default class SandTrap{
                 }
             }
         })
+    }
+
+    springTrap = () => {
+        while(this.dropSand()){this.printGrid()}
+    }
+
+    dropSand = () => {
+        // Copy of start location with offset
+        let sand = {
+            x: this.sandStart.x,
+            y: this.sandStart.y - this.yOffset
+        }; 
+        
+        let sandOutsideBounds = false;
+        let sandStopped = false;
+
+        while (!sandStopped){
+            //console.log(sand.x, sand.y, this.highestX);
+            // Is sand within bounds?
+            sandOutsideBounds = this.isSandOutsideBounds(sand.x, sand.y);
+            if (sandOutsideBounds){ 
+                break;
+            }
+            // Check below
+            else if (this.isAir(sand.x + 1, sand.y)){
+                sand.x += 1;
+            }
+            // Check down to left
+            else if (this.isAir(sand.x + 1, sand.y - 1)){
+                sand.x += 1;
+                sand.y -= 1;
+            }
+            // Check down to right
+            else if (this.isAir(sand.x + 1, sand.y + 1)){
+                sand.x += 1;
+                sand.y += 1;
+            }
+            // Then sand is stopped
+            else {
+                this.grid[sand.x][sand.y].contents = SAND;
+                sandStopped = true;
+                this.sandCounter++;
+            }
+        }
+        
+        // If out of bounds, return false == stop dropping sand
+        // Otherwise return true == drop more sand
+        if (sandOutsideBounds){
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    isAir = (x, y) => {
+        return this.grid[x][y].contents === AIR ? true : false;
+    }
+
+    isSandOutsideBounds = (x, y) => {
+        if (
+            x >= this.highestX ||
+            y <= this.lowestY - this.yOffset ||
+            y >= this.highestY - this.yOffset
+        ){
+            return true;
+        }
+        return false;
     }
 }

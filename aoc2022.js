@@ -184,11 +184,13 @@ const day13 = async () => {
 
 // Day 14
 const day14 = async () => {
-    const trap = new SandTrap([500, 0]);
+    const trap = new SandTrap({y: 500, x: 0});
     trap.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
     trap.parseInput();
     trap.drawRock();
-    trap.printGrid();
+    trap.springTrap();
+    //trap.printGrid();
+    console.log(trap.sandCounter);
 }
 
 day14();
