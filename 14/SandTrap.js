@@ -3,9 +3,9 @@ const ROCK = 1;
 const SAND = 2;
 
 class Node {
-    contents;
-    x;
-    y;
+    contents; // node's contents
+    x; // x coordinate
+    y; // y coordinate
 
     constructor(x, y, contents = AIR){
         this.contents = contents;
@@ -15,16 +15,16 @@ class Node {
 }
 
 export default class SandTrap{
-    grid;
-    rockInstructions;
-    lowestY;
-    highestY;
-    highestX;
-    sandStart;
-    yOffset;
-    sandCounter;
-    sandEntranceBlocked;
-    hasAbyss;
+    grid; // 2D list to manage Nodes
+    rockInstructions; // List of instructions to draw rock
+    lowestY; // to track smallest Y value
+    highestY; // to track largest Y value
+    highestX; // to track largest X value
+    sandStart; // where sand enters from. object with x and y
+    yOffset; // int value to offset y values
+    sandCounter; // count for how much sand has settled
+    sandEntranceBlocked; // bool for whether sand has blocked the sand entrance
+    hasAbyss; // whether there is an abyss below (otherwise there is a floor)
 
     constructor(sandStartLocation, hasAbyss = true) {
         this.grid = [];
@@ -38,6 +38,7 @@ export default class SandTrap{
         this.hasAbyss = hasAbyss;
     }
 
+    // Parses the input into instruction list, finds important points, and then creates grid
     parseInput = () => {
         this.rockInstructions = this.rockInstructions.map(line => {
             return line.split(' -> ').map(pair => {
@@ -49,6 +50,7 @@ export default class SandTrap{
         this.assembleGrid();
     }
 
+    // Finds important points, or sets arbitrarily large ones if there's a floor
     findLowestPoints = () => {
         if (this.hasAbyss){
             this.rockInstructions.forEach(line => {
@@ -72,6 +74,7 @@ export default class SandTrap{
         
     }
 
+    // Builds the grid
     assembleGrid = () => {
         const gridWidth = this.highestY - this.lowestY + 3; // 2 for space on left and right, 1 for inclusivity
         
@@ -89,6 +92,7 @@ export default class SandTrap{
         }
     }
 
+    // Prints grid to console
     printGrid = () => {
         let printString = '';
         this.grid.forEach(line => {
@@ -159,6 +163,7 @@ export default class SandTrap{
         })
     }
 
+    // Clears all sand from trap and resets sandCounter
     resetTrap = () => {
         for (let x = 0; x < this.grid.length; x++){
             for (let y = 0; y < this.grid[x].length; y++){
@@ -170,8 +175,9 @@ export default class SandTrap{
         this.sandCounter = 0;
     }
 
+    // Starts the trap
     springTrap = () => {
-        // Need to add two rows, with bottom row being all rock
+        // If there's a floor, need to add two rows, with bottom row being all rock
         if (!this.hasAbyss){
             const gridWidth = this.highestY - this.lowestY + 3; // 2 for space on left and right, 1 for inclusivity
             const row1 = [];
@@ -189,6 +195,8 @@ export default class SandTrap{
         while(this.dropSand(this.hasAbyss)){}
     }
 
+    // Drops a single block of sand, stopping when settled.
+    // Returns true to say "drop more", else false for "stop"
     dropSand = () => {
         // Copy of start location with offset
         let sand = {
@@ -199,8 +207,8 @@ export default class SandTrap{
         let sandOutsideBounds = false;
         let sandStopped = false;
 
+        // While sand hasn't stopped/settled
         while (!sandStopped){
-            //console.log(sand.x, sand.y, this.highestX, this.lowestY, this.highestY);
             // Is sand within bounds?
             sandOutsideBounds = this.isSandOutsideBounds(sand.x, sand.y);
             if ((sandOutsideBounds && this.hasAbyss)){ 
@@ -241,10 +249,13 @@ export default class SandTrap{
         }
     }
 
+    // Checks if location contains AIR
     isAir = (x, y) => {
         return this.grid[x][y].contents === AIR ? true : false;
     }
 
+    // Checks if location is out of bounds
+    // Only useful when looking for the abyss
     isSandOutsideBounds = (x, y) => {
         if (
             x >= this.highestX ||
