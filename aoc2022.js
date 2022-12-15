@@ -188,9 +188,18 @@ const day14 = async () => {
     trap.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
     trap.parseInput();
     trap.drawRock();
-    trap.springTrap();
+    //trap.springTrap();
     //trap.printGrid();
-    console.log(trap.sandCounter);
+    //console.log(trap.sandCounter);
+
+    // Part 2
+    const trapWithFloor = new SandTrap({y: 500, x: 0}, false);
+    trapWithFloor.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
+    trapWithFloor.parseInput();
+    trapWithFloor.drawRock();
+    trapWithFloor.springTrap();
+    trapWithFloor.printGrid();
+    console.log(trapWithFloor.sandCounter);
 }
 
 day14();
