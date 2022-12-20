@@ -12,6 +12,7 @@ import KeepAway from "./11/KeepAway.js";
 import Heightmap from "./12/Heightmap.js";
 import DistressSignal from "./13/DistressSignal.js";
 import SandTrap from "./14/SandTrap.js";
+import SensorSuite from "./15/SensorSuite.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -202,4 +203,12 @@ const day14 = async () => {
     console.log(trapWithFloor.sandCounter);
 }
 
-day14();
+// Day 15
+const day15 = async () => {
+    const sensors = new SensorSuite();
+    sensors.readings = await DataManager.loadDataToList('./15/sensor_readings.txt');
+    sensors.parseReadings();
+    console.log(sensors.countCoverageOnRow(2000000));
+}
+
+day15();
