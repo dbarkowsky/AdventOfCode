@@ -209,6 +209,9 @@ const day15 = async () => {
     sensors.readings = await DataManager.loadDataToList('./15/sensor_readings.txt');
     sensors.parseReadings();
     console.log(sensors.countCoverageOnRow(2000000));
+
+    // Part 2
+    console.log(sensors.calculateFrequency(4000000));
 }
 
 day15();
