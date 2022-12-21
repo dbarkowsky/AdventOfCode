@@ -13,6 +13,7 @@ import Heightmap from "./12/Heightmap.js";
 import DistressSignal from "./13/DistressSignal.js";
 import SandTrap from "./14/SandTrap.js";
 import SensorSuite from "./15/SensorSuite.js";
+import Valves from "./16/Valves.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -214,4 +215,13 @@ const day15 = async () => {
     console.log(sensors.calculateFrequency(4000000));
 }
 
-day15();
+// Day 16
+const day16 = async () => {
+    const valves = new Valves();
+    valves.rawInput = await DataManager.loadDataToList('./16/valves.txt');
+    valves.parseInput();
+    console.log(valves.valves);
+    console.log(valves.findGreatestPressure('AA', 30, 0, true));
+}
+
+day16();
