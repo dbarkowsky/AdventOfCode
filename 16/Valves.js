@@ -31,7 +31,7 @@ export default class Valves{
 
     findGreatestPressure = (currentValve, minutesRemaining, pressureSoFar, firstNode = false) => {
         //console.log(minutesRemaining);
-        if (minutesRemaining <= 0)
+        if (minutesRemaining == 0)
             return pressureSoFar;
 
         let maxIfOpeningValve = 0;
@@ -41,7 +41,7 @@ export default class Valves{
         if (this.openValves.has(this.valves[currentValve].name) || this.valves[currentValve].flow == 0){
             maxIfValveAlreadyOpenOrUntouched = this.valves[currentValve].tunnels.reduce((maxPressure, currentTunnel) => Math.max(
                 maxPressure, 
-                this.findGreatestPressure(currentTunnel, --minutesRemaining, pressureSoFar)
+                this.findGreatestPressure(currentTunnel, minutesRemaining - 1, pressureSoFar)
                 ), -1);
         }
         
@@ -50,12 +50,12 @@ export default class Valves{
             this.openValves.add(this.valves[currentValve].name);
             minutesRemaining--;
             pressureSoFar += this.valves[currentValve].flow * minutesRemaining;
-            if (minutesRemaining <= 0){
+            if (minutesRemaining == 0){
                 return pressureSoFar;
             }
             maxIfOpeningValve = this.valves[currentValve].tunnels.reduce((maxPressure, currentTunnel) => Math.max(
                 maxPressure, 
-                this.findGreatestPressure(currentTunnel, --minutesRemaining, pressureSoFar)
+                this.findGreatestPressure(currentTunnel, minutesRemaining - 1, pressureSoFar)
                 ), -1);
         }
         
