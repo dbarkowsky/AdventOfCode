@@ -14,6 +14,7 @@ import DistressSignal from "./13/DistressSignal.js";
 import SandTrap from "./14/SandTrap.js";
 import SensorSuite from "./15/SensorSuite.js";
 import Valves from "./16/Valves.js";
+import FallingRocks from "./17/FallingRocks.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -224,4 +225,23 @@ const day16 = async () => {
     console.log(valves.findGreatestPressure('AA', 30, 0, true));
 }
 
-day16();
+// Day 17 
+const day17 = async () => {
+    const rockTetris = new FallingRocks(7, 20);
+    rockTetris.jetPattern = await DataManager.loadData('./17/jetPattern.txt');
+    rockTetris.parsePattern();
+    rockTetris.dropManyRocks(2022);
+    rockTetris.printGrid();
+    console.log(rockTetris.highestX);
+
+    // Part 2
+    const rockTetrisPart2 = new FallingRocks(7, 20);
+    rockTetrisPart2.jetPattern = await DataManager.loadData('./17/jetPattern.txt');
+    rockTetrisPart2.parsePattern();
+    //let rocksToDrop = parseFloat(rockTetrisPart2.jetPattern.length * rockTetrisPart2.rocks.length);
+    rockTetrisPart2.dropManyRocks(1000000000000);
+    //console.log(rockTetrisPart2.getHighestRockRow() * (1000000000000.0 / rocksToDrop));
+    console.log(rockTetris.highestX);
+}
+
+day17();
