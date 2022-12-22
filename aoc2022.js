@@ -15,6 +15,7 @@ import SandTrap from "./14/SandTrap.js";
 import SensorSuite from "./15/SensorSuite.js";
 import Valves from "./16/Valves.js";
 import FallingRocks from "./17/FallingRocks.js";
+import Obsidian from "./18/Obsidian.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -244,4 +245,13 @@ const day17 = async () => {
     console.log(rockTetris.highestX);
 }
 
-day17();
+// Day 18
+const day18 = async () => {
+    const obsidianCubes = new Obsidian();
+    obsidianCubes.rawInput = await DataManager.loadDataToList('./18/scan.txt');
+    obsidianCubes.buildCubes();
+    console.log(obsidianCubes.cubes);
+    console.log(obsidianCubes.countExposedSides());
+}
+
+day18();
