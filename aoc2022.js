@@ -249,9 +249,12 @@ const day17 = async () => {
 const day18 = async () => {
     const obsidianCubes = new Obsidian();
     obsidianCubes.rawInput = await DataManager.loadDataToList('./18/scan.txt');
-    obsidianCubes.buildCubes();
-    console.log(obsidianCubes.cubes);
+    obsidianCubes.placeRocks();
     console.log(obsidianCubes.countExposedSides());
+
+    // Part 2
+    obsidianCubes.fillWithWater();
+    console.log(obsidianCubes.countExposedSides(true));
 }
 
 day18();
