@@ -261,9 +261,9 @@ const day18 = async () => {
 // Day 19
 const day19 = async () => {
     const buildOrder = new BuildOrder();
-    buildOrder.blueprints = await DataManager.loadDataToList('./19/blueprints.txt');
+    buildOrder.blueprints = await DataManager.loadDataToList('./19/blueprintsTest.txt');
     buildOrder.parseBlueprints();
-    console.log(buildOrder.blueprints);
+    console.log(buildOrder.getQuantityLevelsSum(24));
 }
 
 day19();
