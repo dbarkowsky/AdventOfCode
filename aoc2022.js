@@ -16,6 +16,7 @@ import SensorSuite from "./15/SensorSuite.js";
 import Valves from "./16/Valves.js";
 import FallingRocks from "./17/FallingRocks.js";
 import Obsidian from "./18/Obsidian.js";
+import BuildOrder from "./19/BuildOrder.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -257,4 +258,12 @@ const day18 = async () => {
     console.log(obsidianCubes.countExposedSides(true));
 }
 
-day18();
+// Day 19
+const day19 = async () => {
+    const buildOrder = new BuildOrder();
+    buildOrder.blueprints = await DataManager.loadDataToList('./19/blueprints.txt');
+    buildOrder.parseBlueprints();
+    console.log(buildOrder.blueprints);
+}
+
+day19();
