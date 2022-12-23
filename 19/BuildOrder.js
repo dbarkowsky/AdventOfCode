@@ -114,6 +114,131 @@ export default class BuildOrder{
         return geodeCountsPerPath.reduce((v1, v2) => v1 > v2 ? v1 : v2, 0);
     }
 
+    getHighestWithQueue = (blueprint, startingMinutes, robots, resources) => {
+        const buildQueue = [];
+        let initialStep = {
+            remainingMinutes: startingMinutes,
+            robots,
+            resources,
+            purchase: undefined
+        }
+        buildQueue.push(initialStep);
+        let maxGeodes = 0;
+
+        while (buildQueue.length > 0){
+            let currentStep = buildQueue.shift();
+            let currentRobots = {...currentStep.robots};
+            let currentResources = {...currentStep.resources};
+            //console.log(currentStep.remainingMinutes)
+            if (currentStep.remainingMinutes == 0){
+                if (maxGeodes < currentResources.geode) maxGeodes = currentResources.geode;
+            }
+
+            // Update robots based on last purchase
+            switch (currentStep.purchase) {
+                case ORE:
+                    currentRobots.ore++;
+                    break;
+                case CLAY:
+                    currentRobots.clay++;
+                    break;
+                case OBSIDIAN:
+                    currentRobots.obsidian++;
+                    break;
+                case GEODE:
+                    currentRobots.geode++;
+                    break;
+                default: // Don't buy
+                    break;
+            }
+
+            // Copy original resources
+            const originalResources = {...currentResources};
+
+            // How many resources are gained? 
+            currentResources.ore += currentRobots.ore;
+            currentResources.clay += currentRobots.clay;
+            currentResources.obsidian += currentRobots.obsidian;
+            currentResources.geode += currentRobots.geode;
+
+            // Can I buy an ore robot?
+            if (
+                originalResources.ore >= blueprint.oreRobotOreCost && 
+                currentStep.remainingMinutes > 0 &&
+                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.oreRobotOreCost
+            ){
+                const pathResources = {...currentResources};
+                pathResources.ore -= blueprint.oreRobotOreCost;
+                buildQueue.push({
+                    remainingMinutes: currentStep.remainingMinutes - 1, 
+                    robots: {...currentRobots},
+                    resources: {...pathResources}, 
+                    purchase: ORE});
+            }
+                
+            // Can I buy a clay robot?
+            if (
+                originalResources.ore >= blueprint.clayRobotOreCost && 
+                currentStep.remainingMinutes > 0 &&
+                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.clayRobotOreCost
+            ){
+                const pathResources = {...currentResources};
+                pathResources.ore -= blueprint.clayRobotOreCost;
+                buildQueue.push({
+                    remainingMinutes: currentStep.remainingMinutes - 1, 
+                    robots: {...currentRobots},
+                    resources: {...pathResources}, 
+                    purchase: CLAY});            }
+
+            // Can I buy an obsidian robot?
+            if (
+                originalResources.ore >= blueprint.obsidianRobotOreCost && 
+                originalResources.clay >= blueprint.obsidianRobotClayCost  && 
+                currentStep.remainingMinutes > 0 &&
+                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.obsidianRobotOreCost &&
+                currentRobots.clay * currentStep.remainingMinutes + currentResources.clay >= currentStep.remainingMinutes * blueprint.obsidianRobotClayCost
+            ){
+                const pathResources = {...currentResources};
+                pathResources.ore -= blueprint.obsidianRobotOreCost;
+                pathResources.clay -= blueprint.obsidianRobotClayCost;
+                buildQueue.push({
+                    remainingMinutes: currentStep.remainingMinutes - 1, 
+                    robots: {...currentRobots},
+                    resources: {...pathResources}, 
+                    purchase: OBSIDIAN});            }
+
+            // Can I buy a geode robot?
+            if (
+                originalResources.ore >= blueprint.geodeRobotOreCost &&
+                originalResources.obsidian >= blueprint.geodeRobotObsidianCost && 
+                currentStep.remainingMinutes > 0 && 
+                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.geodeRobotOreCost &&
+                currentRobots.obsidian * currentStep.remainingMinutes + currentResources.obsidian >= currentStep.remainingMinutes * blueprint.geodeRobotObsidianCost
+            ){
+                const pathResources = {...currentResources};
+                pathResources.ore -= blueprint.geodeRobotOreCost;
+                pathResources.obsidian -= blueprint.geodeRobotObsidianCost;
+                buildQueue.push({
+                    remainingMinutes: currentStep.remainingMinutes - 1, 
+                    robots: {...currentRobots},
+                    resources: {...pathResources}, 
+                    purchase: GEODE});            
+            }
+
+            // Don't buy anything
+            if (currentStep.remainingMinutes > 0){
+                const pathResources = {...currentResources};
+                buildQueue.push({
+                    remainingMinutes: currentStep.remainingMinutes - 1, 
+                    robots: {...currentRobots},
+                    resources: {...pathResources}, 
+                    purchase: undefined});  
+            }
+        }
+
+        return maxGeodes;
+    }
+
     // Looks for quality level of each blueprint and sums them
     getQuantityLevelsSum = (startingMinutes) => {
         // Define objects
@@ -135,12 +260,18 @@ export default class BuildOrder{
         const qualityLevels = [];
 
         this.blueprints.forEach(blueprint => {
-            qualityLevels.push(blueprint.id * this.getHighestGeodeCount(
-                blueprint, 
-                startingMinutes, 
+            // qualityLevels.push(blueprint.id * this.getHighestGeodeCount(
+            //     blueprint, 
+            //     startingMinutes, 
+            //     {...robots},
+            //     {...resources}
+            // ));
+            qualityLevels.push(blueprint.id * this.getHighestWithQueue(
+                blueprint,
+                startingMinutes,
                 {...robots},
                 {...resources}
-            ));
+            ))
         })
 
         // Return the sum of all quality levels
