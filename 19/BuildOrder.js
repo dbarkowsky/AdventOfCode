@@ -3,6 +3,83 @@ const CLAY = 1;
 const OBSIDIAN = 2;
 const GEODE = 3;
 
+// Represents a single snapshot in time along a specific path...
+class StepNode{
+    resources;
+    robots;
+    minute;
+    blueprint;
+    score;
+
+    constructor(blueprint, robots, resources){
+        this.robots = robots;
+        this.resources = resources;
+        this.minute = 0;
+        this.blueprint = blueprint;
+        this.score = 0;
+    }
+
+    collect = () => {
+        this.minute++;
+        this.resources.ore += this.robots.ore;
+        this.resources.clay += this.robots.clay;
+        this.resources.obsidian += this.robots.obsidian;
+        this.resources.geode += this.robots.geode;
+        return this;
+    }
+
+    buyOreBot = () => {
+        this.robots.ore++;
+        this.resources.ore -= this.blueprint.oreRobotOreCost;
+        return this;
+    }
+
+    buyClayBot = () => {
+        this.robots.clay++;
+        this.resources.ore -= this.blueprint.clayRobotOreCost;
+        return this;
+    }
+
+    buyObsidianBot = () => {
+        this.robots.obsidian++;
+        this.resources.ore -= this.blueprint.obsidianRobotOreCost;
+        this.resources.clay -= this.blueprint.obsidianRobotClayCost;
+        return this;
+    }
+
+    buyGeodeBot = () => {
+        this.robots.geode++;
+        this.resources.ore -= this.blueprint.geodeRobotOreCost;
+        this.resources.obsidian -= this.blueprint.geodeRobotObsidianCost;
+        return this;
+    }
+
+    canAffordOreBot = () => {
+        return this.resources.ore >= this.blueprint.oreRobotOreCost;
+    }
+
+    canAffordClayBot = () => {
+        return this.resources.ore >= this.blueprint.clayRobotOreCost;
+    }
+
+    canAffordObsidianBot = () => {
+        return (this.resources.ore >= this.blueprint.obsidianRobotOreCost &&
+            this.resources.clay >= this.blueprint.obsidianRobotClayCost);
+    }
+
+    canAffordGeodeBot = () => {
+        return (this.resources.ore >= this.blueprint.geodeRobotOreCost &&
+            this.resources.obsidian >= this.blueprint.geodeRobotObsidianCost);
+    }
+
+    // To prevent passing by reference...
+    copy = () => {
+        let step = new StepNode(this.blueprint, {...this.robots}, {...this.resources});
+        step.minute = this.minute;
+        return step;
+    }
+}
+
 export default class BuildOrder{
     blueprints;
     
@@ -34,209 +111,67 @@ export default class BuildOrder{
         })
     }
 
-    // Recursive method to get highest geode count for a single blueprint
-    // Purchases robots, mines resources, then starts any possible paths at this minute
-    getHighestGeodeCount = (blueprint, remainingMinutes, robots, resources, purchase = undefined) => {
-        // If 0 minutes left, return geode count
-        if (remainingMinutes == 0){
-            return resources.geode;
+    // Thank piman for this algorithm
+    // https://github.com/piman51277/AdventOfCode/tree/master/2022/19
+    // Slow, but works.
+    analyzeBlueprint = (minutes, initialStep) => {
+        let stepQueue = [initialStep];
+        let nextSteps = [];
+
+        for (let minute = 0; minute < minutes; minute++){
+            for (const step of stepQueue){
+                // Build ore robot
+                if (step.canAffordOreBot()){
+                    nextSteps.push(step.copy().collect().buyOreBot());
+                }
+                // Build clay robot
+                if (step.canAffordClayBot()){
+                    nextSteps.push(step.copy().collect().buyClayBot());
+                }
+                // Build obsidian robot
+                if (step.canAffordObsidianBot()){
+                    nextSteps.push(step.copy().collect().buyObsidianBot());
+                }
+                // Build geode robot
+                if (step.canAffordGeodeBot()){
+                    nextSteps.push(step.copy().collect().buyGeodeBot());
+                }
+
+                // Don't build anything
+                nextSteps.push(step.copy().collect());
+            }
+
+            // Determine score of upcoming paths
+            nextSteps.forEach(step => {
+                step.score = this.calculateScore(step, minutes);
+            })
+
+            // Sort and trim for best paths
+            nextSteps = nextSteps.sort((a, b) => b.score - a.score).slice(0, 100000);
+            // Assign to current and clear next
+            stepQueue = nextSteps;
+            nextSteps = [];
         }
 
-        // Update robots based on last purchase
-        switch (purchase) {
-            case ORE:
-                robots.ore++;
-                break;
-            case CLAY:
-                robots.clay++;
-                break;
-            case OBSIDIAN:
-                robots.obsidian++;
-                break;
-            case GEODE:
-                robots.geode++;
-                break;
-            default: // Don't buy
-                break;
-        }
-        
-        // Copy original resources
-        const originalResources = {...resources};
+        // Sort remaining paths
+        stepQueue = stepQueue.sort((a, b) => b.resources.geode - a.resources.geode);
 
-        // How many resources are gained? 
-        resources.ore += robots.ore;
-        resources.clay += robots.clay;
-        resources.obsidian += robots.obsidian;
-        resources.geode += robots.geode;
-
-        const geodeCountsPerPath = [];
-        // What buying paths are possible?
-        // Can I buy an ore robot?
-        if (originalResources.ore >= blueprint.oreRobotOreCost){
-            const pathResources = {...resources};
-            pathResources.ore -= blueprint.oreRobotOreCost;
-            geodeCountsPerPath.push(this.getHighestGeodeCount(blueprint, --remainingMinutes, {...robots}, {...pathResources}, ORE));
-        }
-            
-        // Can I buy a clay robot?
-        if (originalResources.ore >= blueprint.clayRobotOreCost){
-            const pathResources = {...resources};
-            pathResources.ore -= blueprint.clayRobotOreCost;
-            geodeCountsPerPath.push(this.getHighestGeodeCount(blueprint, --remainingMinutes, {...robots}, {...pathResources}, CLAY));
-        }
-
-        // Can I buy an obsidian robot?
-        if (
-            originalResources.ore >= blueprint.obsidianRobotOreCost && 
-            originalResources.clay >= blueprint.obsidianRobotClayCost
-        ){
-            const pathResources = {...resources};
-            pathResources.ore -= blueprint.obsidianRobotOreCost;
-            pathResources.clay -= blueprint.obsidianRobotClayCost;
-            geodeCountsPerPath.push(this.getHighestGeodeCount(blueprint, --remainingMinutes, {...robots}, {...pathResources}, OBSIDIAN));
-        }
-
-        // Can I buy a geode robot?
-        if (
-            originalResources.ore >= blueprint.geodeRobotOreCost &&
-            originalResources.obsidian >= blueprint.geodeRobotObsidianCost
-        ){
-            const pathResources = {...resources};
-            pathResources.ore -= blueprint.geodeRobotOreCost;
-            pathResources.obsidian -= blueprint.geodeRobotObsidianCost;
-            geodeCountsPerPath.push(this.getHighestGeodeCount(blueprint, --remainingMinutes, {...robots}, {...pathResources}, GEODE));
-        }
-
-        // What if I buy nothing?
-        geodeCountsPerPath.push(this.getHighestGeodeCount(blueprint, --remainingMinutes, {...robots}, {...resources}));
-
-        // Return the biggest geode count from all possible paths
-        return geodeCountsPerPath.reduce((v1, v2) => v1 > v2 ? v1 : v2, 0);
+        // Return top path
+        return stepQueue[0].resources.geode;
     }
 
-    getHighestWithQueue = (blueprint, startingMinutes, robots, resources) => {
-        const buildQueue = [];
-        let initialStep = {
-            remainingMinutes: startingMinutes,
-            robots,
-            resources,
-            purchase: undefined
-        }
-        buildQueue.push(initialStep);
-        let maxGeodes = 0;
+    // Give a score to help determine value of build order
+    calculateScore = (step, startingMinutes) => {
+        // What's the possible number of future geodes?
+        const futureGeodes = step.resources.geode + ((startingMinutes - step.minute) * step.robots.geode);
 
-        while (buildQueue.length > 0){
-            let currentStep = buildQueue.shift();
-            let currentRobots = {...currentStep.robots};
-            let currentResources = {...currentStep.resources};
-            //console.log(currentStep.remainingMinutes)
-            if (currentStep.remainingMinutes == 0){
-                if (maxGeodes < currentResources.geode) maxGeodes = currentResources.geode;
-            }
+        const score = 
+            futureGeodes * 10000000  +
+            step.robots.obsidian * 10000 +
+            step.robots.clay * 100 +
+            step.robots.ore;
 
-            // Update robots based on last purchase
-            switch (currentStep.purchase) {
-                case ORE:
-                    currentRobots.ore++;
-                    break;
-                case CLAY:
-                    currentRobots.clay++;
-                    break;
-                case OBSIDIAN:
-                    currentRobots.obsidian++;
-                    break;
-                case GEODE:
-                    currentRobots.geode++;
-                    break;
-                default: // Don't buy
-                    break;
-            }
-
-            // Copy original resources
-            const originalResources = {...currentResources};
-
-            // How many resources are gained? 
-            currentResources.ore += currentRobots.ore;
-            currentResources.clay += currentRobots.clay;
-            currentResources.obsidian += currentRobots.obsidian;
-            currentResources.geode += currentRobots.geode;
-
-            // Can I buy an ore robot?
-            if (
-                originalResources.ore >= blueprint.oreRobotOreCost && 
-                currentStep.remainingMinutes > 0 &&
-                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.oreRobotOreCost
-            ){
-                const pathResources = {...currentResources};
-                pathResources.ore -= blueprint.oreRobotOreCost;
-                buildQueue.push({
-                    remainingMinutes: currentStep.remainingMinutes - 1, 
-                    robots: {...currentRobots},
-                    resources: {...pathResources}, 
-                    purchase: ORE});
-            }
-                
-            // Can I buy a clay robot?
-            if (
-                originalResources.ore >= blueprint.clayRobotOreCost && 
-                currentStep.remainingMinutes > 0 &&
-                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.clayRobotOreCost
-            ){
-                const pathResources = {...currentResources};
-                pathResources.ore -= blueprint.clayRobotOreCost;
-                buildQueue.push({
-                    remainingMinutes: currentStep.remainingMinutes - 1, 
-                    robots: {...currentRobots},
-                    resources: {...pathResources}, 
-                    purchase: CLAY});            }
-
-            // Can I buy an obsidian robot?
-            if (
-                originalResources.ore >= blueprint.obsidianRobotOreCost && 
-                originalResources.clay >= blueprint.obsidianRobotClayCost  && 
-                currentStep.remainingMinutes > 0 &&
-                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.obsidianRobotOreCost &&
-                currentRobots.clay * currentStep.remainingMinutes + currentResources.clay >= currentStep.remainingMinutes * blueprint.obsidianRobotClayCost
-            ){
-                const pathResources = {...currentResources};
-                pathResources.ore -= blueprint.obsidianRobotOreCost;
-                pathResources.clay -= blueprint.obsidianRobotClayCost;
-                buildQueue.push({
-                    remainingMinutes: currentStep.remainingMinutes - 1, 
-                    robots: {...currentRobots},
-                    resources: {...pathResources}, 
-                    purchase: OBSIDIAN});            }
-
-            // Can I buy a geode robot?
-            if (
-                originalResources.ore >= blueprint.geodeRobotOreCost &&
-                originalResources.obsidian >= blueprint.geodeRobotObsidianCost && 
-                currentStep.remainingMinutes > 0 && 
-                currentRobots.ore * currentStep.remainingMinutes + currentResources.ore >= currentStep.remainingMinutes * blueprint.geodeRobotOreCost &&
-                currentRobots.obsidian * currentStep.remainingMinutes + currentResources.obsidian >= currentStep.remainingMinutes * blueprint.geodeRobotObsidianCost
-            ){
-                const pathResources = {...currentResources};
-                pathResources.ore -= blueprint.geodeRobotOreCost;
-                pathResources.obsidian -= blueprint.geodeRobotObsidianCost;
-                buildQueue.push({
-                    remainingMinutes: currentStep.remainingMinutes - 1, 
-                    robots: {...currentRobots},
-                    resources: {...pathResources}, 
-                    purchase: GEODE});            
-            }
-
-            // Don't buy anything
-            if (currentStep.remainingMinutes > 0){
-                const pathResources = {...currentResources};
-                buildQueue.push({
-                    remainingMinutes: currentStep.remainingMinutes - 1, 
-                    robots: {...currentRobots},
-                    resources: {...pathResources}, 
-                    purchase: undefined});  
-            }
-        }
-
-        return maxGeodes;
+        return score;
     }
 
     // Looks for quality level of each blueprint and sums them
@@ -256,25 +191,49 @@ export default class BuildOrder{
             geode: 0
         }
         
-        // For holding quality levels that are returned
-        const qualityLevels = [];
-
+        let total = 0;
         this.blueprints.forEach(blueprint => {
-            // qualityLevels.push(blueprint.id * this.getHighestGeodeCount(
-            //     blueprint, 
-            //     startingMinutes, 
-            //     {...robots},
-            //     {...resources}
-            // ));
-            qualityLevels.push(blueprint.id * this.getHighestWithQueue(
-                blueprint,
-                startingMinutes,
-                {...robots},
-                {...resources}
-            ))
-        })
+            let step = new StepNode(blueprint, {...robots}, {...resources});
+            total += blueprint.id * this.analyzeBlueprint( 
+                startingMinutes, 
+                step
+            );
+        });
 
         // Return the sum of all quality levels
-        return qualityLevels.reduce((v1, v2) => v1 += v2, 0);
+        return total;
+    }
+
+    // Examines only a set number of blueprints, returning product of geodes mined
+    getGeodesSum = (startingMinutes, numberOfBlueprints = Infinity) => {
+        // Define objects
+        const robots = {
+            ore: 1,
+            clay: 0,
+            obsidian: 0,
+            geode: 0
+        }
+
+        const resources = {
+            ore: 0,
+            clay: 0,
+            obsidian: 0,
+            geode: 0
+        }
+        
+        let total = 1;
+        numberOfBlueprints = numberOfBlueprints > this.blueprints.length ? this.blueprints.length : numberOfBlueprints;
+            
+
+        for (let i = 0; i < numberOfBlueprints; i++){
+            let step = new StepNode(this.blueprints[i], {...robots}, {...resources});
+            total *= this.analyzeBlueprint( 
+                startingMinutes, 
+                step
+            );
+        }
+
+        // Return the sum of all quality levels
+        return total;
     }
 }
