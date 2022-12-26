@@ -1,3 +1,5 @@
+const DECRYPTION_KEY = 811589153;
+
 export default class Coordinates{
     values;
 
@@ -28,6 +30,7 @@ export default class Coordinates{
             for (let i = 0; i < Math.abs(currentNode.value); i++){
                 newIndex--;
                 if (newIndex < 0) newIndex = this.values.length - 1;
+                if (newIndex == currentIndex) newIndex--; // Skip current item that's moving
             }
             // What is the startingIndex of what's currently in that index?
             const existingNode = this.values.at(newIndex);
@@ -48,7 +51,10 @@ export default class Coordinates{
             
         // if going up
         } else if (currentNode.value > 0){
-            newIndex = (newIndex + currentNode.value) % this.values.length;
+            for (let i = 0; i < Math.abs(currentNode.value); i++){
+                newIndex = (newIndex + 1) % this.values.length;
+                if (newIndex == currentIndex) newIndex++; // Skip current item that's moving
+            }
             // What is the startingIndex of what's currently in that index?
             const existingNode = this.values.at(newIndex);
 
@@ -63,25 +69,30 @@ export default class Coordinates{
         }
     }
 
-    processAllValues = () => {
-        for (let i = 0; i < this.values.length; i++){
-            this.processSingleValue(i);
+    processAllValues = (times = 1) => {
+        for (let time = 0; time < times; time++){
+            for (let i = 0; i < this.values.length; i++){
+                this.processSingleValue(i);
+            }
         }
-        this.updateCurrentIndexes();
+        
+        //this.updateCurrentIndexes();
+    }
+
+    decryptValues = () => {
+        this.values.forEach(value => value.value *= DECRYPTION_KEY);
     }
 
     sumCoordinates = (interval, max) => {
         let sum = 0;
         // Where is 0?
         const zeroIndex = this.values.findIndex(el => el.value == 0);
-        let currentCount = 0;
         //console.log('zeroIndex', zeroIndex)
         for (let i = interval ; i <= max; i += interval){
             if (i % interval == 0){
                 sum += this.values[(zeroIndex + i) % this.values.length].value;
                 console.log(`value ${this.values[(zeroIndex + i) % this.values.length].value} at index ${(zeroIndex + i) % this.values.length}`)
             }
-            currentCount++;
         }
 
         return sum;
