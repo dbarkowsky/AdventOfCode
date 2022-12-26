@@ -18,6 +18,7 @@ import FallingRocks from "./17/FallingRocks.js";
 import Obsidian from "./18/Obsidian.js";
 import BuildOrder from "./19/BuildOrder.js";
 import Coordinates from "./20/Coordinates.js";
+import MonkeyMath from "./21/MonkeyMath.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -287,4 +288,15 @@ const day20 = async () => {
     console.log(bigCoordinates.sumCoordinates(1000, 3000)); // 1595584274798 ???
 }
 
-day20();
+// Day 21
+const day21 = async () => {
+    const shoutingMonkeys = new MonkeyMath();
+    shoutingMonkeys.rawInput = await DataManager.loadDataToList('./21/monkey.txt');
+    shoutingMonkeys.assembleMonkeys();
+    shoutingMonkeys.solveMonkeys();
+
+    // Part 2
+    console.log(shoutingMonkeys.determineHumanNumber(-10000000000000000, 10000000000000000, false));
+}
+
+day21();
