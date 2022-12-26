@@ -17,6 +17,7 @@ import Valves from "./16/Valves.js";
 import FallingRocks from "./17/FallingRocks.js";
 import Obsidian from "./18/Obsidian.js";
 import BuildOrder from "./19/BuildOrder.js";
+import Coordinates from "./20/Coordinates.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -269,4 +270,17 @@ const day19 = async () => {
     console.log(buildOrder.getGeodesSum(32, 3));
 }
 
-day19();
+// Day 20
+const day20 = async () => {
+    const coordinates = new Coordinates();
+    coordinates.values = await DataManager.loadDataToList('./20/code.txt');
+    coordinates.convertValues();
+    coordinates.processAllValues();
+    console.log(coordinates.sumCoordinates(1000, 3000));
+    console.log(coordinates.toString());
+
+    // Part 2
+
+}
+
+day20();
