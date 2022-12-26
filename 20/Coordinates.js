@@ -7,6 +7,7 @@ export default class Coordinates{
         this.values = [];
     }
 
+    // Converts values to objects
     convertValues = () => {
         this.values = this.values.map((value, index) => {
             return {
@@ -17,77 +18,38 @@ export default class Coordinates{
         })
     }
 
+    // Looks at a single value and moves it left or right accordingly
+    // Thanks to u/MrJohnnyS for helping me see how I could minimize this! Way faster
     processSingleValue = (startingIndex) => {
         // Find matching node
         let currentIndex = this.values.findIndex(el => el.startingIndex == startingIndex);
         let currentNode = this.values.at(currentIndex);
 
-        // Determine new index of node
-        let newIndex = currentIndex;
-        // console.log(newIndex, currentNode.value);
-        // if going down
-        if (currentNode.value < 0){
-            for (let i = 0; i < Math.abs(currentNode.value); i++){
-                newIndex--;
-                if (newIndex < 0) newIndex = this.values.length - 1;
-                if (newIndex == currentIndex) newIndex--; // Skip current item that's moving
-            }
-            // What is the startingIndex of what's currently in that index?
-            const existingNode = this.values.at(newIndex);
-
-            // Remove original
-            this.values.splice(currentIndex, 1);
-
-            // Find node to insert before
-            const existingIndex = this.values.findIndex(el => el.startingIndex == existingNode.startingIndex);
-
-            // Insert new node
-            this.values.splice(existingIndex, 0, currentNode);
-
-            // If moved to the beginning, put it at the end instead
-            if(newIndex == 0){
-                this.values.push(this.values.shift());
-            }
-            
-        // if going up
-        } else if (currentNode.value > 0){
-            for (let i = 0; i < Math.abs(currentNode.value); i++){
-                newIndex = (newIndex + 1) % this.values.length;
-                if (newIndex == currentIndex) newIndex++; // Skip current item that's moving
-            }
-            // What is the startingIndex of what's currently in that index?
-            const existingNode = this.values.at(newIndex);
-
-            // Remove original
-            this.values.splice(currentIndex, 1);
-
-            // Find node to insert after
-            const existingIndex = this.values.findIndex(el => el.startingIndex == existingNode.startingIndex);
-
-            // Insert new node
-            this.values.splice(existingIndex + 1, 0, currentNode);
-        }
+        // Remove node
+        this.values.splice(currentIndex, 1); 
+        // Place node at a location offset from the current location
+        this.values.splice((currentNode.value + currentIndex) % this.values.length, 0, currentNode);
     }
 
+    // Looks at all values in list. Makes call to move them.
     processAllValues = (times = 1) => {
         for (let time = 0; time < times; time++){
             for (let i = 0; i < this.values.length; i++){
                 this.processSingleValue(i);
             }
         }
-        
-        //this.updateCurrentIndexes();
     }
 
+    // Uses decryption key to alter values 
     decryptValues = () => {
         this.values.forEach(value => value.value *= DECRYPTION_KEY);
     }
 
+    // Gets the sum at specified intervals
     sumCoordinates = (interval, max) => {
         let sum = 0;
         // Where is 0?
         const zeroIndex = this.values.findIndex(el => el.value == 0);
-        //console.log('zeroIndex', zeroIndex)
         for (let i = interval ; i <= max; i += interval){
             if (i % interval == 0){
                 sum += this.values[(zeroIndex + i) % this.values.length].value;
@@ -98,11 +60,13 @@ export default class Coordinates{
         return sum;
     }
 
+    // Updates indexes by running through values list. Never used.
     updateCurrentIndexes = () => {
         for (let i = 0; i < this.values.length; i++){
             this.values[i].currentIndex = i;
         }
     }
 
+    // Prints value to string to help with tracking
     toString = () => this.values.map(el => '\n' + `i: ${el.currentIndex}, v: ${el.value}`).toString();
 }

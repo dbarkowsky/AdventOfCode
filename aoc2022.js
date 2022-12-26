@@ -277,10 +277,14 @@ const day20 = async () => {
     coordinates.convertValues();
     coordinates.processAllValues();
     console.log(coordinates.sumCoordinates(1000, 3000));
-    console.log(coordinates.toString());
 
     // Part 2
-
+    const bigCoordinates = new Coordinates();
+    bigCoordinates.values = await DataManager.loadDataToList('./20/code.txt');
+    bigCoordinates.convertValues();
+    bigCoordinates.decryptValues();
+    bigCoordinates.processAllValues(10);
+    console.log(bigCoordinates.sumCoordinates(1000, 3000)); // 1595584274798 ???
 }
 
 day20();
