@@ -19,6 +19,7 @@ import Obsidian from "./18/Obsidian.js";
 import BuildOrder from "./19/BuildOrder.js";
 import Coordinates from "./20/Coordinates.js";
 import MonkeyMath from "./21/MonkeyMath.js";
+import DiceMap from "./22/DiceMap.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -299,4 +300,17 @@ const day21 = async () => {
     console.log(shoutingMonkeys.determineHumanNumber(-10000000000000000, 10000000000000000, false));
 }
 
-day21();
+// Day 22
+const day22 = async () => {
+    const monkeyMap = new DiceMap();
+    monkeyMap.input = USE_TEST_INPUT 
+                        ? await DataManager.loadDataToList('./22/inputTest.txt')
+                        : await DataManager.loadDataToList('./22/input.txt');
+    monkeyMap.convertInputToInstructions();
+    monkeyMap.createNodes();
+    console.log('instructions', monkeyMap.instructions);                       
+    console.log('nodes', monkeyMap.nodes);
+}
+
+const USE_TEST_INPUT = false;
+day22();
