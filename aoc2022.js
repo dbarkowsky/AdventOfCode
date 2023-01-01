@@ -20,6 +20,7 @@ import BuildOrder from "./19/BuildOrder.js";
 import Coordinates from "./20/Coordinates.js";
 import MonkeyMath from "./21/MonkeyMath.js";
 import Diffusion from "./23/Diffusion.js";
+import Blizzard from "./24/Blizzard.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -320,6 +321,16 @@ const day23 = async () => {
     console.log(diffuseFully.runTillDone());
 }
 
+// Day 24
+const day24 = async () => {
+    const bliz = new Blizzard();
+    bliz.rawInput = USE_TEST_DATA
+                    ? await DataManager.loadDataToList('./24/inputTest.txt')
+                    : await DataManager.loadDataToList('./24/input.txt');
+    bliz.parseInput();
+    console.log(bliz.walls);
+    console.log(bliz.runMaze());
+}
 
-const USE_TEST_DATA = false;
-day23();
+const USE_TEST_DATA = true;
+day24();
