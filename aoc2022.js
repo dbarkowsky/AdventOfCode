@@ -19,6 +19,7 @@ import Obsidian from "./18/Obsidian.js";
 import BuildOrder from "./19/BuildOrder.js";
 import Coordinates from "./20/Coordinates.js";
 import MonkeyMath from "./21/MonkeyMath.js";
+import Diffusion from "./23/Diffusion.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -299,4 +300,26 @@ const day21 = async () => {
     console.log(shoutingMonkeys.determineHumanNumber(-10000000000000000, 10000000000000000, false));
 }
 
-day21();
+
+// Day 23
+const day23 = async () => {
+    const diffuse = new Diffusion();
+    diffuse.rawInput = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./23/inputTest.txt')
+                        : await DataManager.loadDataToList('./23/input.txt');
+    diffuse.parseInput();
+    diffuse.runRounds(10);
+    console.log(diffuse.getEmptySpaces());
+
+    // Part 2
+    const diffuseFully = new Diffusion();
+    diffuseFully.rawInput = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./23/inputTest.txt')
+                        : await DataManager.loadDataToList('./23/input.txt');
+    diffuseFully.parseInput();
+    console.log(diffuseFully.runTillDone());
+}
+
+
+const USE_TEST_DATA = false;
+day23();
