@@ -28,7 +28,9 @@ import DataManager from "./common/DataManager.js";
 // Day 01
 const day01 = async () => {
     const calories = new ElfCalories();
-    calories.data = await DataManager.loadDataToList('./01/calories.txt');
+    calories.data = USE_TEST_DATA
+                    ? await DataManager.loadDataToList('./01/caloriesTest.txt')
+                    : await DataManager.loadDataToList('./01/calories.txt');
     calories.sumCalories();
     calories.sortCalories();
     console.log(calories.elfList);
@@ -38,7 +40,9 @@ const day01 = async () => {
 // Day 02
 const day02 = async () => {
     const scores = new RockPaperScissors();
-    scores.data = await DataManager.loadDataToList('./02/rounds.txt');
+    scores.data = USE_TEST_DATA 
+                    ? await DataManager.loadDataToList('./02/roundsTest.txt')
+                    : await DataManager.loadDataToList('./02/rounds.txt');
     scores.refineData();
     scores.calculateTotalScore();
     console.log(scores.totalScore);
@@ -51,7 +55,9 @@ const day02 = async () => {
 // Day 03
 const day03 = async () => {
     const sack = new Rucksack();
-    sack.contents = await DataManager.loadDataToList('./03/contents.txt');
+    sack.contents = USE_TEST_DATA
+                    ? await DataManager.loadDataToList('./03/contentsTest.txt')
+                    : await DataManager.loadDataToList('./03/contents.txt');
     sack.compareCompartments();
     console.log(sack.sum);
 
@@ -63,7 +69,9 @@ const day03 = async () => {
 // Day 04
 const day04 = async () => {
     const shifts = new ElfAssignments();
-    shifts.shifts = await DataManager.loadDataToList('./04/pairs.txt');
+    shifts.shifts = USE_TEST_DATA
+                    ? await DataManager.loadDataToList('./04/pairsTest.txt')
+                    : await DataManager.loadDataToList('./04/pairs.txt');
     shifts.splitShifts();
     console.log(shifts.countOverlap(true)); // Full overlap
 
@@ -74,14 +82,20 @@ const day04 = async () => {
 // Day 05
 const day05 = async () => {
     const crateStack = new CrateStacking();
-    crateStack.crateStacks = await DataManager.loadDataToList('./05/startingPositions.txt');
-    crateStack.instructions = await DataManager.loadDataToList('./05/instructions.txt');
+    crateStack.crateStacks = USE_TEST_DATA
+                            ? await DataManager.loadDataToList('./05/startingPositionsTest.txt')
+                            : await DataManager.loadDataToList('./05/startingPositions.txt');
+    crateStack.instructions = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./05/instructionsTest.txt')
+                                : await DataManager.loadDataToList('./05/instructions.txt');
     crateStack.splitStacks();
     crateStack.performInstructionsCrane3000();
     console.log(crateStack.getTopCrates());
 
     // Part 2
-    crateStack.crateStacks = await DataManager.loadDataToList('./05/startingPositions.txt');
+    crateStack.crateStacks = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./05/startingPositionsTest.txt')
+                                : await DataManager.loadDataToList('./05/startingPositions.txt');
     crateStack.splitStacks();
     crateStack.performInstructionsCrane3001();
     console.log(crateStack.getTopCrates());
@@ -90,7 +104,9 @@ const day05 = async () => {
 // Day 06
 const day06 = async () => {
     const signal = new SignalCode();
-    signal.signal = await DataManager.loadData('./06/signal.txt');
+    signal.signal = USE_TEST_DATA 
+                    ? await DataManager.loadData('./06/signalTest.txt')
+                    : await DataManager.loadData('./06/signal.txt');
     signal.splitSignal();
     console.log(signal.signal);
     console.log(signal.getSignalIndex(4));
@@ -102,7 +118,9 @@ const day06 = async () => {
 // Day 07
 const day07 = async () => {
     const files = new FileStructure();
-    files.commands = await DataManager.loadDataToList('./07/commands.txt');
+    files.commands = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./07/commandsTest.txt')
+                        : await DataManager.loadDataToList('./07/commands.txt');
     files.processCommands();
     console.log(files.sumDirsUnder(100000));
 
@@ -118,7 +136,9 @@ const day07 = async () => {
 // Day 08
 const day08 = async () => {
     const treehouse = new TreeHouse();
-    treehouse.trees = await DataManager.loadDataToList('./08/trees.txt');
+    treehouse.trees = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./08/treesTest.txt')
+                        : await DataManager.loadDataToList('./08/trees.txt');
     treehouse.splitData();
     console.log(treehouse.countVisibleTrees());
 
@@ -129,13 +149,17 @@ const day08 = async () => {
 // Day 09
 const day09 = async () => {
     const rope = new RopeBridge(0);
-    rope.instructions = await DataManager.loadDataToList('./09/instructions.txt');
+    rope.instructions = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./09/instructionsTest.txt')
+                        : await DataManager.loadDataToList('./09/instructions.txt');
     rope.giveInstructions();
     console.log(rope.tailLocations.size);
 
     // Part 2
     const bigRope = new RopeBridge(8);
-    bigRope.instructions = await DataManager.loadDataToList('./09/instructions.txt');
+    bigRope.instructions = USE_TEST_DATA
+                            ? await DataManager.loadDataToList('./09/instructionsTestBig.txt')
+                            : await DataManager.loadDataToList('./09/instructions.txt');
     bigRope.giveInstructions();
     console.log(bigRope.tailLocations.size);
 }
@@ -143,7 +167,9 @@ const day09 = async () => {
 // Day 10
 const day10 = async () => {
     const tube = new CathodeRayTube(20, 40);
-    tube.instructions = await DataManager.loadDataToList('./10/instructions.txt');
+    tube.instructions = USE_TEST_DATA
+                            ? await DataManager.loadDataToList('./10/instructionsTest.txt')
+                            : await DataManager.loadDataToList('./10/instructions.txt');
     tube.executeInstructions();
     console.log(tube.getSignalStrengthSum());
     
@@ -154,7 +180,9 @@ const day10 = async () => {
 // Day 11
 const day11 = async () => {
     const keepaway = new KeepAway();
-    keepaway.monkeys = await DataManager.loadDataToList('./11/monkeys.txt');
+    keepaway.monkeys = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./11/monkeysTest.txt')
+                        : await DataManager.loadDataToList('./11/monkeys.txt');
     keepaway.convertMonkeys();
     keepaway.playKeepAway(20);
     console.log(keepaway.monkeys);
@@ -162,7 +190,9 @@ const day11 = async () => {
 
     // Part 2
     const keepawayPt2 = new KeepAway();
-    keepawayPt2.monkeys = await DataManager.loadDataToList('./11/monkeys.txt');
+    keepawayPt2.monkeys = USE_TEST_DATA
+                            ? await DataManager.loadDataToList('./11/monkeysTest.txt')
+                            : await DataManager.loadDataToList('./11/monkeys.txt');
     keepawayPt2.convertMonkeys();
     keepawayPt2.playKeepAway(10000, false);
     console.log(keepawayPt2.getMonkeyBusiness(2));
@@ -171,7 +201,9 @@ const day11 = async () => {
 // Day 12
 const day12 = async () => {
     const map = new Heightmap();
-    map.map = await DataManager.loadDataToList('./12/map.txt');
+    map.map = USE_TEST_DATA
+                ? await DataManager.loadDataToList('./12/mapTest.txt')
+                : await DataManager.loadDataToList('./12/map.txt');
     map.splitMapRows();
     //console.log(map.map);
     map.findStartingNode();
@@ -184,7 +216,9 @@ const day12 = async () => {
 // Day 13
 const day13 = async () => {
     const signal = new DistressSignal();
-    signal.data = await DataManager.loadDataToList('./13/input.txt');
+    signal.data = USE_TEST_DATA 
+                    ? await DataManager.loadDataToList('./13/inputTest.txt')
+                    : await DataManager.loadDataToList('./13/input.txt');
     signal.cleanData();
     console.log(signal.countRightPairs());
 
@@ -196,7 +230,9 @@ const day13 = async () => {
 // Day 14
 const day14 = async () => {
     const trap = new SandTrap({y: 500, x: 0});
-    trap.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
+    trap.rockInstructions = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./14/inputTest.txt')
+                                : await DataManager.loadDataToList('./14/input.txt');
     trap.parseInput();
     trap.drawRock();
     trap.springTrap();
@@ -205,7 +241,9 @@ const day14 = async () => {
 
     // Part 2
     const trapWithFloor = new SandTrap({y: 500, x: 0}, false);
-    trapWithFloor.rockInstructions = await DataManager.loadDataToList('./14/input.txt');
+    trapWithFloor.rockInstructions = USE_TEST_DATA
+                                        ? await DataManager.loadDataToList('./14/inputTest.txt')
+                                        : await DataManager.loadDataToList('./14/input.txt');
     trapWithFloor.parseInput();
     trapWithFloor.drawRock();
     trapWithFloor.springTrap();
@@ -216,7 +254,9 @@ const day14 = async () => {
 // Day 15
 const day15 = async () => {
     const sensors = new SensorSuite();
-    sensors.readings = await DataManager.loadDataToList('./15/sensor_readings.txt');
+    sensors.readings = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./15/sensorReadingsTest.txt')
+                        : await DataManager.loadDataToList('./15/sensorReadings.txt');
     sensors.parseReadings();
     console.log(sensors.countCoverageOnRow(2000000));
 
@@ -227,7 +267,9 @@ const day15 = async () => {
 // Day 16
 const day16 = async () => {
     const valves = new Valves();
-    valves.rawInput = await DataManager.loadDataToList('./16/valves.txt');
+    valves.rawInput = USE_TEST_DATA 
+                        ? await DataManager.loadDataToList('./16/valvesTest.txt')
+                        : await DataManager.loadDataToList('./16/valves.txt');
     valves.parseInput();
     console.log(valves.valves);
     console.log(valves.findGreatestPressure('AA', 30, 0, true));
@@ -236,7 +278,9 @@ const day16 = async () => {
 // Day 17 
 const day17 = async () => {
     const rockTetris = new FallingRocks(7, 20);
-    rockTetris.jetPattern = await DataManager.loadData('./17/jetPattern.txt');
+    rockTetris.jetPattern = USE_TEST_DATA
+                                ? await DataManager.loadData('./17/jetPatternTest.txt')
+                                : await DataManager.loadData('./17/jetPattern.txt');
     rockTetris.parsePattern();
     rockTetris.dropManyRocks(2022);
     rockTetris.printGrid();
@@ -244,7 +288,9 @@ const day17 = async () => {
 
     // Part 2
     const rockTetrisPart2 = new FallingRocks(7, 20);
-    rockTetrisPart2.jetPattern = await DataManager.loadData('./17/jetPattern.txt');
+    rockTetrisPart2.jetPattern = USE_TEST_DATA
+                                    ? await DataManager.loadData('./17/jetPatternTest.txt')
+                                    : await DataManager.loadData('./17/jetPattern.txt');
     rockTetrisPart2.parsePattern();
     //let rocksToDrop = parseFloat(rockTetrisPart2.jetPattern.length * rockTetrisPart2.rocks.length);
     rockTetrisPart2.dropManyRocks(1000000000000);
@@ -255,7 +301,9 @@ const day17 = async () => {
 // Day 18
 const day18 = async () => {
     const obsidianCubes = new Obsidian();
-    obsidianCubes.rawInput = await DataManager.loadDataToList('./18/scan.txt');
+    obsidianCubes.rawInput = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./18/scanTest.txt')
+                                : await DataManager.loadDataToList('./18/scan.txt');
     obsidianCubes.placeRocks();
     console.log(obsidianCubes.countExposedSides());
 
@@ -267,7 +315,9 @@ const day18 = async () => {
 // Day 19
 const day19 = async () => {
     const buildOrder = new BuildOrder();
-    buildOrder.blueprints = await DataManager.loadDataToList('./19/blueprints.txt');
+    buildOrder.blueprints = USE_TEST_DATA 
+                            ? await DataManager.loadDataToList('./19/blueprintsTest.txt')
+                            : await DataManager.loadDataToList('./19/blueprints.txt');
     buildOrder.parseBlueprints();
     console.log(buildOrder.getQuantityLevelsSum(24));
 
@@ -278,14 +328,18 @@ const day19 = async () => {
 // Day 20
 const day20 = async () => {
     const coordinates = new Coordinates();
-    coordinates.values = await DataManager.loadDataToList('./20/code.txt');
+    coordinates.values = USE_TEST_DATA
+                            ? await DataManager.loadDataToList('./20/codeTest.txt')
+                            : await DataManager.loadDataToList('./20/code.txt');
     coordinates.convertValues();
     coordinates.processAllValues();
     console.log(coordinates.sumCoordinates(1000, 3000));
 
     // Part 2
     const bigCoordinates = new Coordinates();
-    bigCoordinates.values = await DataManager.loadDataToList('./20/code.txt');
+    bigCoordinates.values = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./20/codeTest.txt')
+                                : await DataManager.loadDataToList('./20/code.txt');
     bigCoordinates.convertValues();
     bigCoordinates.decryptValues();
     bigCoordinates.processAllValues(10);
@@ -295,7 +349,9 @@ const day20 = async () => {
 // Day 21
 const day21 = async () => {
     const shoutingMonkeys = new MonkeyMath();
-    shoutingMonkeys.rawInput = await DataManager.loadDataToList('./21/monkey.txt');
+    shoutingMonkeys.rawInput = USE_TEST_DATA
+                                ? await DataManager.loadDataToList('./21/monkeyTest.txt')
+                                : await DataManager.loadDataToList('./21/monkey.txt');
     shoutingMonkeys.assembleMonkeys();
     shoutingMonkeys.solveMonkeys();
 
