@@ -61,4 +61,74 @@ export default class Valves{
         
         return pressureSoFar + Math.max(maxIfOpeningValve, maxIfValveAlreadyOpenOrUntouched);
     }
+
+    findViaBFS = (minutes) => {
+        let valveQueue = [{
+            name: 'AA',
+            pressureSoFar: 0,
+            minutesRemaining: minutes,
+            openValves: [],
+            visitedValves: []
+        }]
+        let maxPressure = 0;
+
+        while (valveQueue.length > 0){
+            let currentValve = valveQueue.shift();
+            currentValve.visitedValves.push(currentValve.name);
+            // Add pressure from all open valves
+            let pressureReleasedThisMinute = 0;
+            currentValve.openValves.forEach(name => {
+                pressureReleasedThisMinute += this.valves[name].flow;
+            })
+            currentValve.pressureSoFar += pressureReleasedThisMinute;
+            
+            // Check if minutes has been reached
+            if (currentValve.minutesRemaining == 0){
+                // check against maxPressure, continue loop
+                maxPressure = maxPressure < currentValve.pressureSoFar ? currentValve.pressureSoFar : maxPressure;
+                continue;
+            }
+
+            // Add possibilities if we don't open valve
+            this.valves[currentValve.name].tunnels.forEach(tunnel => {
+                if (!currentValve.visitedValves.includes(tunnel))
+                    valveQueue.push({
+                        name: tunnel,
+                        pressureSoFar: currentValve.pressureSoFar,
+                        minutesRemaining: currentValve.minutesRemaining - 1,
+                        openValves: currentValve.openValves,
+                        visitedValves: currentValve.visitedValves
+                    })
+            })
+
+            // Only open valve if valve wasn't already open and if it has flow 
+            if (!currentValve.openValves.includes(currentValve.name) && this.valves[currentValve.name].flow > 0){
+                 // Open valve
+                currentValve.openValves.push(currentValve.name);
+                currentValve.minutesRemaining--;
+
+                // Only add if there's still time left
+                if (currentValve.minutesRemaining > 0){
+                    // Add possibilities if we did open valve
+                    this.valves[currentValve.name].tunnels.forEach(tunnel => {
+                        let keys = Object.keys(this.valves);
+                        if (!keys.find(key => 
+                            this.valves[key].name == currentValve.name && 
+                            this.valves[key].pressureSoFar >= currentValve.pressureSoFar &&
+                            this.valves[key].minutesRemaining >= currentValve.minutesRemaining
+                        ) && !currentValve.visitedValves.includes(tunnel)){
+                            valveQueue.push({
+                                name: tunnel,
+                                pressureSoFar: currentValve.pressureSoFar,
+                                minutesRemaining: currentValve.minutesRemaining - 1,
+                                openValves: currentValve.openValves,
+                                visitedValves: currentValve.visitedValves
+                            })
+                        }
+                    })
+                }
+            }
+        }
+        return maxPressure;
+    }
 }

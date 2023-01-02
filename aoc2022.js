@@ -272,7 +272,7 @@ const day16 = async () => {
                         : await DataManager.loadDataToList('./16/valves.txt');
     valves.parseInput();
     console.log(valves.valves);
-    console.log(valves.findGreatestPressure('AA', 30, 0, true));
+    console.log(valves.findViaBFS(30));
 }
 
 // Day 17 
@@ -418,4 +418,4 @@ const day25 = async () => {
 }
 
 const USE_TEST_DATA = true;
-day25();
+day16();
