@@ -20,6 +20,8 @@ import BuildOrder from "./19/BuildOrder.js";
 import Coordinates from "./20/Coordinates.js";
 import MonkeyMath from "./21/MonkeyMath.js";
 import DiceMap from "./22/DiceMap.js";
+import Diffusion from "./23/Diffusion.js";
+import Blizzard from "./24/Blizzard.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -300,10 +302,11 @@ const day21 = async () => {
     console.log(shoutingMonkeys.determineHumanNumber(-10000000000000000, 10000000000000000, false));
 }
 
+
 // Day 22
 const day22 = async () => {
     const monkeyMap = new DiceMap();
-    monkeyMap.input = USE_TEST_INPUT 
+    monkeyMap.input = USE_TEST_DATA 
                         ? await DataManager.loadDataToList('./22/inputTest.txt')
                         : await DataManager.loadDataToList('./22/input.txt');
     monkeyMap.convertInputToInstructions();
@@ -312,5 +315,37 @@ const day22 = async () => {
     console.log('nodes', monkeyMap.nodes);
 }
 
-const USE_TEST_INPUT = false;
-day22();
+
+
+// Day 23
+const day23 = async () => {
+    const diffuse = new Diffusion();
+    diffuse.rawInput = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./23/inputTest.txt')
+                        : await DataManager.loadDataToList('./23/input.txt');
+    diffuse.parseInput();
+    diffuse.runRounds(10);
+    console.log(diffuse.getEmptySpaces());
+
+    // Part 2
+    const diffuseFully = new Diffusion();
+    diffuseFully.rawInput = USE_TEST_DATA
+                        ? await DataManager.loadDataToList('./23/inputTest.txt')
+                        : await DataManager.loadDataToList('./23/input.txt');
+    diffuseFully.parseInput();
+    console.log(diffuseFully.runTillDone());
+}
+
+// Day 24
+const day24 = async () => {
+    const bliz = new Blizzard();
+    bliz.rawInput = USE_TEST_DATA
+                    ? await DataManager.loadDataToList('./24/inputTest.txt')
+                    : await DataManager.loadDataToList('./24/input.txt');
+    bliz.parseInput();
+    console.log(bliz.walls);
+    console.log(bliz.runMaze());
+}
+
+const USE_TEST_DATA = true;
+day24();
