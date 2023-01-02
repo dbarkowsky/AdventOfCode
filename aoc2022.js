@@ -343,9 +343,12 @@ const day24 = async () => {
                     ? await DataManager.loadDataToList('./24/inputTest.txt')
                     : await DataManager.loadDataToList('./24/input.txt');
     bliz.parseInput();
-    console.log(bliz.walls);
     console.log(bliz.runMaze());
+
+    // Part 2
+    bliz.parseInput();
+    console.log(bliz.thereAndBackAndThereAgain());
 }
 
-const USE_TEST_DATA = true;
+const USE_TEST_DATA = false;
 day24();

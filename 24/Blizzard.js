@@ -6,7 +6,7 @@ export default class Blizzard{
     blizzards; // List of blizzard objects
     blizzardLocations; // Set of blizzard-occupied spaces
     rawInput;
-    goal;
+    goal; // Standard ending location
 
     constructor(){
         this.walls = new Set();
@@ -16,7 +16,14 @@ export default class Blizzard{
         this.goal = {};
     }
 
+    // Converts raw input into blizzards and walls
     parseInput = () => {
+        // Reset old
+        this.walls = new Set();
+        this.blizzardLocations = new Set();
+        this.blizzards = [];
+
+        // Convert input to walls and blizzards
         this.rawInput.forEach((line, x) => {
             line.split('').forEach((point, y) => {
                 switch (point) {
@@ -39,22 +46,25 @@ export default class Blizzard{
         });
         // Add extra wall at top to prevent going that direction
         this.walls.add('-1,1');
+        // Add extra wall below to prevent similar issue if returning
+        this.walls.add(`${this.goal.x + 1},${this.goal.y}`);
     }
 
-    runMaze = () => {
-        // Set initial position
-        let startingPosition = {x: 0, y: 1};
+    // Runs the maze from start to goal. Does not reset blizzards, so can be run back to back.
+    runMaze = (startingPosition = {x: 0, y: 1}, goal = this.goal) => {
         // Start queue with this position
-        const routeQueue = [startingPosition];
+        let routeQueue = [startingPosition];
         // Until end is found
         let turns = 0;
         while (true){
             // While queue has possibilities
-            while (routeQueue.length > 0){
+            let currentRouteQueueLength = routeQueue.length;
+            let nextQueue = [];
+            for (let i = 0; i < currentRouteQueueLength; i++){
                 let currentRoute = routeQueue.shift();
                 // Check if this position == the goal
                     // if so, return count of turns
-                if (currentRoute.x == this.goal.x && currentRoute.y == this.goal.y){
+                if (currentRoute.x == goal.x && currentRoute.y == goal.y){
                     return turns;
                 }
 
@@ -66,32 +76,40 @@ export default class Blizzard{
                 // If it didn't encounter blizzard, add all possible paths to queue
                 // ALSO! Don't let it go back to start position
                 // Say in place
-                if (this.isNotStart(currentRoute))
-                    routeQueue.push({x: currentRoute.x, y: currentRoute.y});
+                if (!this.routeQueueHas(nextQueue, currentRoute))
+                    nextQueue.push({x: currentRoute.x, y: currentRoute.y});
                 // North
-                if (!this.walls.has(`${currentRoute.x - 1},${currentRoute.y}`)) 
-                    routeQueue.push({x: currentRoute.x - 1, y: currentRoute.y});
+                if (!this.walls.has(`${currentRoute.x - 1},${currentRoute.y}`) && !this.routeQueueHas(nextQueue, {x: currentRoute.x - 1, y: currentRoute.y})) 
+                    nextQueue.push({x: currentRoute.x - 1, y: currentRoute.y});
                 // South
-                if (!this.walls.has(`${currentRoute.x + 1},${currentRoute.y}`)) 
-                    routeQueue.push({x: currentRoute.x + 1, y: currentRoute.y});
+                if (!this.walls.has(`${currentRoute.x + 1},${currentRoute.y}`) && !this.routeQueueHas(nextQueue, {x: currentRoute.x + 1, y: currentRoute.y})) 
+                    nextQueue.push({x: currentRoute.x + 1, y: currentRoute.y});
                 // West
-                if (!this.walls.has(`${currentRoute.x},${currentRoute.y - 1}`)) 
-                    routeQueue.push({x: currentRoute.x, y: currentRoute.y - 1});
+                if (!this.walls.has(`${currentRoute.x},${currentRoute.y - 1}`) && !this.routeQueueHas(nextQueue, {x: currentRoute.x, y: currentRoute.y - 1})) 
+                    nextQueue.push({x: currentRoute.x, y: currentRoute.y - 1});
                 // East
-                if (!this.walls.has(`${currentRoute.x},${currentRoute.y + 1}`)) 
-                    routeQueue.push({x: currentRoute.x, y: currentRoute.y + 1});
+                if (!this.walls.has(`${currentRoute.x},${currentRoute.y + 1}`) && !this.routeQueueHas(nextQueue, {x: currentRoute.x, y: currentRoute.y + 1})) 
+                    nextQueue.push({x: currentRoute.x, y: currentRoute.y + 1});
             }
-
+            routeQueue = nextQueue;
             // Simulate one minute passing for blizzard movement
             this.updateBlizzards();
             turns++;
         }
     }
 
+    // Checks if the current queue being built already has this value
+    // Saves a lot of time!
+    routeQueueHas = (queue, location) => {
+        return queue.find(el => el.y == location.y && el.x == location.x);
+    }
+
+    // Check if location is the starting location. Didn't end up being needed.
     isNotStart = (point) => {
         return !(point.x == 0 && point.y == 1);
     }
 
+    // Moves all the blizzards one space, wrapping if needed
     updateBlizzards = () => {
         this.blizzardLocations = new Set(); // reset
         this.blizzards.forEach(blizzard => {
@@ -133,7 +151,20 @@ export default class Blizzard{
                     }
                     break;
             }
+            // Add to blizzard set
             this.blizzardLocations.add(`${blizzard.x},${blizzard.y}`);
         })
+    }
+
+    // Get total number of turns going from start to end to start to end again.
+    thereAndBackAndThereAgain = () => {
+        const start = {x: 0, y: 1};
+        const end = {x: this.goal.x, y: this.goal.y};
+
+        const there = this.runMaze(start, end);
+        const back = this.runMaze(end, start);
+        const thereAgain = this.runMaze(start, end);
+
+        return there + back + thereAgain;
     }
 }
