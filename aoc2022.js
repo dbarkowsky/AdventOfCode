@@ -22,6 +22,7 @@ import MonkeyMath from "./21/MonkeyMath.js";
 import DiceMap from "./22/DiceMap.js";
 import Diffusion from "./23/Diffusion.js";
 import Blizzard from "./24/Blizzard.js";
+import Balloons from "./25/Balloons.js";
 import DataManager from "./common/DataManager.js";
 
 // Day 01
@@ -350,5 +351,15 @@ const day24 = async () => {
     console.log(bliz.thereAndBackAndThereAgain());
 }
 
+// Day 25
+const day25 = async () => {
+    const bob = new Balloons();
+    bob.snafu = USE_TEST_DATA
+                ? await DataManager.loadDataToList('./25/inputTest.txt')
+                : await DataManager.loadDataToList('./25/input.txt');
+    bob.convertSnafu();
+    console.log(bob.decimalToSnafu(bob.getDecimalSum()));
+}
+
 const USE_TEST_DATA = false;
-day24();
+day25();
