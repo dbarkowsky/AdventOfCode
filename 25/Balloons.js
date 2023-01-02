@@ -7,11 +7,13 @@ export default class Balloons{
         this.decimal = [];
     }
 
+    // Converts snafu string into decimal number
     snafuToDecimal = (snafu) => {
         let base = 1;
         let sum = 0;
         const snafuList = snafu.split('');
 
+        // For each symbol, determine value and sum
         while (snafuList.length > 0){
             const value = snafuList.pop();
 
@@ -33,6 +35,7 @@ export default class Balloons{
         return sum;
     }
 
+    // Converts decimal number into snafu string
     decimalToSnafu = (decimal) => {
         // Determine biggest square of 5 we need
         let biggestDivisor = 1;
@@ -40,14 +43,13 @@ export default class Balloons{
                 biggestDivisor *= 5;
         }
         biggestDivisor /= 5; // take it back a step
-        let placesArr = new Array(Math.floor(Math.pow(biggestDivisor, 1/5)) + 1); // extra place for 1's position
+        let placesArr = []; // extra place for 1's position
 
-        // 5th root of place determines index and vice versa
-        // Put values into 
+        // Put values into list in reverse order, stop after 1s position
         let currentDivisor = biggestDivisor;
         let remainder = decimal;
-        for (let index = Math.floor(Math.pow(biggestDivisor, 1/5)); index >= 0; index--){
-            placesArr[index] = Math.floor(remainder / currentDivisor);
+        while(currentDivisor >= 1){
+            placesArr.unshift(Math.floor(remainder / currentDivisor));
             remainder = remainder % currentDivisor;
             currentDivisor /= 5;
         }
@@ -82,30 +84,14 @@ export default class Balloons{
         return returnString;
     }
 
+    // Converts all snafu to decimal list
     convertSnafu = () => {
         this.snafu.forEach(num => {
             this.decimal.push(this.snafuToDecimal(num));
         })
     }
 
+    // Gets the sum of the decimal list
     getDecimalSum = () => this.decimal.reduce((acc, val) => acc + val, 0);
     
 }
-// 4890 / 3125 = 1
-// 4890 % 3125 = 1765
-// 1765 / 625 = 2
-// 1765 % 625 = 515
-// 515 / 125 = 4 ~~~ not allowed so how to fix?  -> must subtract 5, then add 1 to higher value so 4 -> '-', 2 -> 3, then repeat
-// 515 % 125 = 15
-// 15 / 25 = 0
-// 15 % 25 = 15
-// 15 / 5 = 3 ~~~ not allowed
-// 15 % 5 = 0
-
-// should be 2=-1=0   3125,625,125,25,5,1
-// +3125 * 2
-// -625 * 2
-// -125 * 1
-// +25 * 1
-// -5 * 2
-// 1 * 0

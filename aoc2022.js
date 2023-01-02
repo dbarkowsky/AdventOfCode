@@ -361,5 +361,5 @@ const day25 = async () => {
     console.log(bob.decimalToSnafu(bob.getDecimalSum()));
 }
 
-const USE_TEST_DATA = false;
+const USE_TEST_DATA = true;
 day25();
