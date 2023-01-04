@@ -270,9 +270,11 @@ const day16 = async () => {
     valves.rawInput = USE_TEST_DATA 
                         ? await DataManager.loadDataToList('./16/valvesTest.txt')
                         : await DataManager.loadDataToList('./16/valves.txt');
-    valves.parseInput();
-    console.log(valves.valves);
-    console.log(valves.findViaBFS(30));
+    valves.buildValves();
+    console.log(valves.findBestPath('AA', 30));
+
+    // Part 2
+    console.log(valves.workWithElephant('AA', 26));
 }
 
 // Day 17 
@@ -417,5 +419,5 @@ const day25 = async () => {
     console.log(bob.decimalToSnafu(bob.getDecimalSum()));
 }
 
-const USE_TEST_DATA = true;
+const USE_TEST_DATA = false;
 day16();
