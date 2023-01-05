@@ -44,6 +44,7 @@ export default class DiceMap{
             // If it's a number, move
             if (parseInt(instruction)){
                 move: for (let i = 0; i < instruction; i++){
+                    let initialFace = this.currentNode.face;
                     switch (this.currentDirection) {
                         case UP:
                             if (!this.currentNode.up.rock) this.currentNode = this.currentNode.up;
@@ -62,6 +63,10 @@ export default class DiceMap{
                             else break move;
                             break;
                     }
+                    // If we wrap the side of a cube... what direction should we be going now?
+                    if (initialFace != this.currentNode.face && this.cubeGrid){
+                        this.currentDirection = this.determineNewDirection(initialFace, this.currentNode.face, USE_TEST_DATA);
+                    }
                 }
             // Otherwise it's a turning instruction, so turn
             } else {
@@ -75,11 +80,81 @@ export default class DiceMap{
         })
     }
 
+    determineNewDirection = (initialFace, currentFace, USE_TEST_DATA) => {
+        if (USE_TEST_DATA){
+            switch(initialFace){
+                case 0:
+                    switch (currentFace) {
+                        case 1:
+                        case 2:
+                        case 3:
+                            return DOWN;
+                        case 5:
+                            return LEFT;
+                    }
+                case 1:
+                    switch (currentFace) {
+                        case 0:
+                            return DOWN;
+                        case 2:
+                            return RIGHT;
+                        case 4:
+                            return UP;
+                        case 5:
+                            return DOWN;
+                    }
+                case 2:
+                    switch (currentFace) {
+                        case 0:
+                            return RIGHT;
+                        case 1:
+                            return LEFT;
+                        case 3:
+                        case 4:
+                            return RIGHT;
+                    }
+                case 3:
+                    switch (currentFace) {
+                        case 0:
+                            return UP;
+                        case 2:
+                            return LEFT;
+                        case 4:
+                        case 5:
+                            return DOWN;
+                    }
+                case 4:
+                    switch (currentFace) {
+                        case 1:  
+                        case 2:  
+                        case 3:
+                            return UP;
+                        case 5:
+                            return RIGHT;
+                    }
+                case 5:
+                    switch (currentFace) {
+                        case 0:  
+                            return LEFT;
+                        case 1:  
+                            return RIGHT;
+                        case 3:
+                        case 4:
+                            return LEFT;
+                    }
+            }
+        } else {
+
+        }
+    }
+
     getLocationScore = () => {
         return (1000 * (this.currentNode.x + this.currentNode.xOffset + 1)) + (4 * (this.currentNode.y + this.currentNode.yOffset + 1)) + this.currentDirection;
     }
 
     createNodes = (USE_TEST_DATA, cube = false) => {
+        this.nodes = [];
+        this.cubeGrid = cube;
         // Trim last two lines of input
         const gridInput = [];
         for (let i = 0; i < this.input.length - 2; i++){
@@ -97,7 +172,6 @@ export default class DiceMap{
             if (lineLength < faceLength) faceLength = lineLength;
         })
         
-        console.log(faceLength);
         // For each line in face 0
         const face0 = [];
         let xOffset = 0; // Identical
@@ -184,56 +258,226 @@ export default class DiceMap{
                         node.left = this.nodes[node.face][node.x][node.y - 1];
                         node.right = this.nodes[node.face][node.x][node.y + 1];
                     } else {
-                        // Connect edge nodes according to flat or cube shape
-                        if (this.cubeGrid){
-
-                        } else {
-                            this.connectEdges(node, faceLength, USE_TEST_DATA);
-                        }
+                        // Connect edge nodes only if using a flat map
+                        if (!this.cubeGrid) this.connectEdges(node, faceLength, USE_TEST_DATA);
                     }
                 })
             })
         })
+        // If we folded this into a cube, determine edges
+        if (this.cubeGrid) this.zipCube(faceLength, USE_TEST_DATA);
+    }
+    
+    zipCube = (faceLength, USE_TEST_DATA) => {
+        const first = 0;
+        const last = faceLength - 1;
+
+        for (let i = 0; i < faceLength; i++){
+            const increasing = i;
+            const decreasing = last - i;
+
+            // Face 0 
+            let currentFace = 0;
+            let faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA)
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][first][decreasing];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][first][increasing];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][first][increasing];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][decreasing][last];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+
+            // Face 1
+            currentFace = 1;
+            faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA);
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][first][decreasing];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][first][increasing];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][last][decreasing];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][increasing][first];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+
+            // Face 2
+            currentFace = 2;
+            faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA);
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][increasing][first];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][decreasing][first];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][increasing][last];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][increasing][first];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+
+            // Face 3
+            currentFace = 3;
+            faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA);
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][last][increasing];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][first][increasing];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][increasing][last];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][first][decreasing];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+
+            // Face 4
+            currentFace = 4;
+            faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA);
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][last][increasing];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][last][decreasing];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][last][decreasing];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][increasing][first];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+
+            // Face 5
+            currentFace = 5;
+            faceRelations = this.getFaceRelations(currentFace, USE_TEST_DATA);
+            // Top
+            this.nodes[currentFace][first][increasing].up = this.nodes[faceRelations.up][decreasing][last];
+            this.connectOtherTopSides(this.nodes[currentFace][first][increasing], faceLength, increasing);
+            // Bottom
+            this.nodes[currentFace][last][increasing].down = this.nodes[faceRelations.down][decreasing][first];
+            this.connectOtherBottomSides(this.nodes[currentFace][last][increasing], faceLength, increasing);
+            // Left
+            this.nodes[currentFace][increasing][first].left = this.nodes[faceRelations.left][increasing][last];
+            this.connectOtherLeftSides(this.nodes[currentFace][increasing][first], faceLength, increasing);
+            // Right
+            this.nodes[currentFace][increasing][last].right = this.nodes[faceRelations.right][decreasing][last];
+            this.connectOtherRightSides(this.nodes[currentFace][increasing][last], faceLength, increasing);
+        }
+    }
+
+    connectOtherTopSides = (node, faceLength, y) => {
+        node.down = this.nodes[node.face][1][y]; // down always safe
+        // Only add lefts and rights if they aren't going over the edge
+        if (y != 0) node.left = this.nodes[node.face][0][y - 1];
+        if (y != faceLength - 1) node.right = this.nodes[node.face][0][y + 1];
+    }
+
+    connectOtherBottomSides = (node, faceLength, y) => {
+        node.up = this.nodes[node.face][faceLength - 2][y]; // up always safe
+        if (y != 0) node.left = this.nodes[node.face][faceLength - 1][y - 1];
+        if (y != faceLength -1) node.right = this.nodes[node.face][faceLength - 1][y + 1];
+    }
+
+    connectOtherLeftSides = (node, faceLength, x) => {
+        node.right = this.nodes[node.face][x][1];// right always safe
+        if (x != 0) node.up = this.nodes[node.face][x - 1][0];
+        if (x != faceLength - 1) node.down = this.nodes[node.face][x + 1][0];
+    }
+
+    connectOtherRightSides = (node, faceLength, x) => {
+        node.left = this.nodes[node.face][x][faceLength - 2];
+        if (x != 0) node.up = this.nodes[node.face][x - 1][faceLength - 1];
+        if (x != faceLength - 1) node.down = this.nodes[node.face][x + 1][faceLength - 1];
     }
 
     connectEdges = (node, faceLength, USE_TEST_DATA) => {
         let faceRelations = this.getFaceRelations(node.face, USE_TEST_DATA);
-        node.up = node.x == 0 ? this.nodes[faceRelations.up][faceLength - 1][node.y] : this.nodes[node.face][node.x - 1][node.y];
-        node.down = node.x == faceLength - 1 ? this.nodes[faceRelations.down][0][node.y] : this.nodes[node.face][node.x + 1][node.y];
-        node.left = node.y == 0 ? this.nodes[faceRelations.left][node.x][faceLength - 1] : this.nodes[node.face][node.x][node.y - 1];
-        node.right = node.y == faceLength - 1 ? this.nodes[faceRelations.right][node.x][0] : this.nodes[node.face][node.x][node.y + 1];
+        if (this.cubeGrid){
+            node.up = node.x == 0 ? this.nodes[faceRelations.up][faceLength - 1][node.y] : this.nodes[node.face][node.x - 1][node.y];
+            node.down = node.x == faceLength - 1 ? this.nodes[faceRelations.down][0][node.y] : this.nodes[node.face][node.x + 1][node.y];
+            node.left = node.y == 0 ? this.nodes[faceRelations.left][node.x][faceLength - 1] : this.nodes[node.face][node.x][node.y - 1];
+            node.right = node.y == faceLength - 1 ? this.nodes[faceRelations.right][node.x][0] : this.nodes[node.face][node.x][node.y + 1];
+        } else {
+            node.up = node.x == 0 ? this.nodes[faceRelations.up][faceLength - 1][node.y] : this.nodes[node.face][node.x - 1][node.y];
+            node.down = node.x == faceLength - 1 ? this.nodes[faceRelations.down][0][node.y] : this.nodes[node.face][node.x + 1][node.y];
+            node.left = node.y == 0 ? this.nodes[faceRelations.left][node.x][faceLength - 1] : this.nodes[node.face][node.x][node.y - 1];
+            node.right = node.y == faceLength - 1 ? this.nodes[faceRelations.right][node.x][0] : this.nodes[node.face][node.x][node.y + 1];
+        }
     }
 
     getFaceRelations = (face, USE_TEST_DATA) => {
         if (USE_TEST_DATA){
-            switch (face) {
-                case 0:
-                    return {up: 4, down: 3, left: 0, right: 0};
-                case 1:
-                    return {up: 1, down: 1, left: 3, right: 2};
-                case 2:
-                    return {up: 2, down: 2, left: 1, right: 3};
-                case 3:
-                    return {up: 0, down: 4, left: 2, right: 1};
-                case 4:
-                    return {up: 3, down: 0, left: 5, right: 5};
-                case 5:
-                    return {up: 5, down: 5, left: 4, right: 4};
+            if (this.cubeGrid){
+                switch (face) {
+                    case 0:
+                        return {up: 1, down: 3, left: 2, right: 5};
+                    case 1:
+                        return {up: 0, down: 4, left: 5, right: 2};
+                    case 2:
+                        return {up: 0, down: 4, left: 1, right: 3};
+                    case 3:
+                        return {up: 0, down: 4, left: 2, right: 5};
+                    case 4:
+                        return {up: 3, down: 1, left: 2, right: 5};
+                    case 5:
+                        return {up: 3, down: 1, left: 4, right: 0};
+                }
+            } else {
+                switch (face) {
+                    case 0:
+                        return {up: 4, down: 3, left: 0, right: 0};
+                    case 1:
+                        return {up: 1, down: 1, left: 3, right: 2};
+                    case 2:
+                        return {up: 2, down: 2, left: 1, right: 3};
+                    case 3:
+                        return {up: 0, down: 4, left: 2, right: 1};
+                    case 4:
+                        return {up: 3, down: 0, left: 5, right: 5};
+                    case 5:
+                        return {up: 5, down: 5, left: 4, right: 4};
+                }
             }
         } else {
-            switch (face) {
-                case 0:
-                    return {up: 4, down: 2, left: 1, right: 1};
-                case 1:
-                    return {up: 1, down: 1, left: 0, right: 0};
-                case 2:
-                    return {up: 0, down: 4, left: 2, right: 2};
-                case 3:
-                    return {up: 5, down: 5, left: 4, right: 4};
-                case 4:
-                    return {up: 2, down: 0, left: 3, right: 3};
-                case 5:
-                    return {up: 3, down: 3, left: 5, right: 5};
+            if (this.cubeGrid){
+                switch (face) {
+                    case 0:
+                        return {up: 5, down: 2, left: 3, right: 1};
+                    case 1:
+                        return {up: 5, down: 2, left: 0, right: 4};
+                    case 2:
+                        return {up: 0, down: 4, left: 3, right: 1};
+                    case 3:
+                        return {up: 2, down: 5, left: 0, right: 4};
+                    case 4:
+                        return {up: 2, down: 0, left: 3, right: 1};
+                    case 5:
+                        return {up: 3, down: 1, left: 0, right: 4};
+                }
+            } else {
+                switch (face) {
+                    case 0:
+                        return {up: 4, down: 2, left: 1, right: 1};
+                    case 1:
+                        return {up: 1, down: 1, left: 0, right: 0};
+                    case 2:
+                        return {up: 0, down: 4, left: 2, right: 2};
+                    case 3:
+                        return {up: 5, down: 5, left: 4, right: 4};
+                    case 4:
+                        return {up: 2, down: 0, left: 3, right: 3};
+                    case 5:
+                        return {up: 3, down: 3, left: 5, right: 5};
+                }
             }
         }
         
