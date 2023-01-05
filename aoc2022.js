@@ -359,7 +359,6 @@ const day21 = async () => {
     console.log(shoutingMonkeys.determineHumanNumber(-10000000000000000, 10000000000000000, false));
 }
 
-
 // Day 22
 const day22 = async () => {
     const monkeyMap = new DiceMap();
@@ -367,12 +366,12 @@ const day22 = async () => {
                         ? await DataManager.loadDataToList('./22/inputTest.txt')
                         : await DataManager.loadDataToList('./22/input.txt');
     monkeyMap.convertInputToInstructions();
-    monkeyMap.createNodes();
+    monkeyMap.createNodes(USE_TEST_DATA);
+    monkeyMap.followInstructions(USE_TEST_DATA);
+    console.log(monkeyMap.currentNode, monkeyMap.currentDirection);
+    console.log(monkeyMap.getLocationScore());
     console.log('instructions', monkeyMap.instructions);                       
-    console.log('nodes', monkeyMap.nodes);
 }
-
-
 
 // Day 23
 const day23 = async () => {
@@ -418,4 +417,4 @@ const day25 = async () => {
 }
 
 const USE_TEST_DATA = false;
-day17();
+day22();
