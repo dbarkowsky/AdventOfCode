@@ -285,7 +285,7 @@ const day17 = async () => {
                                 : await DataManager.loadData('./17/jetPattern.txt');
     rockTetris.parsePattern();
     rockTetris.dropManyRocks(2022);
-    rockTetris.printGrid();
+    //rockTetris.printGrid();
     console.log(rockTetris.highestX);
 
     // Part 2
@@ -294,10 +294,8 @@ const day17 = async () => {
                                     ? await DataManager.loadData('./17/jetPatternTest.txt')
                                     : await DataManager.loadData('./17/jetPattern.txt');
     rockTetrisPart2.parsePattern();
-    //let rocksToDrop = parseFloat(rockTetrisPart2.jetPattern.length * rockTetrisPart2.rocks.length);
     rockTetrisPart2.dropManyRocks(1000000000000);
-    //console.log(rockTetrisPart2.getHighestRockRow() * (1000000000000.0 / rocksToDrop));
-    console.log(rockTetris.highestX);
+    console.log(rockTetrisPart2.highestX);
 }
 
 // Day 18
@@ -420,4 +418,4 @@ const day25 = async () => {
 }
 
 const USE_TEST_DATA = false;
-day16();
+day17();
