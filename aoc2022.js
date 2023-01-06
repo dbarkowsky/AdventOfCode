@@ -205,7 +205,6 @@ const day12 = async () => {
                 ? await DataManager.loadDataToList('./12/mapTest.txt')
                 : await DataManager.loadDataToList('./12/map.txt');
     map.splitMapRows();
-    //console.log(map.map);
     map.findStartingNode();
     console.log(map.findPathLength(map.startingNode));
 
@@ -368,9 +367,7 @@ const day22 = async () => {
     monkeyMap.convertInputToInstructions();
     monkeyMap.createNodes(USE_TEST_DATA);
     monkeyMap.followInstructions(USE_TEST_DATA);
-    //console.log(monkeyMap.currentNode, monkeyMap.currentDirection);
     console.log(monkeyMap.getLocationScore());
-    //console.log('instructions', monkeyMap.instructions);                       
 
     // Part 2
     monkeyMap.createNodes(USE_TEST_DATA, true);
@@ -421,5 +418,6 @@ const day25 = async () => {
     console.log(bob.decimalToSnafu(bob.getDecimalSum()));
 }
 
-const USE_TEST_DATA = true;
-day22();
+const USE_TEST_DATA = false;
+
+// Call the function for a specific day below: e.g. day25();
