@@ -1,4 +1,5 @@
 ﻿using System;
+using Solutions;
 class AdventOfCode2023
 {
   public static void Main(string[] args)
@@ -17,14 +18,22 @@ class AdventOfCode2023
     }
 
     Console.WriteLine("Running day " + day);
-
-    switch (day)
+    try
     {
-      case 1:
-        break;
-      default:
-        Console.WriteLine("Day not yet created/solved.");
-        break;
+      switch (day)
+      {
+        case 1:
+          Day01.PartOne("test.txt");
+          break;
+        default:
+          Console.WriteLine("Day not yet created/solved.");
+          break;
+      }
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e.Message);
+      System.Environment.Exit(0);
     }
   }
 }
