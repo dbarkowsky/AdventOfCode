@@ -1,11 +1,14 @@
 class Day01 : Day {
+
   var listOfCommands: Array<Substring> = []
+
   override init(fileName: String){
     super.init(fileName: fileName)
     // Break up input
     listOfCommands = input.split(separator: "")
     listOfCommands.removeLast() // remove /r/n from end
   }
+
   func Part01() -> Int {
     var floor = 0
     for command in listOfCommands {
@@ -36,6 +39,6 @@ class Day01 : Day {
       }
     }
 
-    return 0
+    return -1
   }
 }
