@@ -4,5 +4,5 @@ typealias CurrentDay = Day01
 
 print("\n--- Input---")
 let day = CurrentDay(fileName: "Day01.txt")
-print(day.Part01())
-print(day.Part02())
+print("Part 1: \(day.Part01())")
+print("Part 2: \(day.Part02())")
