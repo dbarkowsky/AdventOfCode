@@ -1,29 +1,33 @@
-import CryptoKit
+// import CryptoKit
 
 class Day04 : Day {
 
   var secretKey: String = ""
+  var part1Answer: Int = 0
 
   override init(fileName: String){
     super.init(fileName: fileName)
     secretKey = String(input.split(separator: "\r\n").first!)
   }
 
-  func Part01() -> Int {
-    var appendedNumber: Int = 0
-    var key = "abcdef609043"//"\(secretKey)\(appendedNumber)"
-    // var hashResult: MD5Digest = key.utf8.md5
-    print(Insecure.MD5.hash(data: key))
+  func FindAppendedNumForPrefix(_ prefix: String, startAt: Int = 0) -> Int {
+    var appendedNumber: Int = startAt
+    var hashResult: String = MD5("\(secretKey)\(appendedNumber)")
 
-    // while (!(hashResult).hasPrefix("00000")) {
-      
-    //   hashResult = key.utf8.md5 //Insecure.MD5.hash(data: "\(secretKey)\(appendedNumber)")
-    // }
+    while (!(hashResult).hasPrefix(prefix)) {
+      appendedNumber += 1
+      hashResult = MD5("\(secretKey)\(appendedNumber)")
+    }
 
     return appendedNumber
   }
 
+  func Part01() -> Int {
+    part1Answer = FindAppendedNumForPrefix("00000") // Store this for later to save time...
+    return part1Answer
+  }
+
   func Part02() -> Int {
-    return -1
+    return FindAppendedNumForPrefix("000000", startAt: part1Answer)
   }
 }
