@@ -16,8 +16,9 @@ I'm trying to do each year in a different language.
 
 So far:
 
+- 2015: Swift (Ongoing)
 - 2022: JavaScript
-- 2023: C#
+- 2023: C# (Ongoing)
 
 Languages I would still like to try for other years:
 
@@ -27,7 +28,6 @@ Languages I would still like to try for other years:
 - C++
 - TypeScript
 - Perl
-- Swift
 - Java
 - Rust
 - Kotlin
