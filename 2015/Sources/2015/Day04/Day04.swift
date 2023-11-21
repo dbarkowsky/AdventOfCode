@@ -1,5 +1,3 @@
-// import CryptoKit
-
 class Day04 : Day {
 
   var secretKey: String = ""
