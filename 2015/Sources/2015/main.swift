@@ -1,12 +1,12 @@
 import Foundation
 
 // Thanks @HarshilShah for this idea.
-typealias CurrentDay = Day04
+typealias CurrentDay = Day05
 
 let startTime = Date()
 
 print("\n--- Input---")
-let day = CurrentDay(fileName: "Day04.txt")
+let day = CurrentDay(fileName: "Day05.txt")
 print("Part 1: \(day.Part01())")
 print("Part 2: \(day.Part02())")
 
