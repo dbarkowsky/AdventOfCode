@@ -1,7 +1,10 @@
 class Day07 : Day {
   // Breaking the commands into tuples for easier parsing later
   var commands: Array<String> = []
+  // A list of tuples with the command and register key
   var registerTuples: Array<(command: String, register: String)> = []
+  // Storing previously calculated values in this dict
+  // Without this, there are so many repeated calculations, it takes forever!
   var previouslyCalculatedValues: [String: Int] = [:]
 
   override init(fileName: String){
@@ -78,108 +81,63 @@ class Day07 : Day {
     return num >> distance
   }
 
+  // Checking if value already is a number or needs to be calculated
+  // Helps cut down repetitive code in GetValueOfRegister
+  func GetValueHelper(command: String, index: Int) -> UInt16 {
+    let params = command.split(separator: " ").map{ String($0) }
+    // If not nil, it's a number
+    if (Int(params[index]) != nil){
+      return IntToUInt16(Int(params[index])!)
+    } else {
+      // Then it must be a letter/register
+      return IntToUInt16(GetValueOfRegister(key: params[index]))
+    }
+  }
+
   // Gets the value of a specific register
+  // Recursively looks for register values needed
   func GetValueOfRegister(key: String) -> Int {
     // Has it already been calculated? Just use that.
     if (previouslyCalculatedValues[key] != nil){
       return previouslyCalculatedValues[key]!
     }
 
-    // Find that entry in the registerTuples
+    // Otherwise, find that entry in the registerTuples
     if let entry = registerTuples.first(where: { $0.register == key}){
       let commandType = ParseCommand(entry.command)
-      let defaultUInt16 = UInt16.min
-
       var result: Int = 0
       // Do the correct command
       switch (commandType){
         case CommandType.AND:
-          let params = entry.command.split(separator: " ").map{ String($0) }
-          var input1 = defaultUInt16
-          var input2 = defaultUInt16
-          // If not nil, it's a number
-          if (Int(params[0]) != nil){
-            input1 = IntToUInt16(Int(params[0])!)
-          } else {
-            // Then it must be a letter/register
-            input1 = IntToUInt16(GetValueOfRegister(key: params[0]))
-          }
-          // Same thing with input 2
-          if (Int(params[2]) != nil){
-            input2 = IntToUInt16(Int(params[2])!)
-          } else {
-            // Then it must be a letter/register
-            input2 = IntToUInt16(GetValueOfRegister(key: params[2]))
-          }
+          let input1 = GetValueHelper(command: entry.command, index: 0)
+          let input2 = GetValueHelper(command: entry.command, index: 2)
           result = UInt16ToInt(AND(input1, input2))
         case CommandType.OR:
-          let params = entry.command.split(separator: " ").map{ String($0) }
-          var input1 = defaultUInt16
-          var input2 = defaultUInt16
-          // If not nil, it's a number
-          if (Int(params[0]) != nil){
-            input1 = IntToUInt16(Int(params[0])!)
-          } else {
-            // Then it must be a letter/register
-            input1 = IntToUInt16(GetValueOfRegister(key: params[0]))
-          }
-          // Same thing with input 2
-          if (Int(params[2]) != nil){
-            input2 = IntToUInt16(Int(params[2])!)
-          } else {
-            // Then it must be a letter/register
-            input2 = IntToUInt16(GetValueOfRegister(key: params[2]))
-          }
+          let input1 = GetValueHelper(command: entry.command, index: 0)
+          let input2 = GetValueHelper(command: entry.command, index: 2)
           result = UInt16ToInt(OR(input1, input2))
         case CommandType.NOT:
-          let params = entry.command.split(separator: " ").map{ String($0) }
-          var input = defaultUInt16
-          // If not nil, it's a number
-          if (Int(params[1]) != nil){
-            input = IntToUInt16(Int(params[1])!)
-          } else {
-            // Then it must be a letter/register
-            input = IntToUInt16(GetValueOfRegister(key: params[1]))
-          }
+          let input = GetValueHelper(command: entry.command, index: 1)
           result = UInt16ToInt(NOT(input))
         case CommandType.LSHIFT:
           let params = entry.command.split(separator: " ").map{ String($0) }
-          var input = defaultUInt16
-          // If not nil, it's a number
-          if (Int(params[0]) != nil){
-            input = IntToUInt16(Int(params[0])!)
-          } else {
-            // Then it must be a letter/register
-            input = IntToUInt16(GetValueOfRegister(key: params[0]))
-          }
+          let input = GetValueHelper(command: entry.command, index: 0)
           let distance = Int(params[2])!
           result = UInt16ToInt(LSHIFT(input, distance))
         case CommandType.RSHIFT:
           let params = entry.command.split(separator: " ").map{ String($0) }
-          var input = defaultUInt16
-          // If not nil, it's a number
-          if (Int(params[0]) != nil){
-            input = IntToUInt16(Int(params[0])!)
-          } else {
-            // Then it must be a letter/register
-            input = IntToUInt16(GetValueOfRegister(key: params[0]))
-          }
+          let input = GetValueHelper(command: entry.command, index: 0)
           let distance = Int(params[2])!
           result = UInt16ToInt(RSHIFT(input, distance))
         case CommandType.NUMBER:
-          var input = defaultUInt16
-          if (Int(entry.command) != nil){
-            input = IntToUInt16(Int(entry.command)!)
-          } else {
-            input = IntToUInt16(GetValueOfRegister(key: entry.command))
-          }
+          let input = GetValueHelper(command: entry.command, index: 0)
           result = UInt16ToInt(input)
       }
       // Add the result to the previously calculated values and return it.
       previouslyCalculatedValues[key] = result
       return result
     } else {
-      // Should never reach this
+      // Should never reach this unless you ask for a non-existent key
       print("That key doesn't exist...")
       return -1
     }
