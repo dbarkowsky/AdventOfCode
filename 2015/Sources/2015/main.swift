@@ -6,7 +6,7 @@ typealias CurrentDay = Day07
 let startTime = Date()
 
 print("\n--- Input---")
-let day = CurrentDay(fileName: "Day07.test.txt")
+let day = CurrentDay(fileName: "Day07.txt")
 print("Part 1: \(day.Part01())")
 print("Part 2: \(day.Part02())")
 
