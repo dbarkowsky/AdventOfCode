@@ -2,12 +2,41 @@ import Foundation
 
 class Day08 : Day {
 
-  var listOfTuples: Array<(raw: String, actual: String)> = []
+  var listOfTuples: Array<(raw: Int, actual: Int)> = []
 
   override init(fileName: String){
     super.init(fileName: fileName)
     // Break up input
-    listOfTuples = input.split(separator: "\r\n").map{ (raw: #"\#(String($0))"#, actual: Sanitize(word: String($0))) }
+    listOfTuples = input.split(separator: "\r\n").map{ (raw: #"\#(String($0))"#.count, actual: SubtractLengths(String($0))) }
+    print(listOfTuples)
+  }
+
+  func SubtractLengths(_ word: String) -> Int{
+    var toSubtract = 2 // For outer quotes
+    print(word)
+    // For hex
+    var pattern = "[^\\\\]\\\\x[0-9a-f]{2}"
+    var regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+    let nsString = word as NSString
+    var matches = regex.matches(in: word, options: [], range: NSMakeRange(0, nsString.length))
+    print(matches.count)
+    toSubtract += (matches.count * 3) // Lose 3 characters for this conversion
+    // For \\
+    pattern = "\\\\\\\\"
+    regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+    matches = regex.matches(in: word, options: [], range: NSMakeRange(0, nsString.length))
+        print(matches.count)
+
+    toSubtract += matches.count
+    // For \"
+    pattern = "[^\\\\]\\\\\""
+    regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
+    matches = regex.matches(in: word, options: [], range: NSMakeRange(0, nsString.length))
+        print(matches.count)
+
+    toSubtract += matches.count
+
+    return word.count - toSubtract
   }
 
   func GetCodeLength(rawWord: String) -> Int {
@@ -84,8 +113,8 @@ class Day08 : Day {
     var codeCount = 0
     var memoryCount = 0
     for tuple in listOfTuples {
-      codeCount += GetCodeLength(rawWord: tuple.raw)
-      memoryCount += GetMemoryLength(word: tuple.actual)
+      codeCount += tuple.raw
+      memoryCount += tuple.actual
       // print("\(tuple.raw) \(GetCodeLength(rawWord: tuple.raw)) \(tuple.actual) \(GetMemoryLength(word: tuple.actual))")
     }
 
