@@ -3,6 +3,7 @@ import Foundation
 class Day08 : Day {
 
   var listOfTuples: Array<(raw: String, actual: String)> = []
+  var partTwoAnswer: Int = 0
 
   override init(fileName: String){
     super.init(fileName: fileName)
@@ -42,20 +43,54 @@ class Day08 : Day {
     return transformedWord
   }
 
+  // Did this one a little hacky-er
+  // We're just going to replace substrings if found.
+  // Don't care if the result is the actual word wanted, just needs the correct length
+  func Dirty(word: String) -> String {
+    var transformedWord = word
+    print(transformedWord)
+    while let r = transformedWord.range(of: "\"")
+    {
+        transformedWord.replaceSubrange(r, with: "77")
+    }
+
+    while let r = transformedWord.range(of: "\\")
+    {
+        transformedWord.replaceSubrange(r, with: "88")
+    }
+
+    // Append two random characters to spoof adding surrounding quotes
+    transformedWord.append("99")
+    return transformedWord
+  }
+
   func Part01() -> Int { 
     var rawCount: Int = 0
     var saniCount: Int = 0
+    
+    // Pre-work for part 2
+    var dirtyCount: Int = 0
+
+    // Loop through tuples
     for tuple in listOfTuples {
-      let sanitizedWord = Sanitize(word: tuple.actual);
+      let sanitizedWord = Sanitize(word: tuple.actual); // Get cleaned word
       // print("\(tuple.raw) \(GetCodeLength(rawWord: tuple.raw)) \(sanitizedWord) \(sanitizedWord.count)")
+      // Track lengths of words
       rawCount += tuple.raw.count
       saniCount += sanitizedWord.count
+
+      // Pre-work for part 2
+      let dirtyWord = Dirty(word: tuple.actual)
+      dirtyCount += dirtyWord.count
     }
+
+    // Store value for part 2
+    partTwoAnswer = dirtyCount - rawCount;
 
     return rawCount - saniCount
   }
 
   func Part02() -> Int {
-    return -1
+    return partTwoAnswer
   }
 }
