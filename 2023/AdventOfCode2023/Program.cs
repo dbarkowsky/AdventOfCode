@@ -23,7 +23,9 @@ class AdventOfCode2023
       switch (day)
       {
         case 1:
-          Day01.PartOne("test.txt");
+          Day01 day01 = new Day01("Day01.txt");
+          Console.WriteLine($"Part 1: {day01.PartOne()}");
+          Console.WriteLine($"Part 2: {day01.PartTwo()}");
           break;
         default:
           Console.WriteLine("Day not yet created/solved.");
