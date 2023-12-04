@@ -6,10 +6,10 @@ namespace Solutions
 {
   public class Day01
   {
-    List<String> strings = new List<String>();
+    List<string> strings = new List<string>();
 
 
-    public Day01(String fileName)
+    public Day01(string fileName)
     {
       strings = FileReader.AsStringArray(fileName).ToList();
     }
@@ -18,11 +18,11 @@ namespace Solutions
     {
       int partOneTotal = 0;
       string pattern = @"\d";
-      foreach (String line in strings)
+      foreach (string line in strings)
       {
-        var matches = Regex.Matches(line, pattern);
-        String firstNum = matches[0].Value;
-        String lastNum = matches[matches.Count - 1].Value;
+        MatchCollection matches = Regex.Matches(line, pattern);
+        string firstNum = matches[0].Value;
+        string lastNum = matches[matches.Count - 1].Value;
         int combinedValue = int.Parse($"{firstNum}{lastNum}");
         partOneTotal += combinedValue;
       }
@@ -33,17 +33,17 @@ namespace Solutions
     {
       int partTwoTotal = 0;
       string pattern = @"\d|one|two|three|four|five|six|seven|eight|nine";
-      foreach (String line in strings)
+      foreach (string line in strings)
       {
-        String firstNum = Regex.Match(line, pattern).Value;
-        String lastNum = Regex.Match(line, pattern, RegexOptions.RightToLeft).Value;
-        int combinedValue = int.Parse($"{StringToNumber(firstNum)}{StringToNumber(lastNum)}");
+        string firstNum = Regex.Match(line, pattern).Value;
+        string lastNum = Regex.Match(line, pattern, RegexOptions.RightToLeft).Value;
+        int combinedValue = int.Parse($"{stringToNumber(firstNum)}{stringToNumber(lastNum)}");
         partTwoTotal += combinedValue;
       }
       return partTwoTotal;
     }
 
-    private int StringToNumber(String number)
+    private int stringToNumber(string number)
     {
       switch (number)
       {
