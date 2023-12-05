@@ -28,8 +28,10 @@ namespace Solutions
       // Get all other three-number lines and add to list of mappings
       string pattern = @"\d+ \d+ \d+";
       List<ulong[]> currentMapGroup = new List<ulong[]>();
+      int lineNumber = 1;
       foreach (string line in lines)
       {
+        // Console.WriteLine($"Line: {line}");
         if (Regex.IsMatch(line, pattern))
         {
           // Add [] to currentGroup list
@@ -37,12 +39,13 @@ namespace Solutions
           ulong[] thisGroup = new ulong[] { ulong.Parse(nums[0]), ulong.Parse(nums[1]), ulong.Parse(nums[2]) };
           currentMapGroup.Add(thisGroup);
         }
-        else if (line == "")
+        if (line == "" || lineNumber == lines.Count)
         {
           // Add currentGroup to mappings, reset currentGroup
           mappings.Add(currentMapGroup);
           currentMapGroup = new List<ulong[]>();
         }
+        lineNumber++;
       }
     }
 
@@ -82,6 +85,7 @@ namespace Solutions
         foreach (string key in dictionary.Keys)
         {
           dictionary[key]["touched"] = 0;
+          // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
         }
       }
 
@@ -98,7 +102,7 @@ namespace Solutions
       UInt64 min = UInt64.MaxValue;
       foreach (string key in dictionary.Keys)
       {
-        Console.WriteLine(dictionary[key]["value"]);
+        // Console.WriteLine(dictionary[key]["value"]);
 
         if (dictionary[key]["value"] < min)
         {
