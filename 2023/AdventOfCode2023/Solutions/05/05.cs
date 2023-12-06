@@ -7,22 +7,15 @@ namespace Solutions
   public class Day05
   {
     List<string> lines = new List<string>();
-    Dictionary<string, Dictionary<string, ulong>> dictionary = new Dictionary<string, Dictionary<string, ulong>>();
+    List<string> seedStrings;
     List<List<ulong[]>> mappings = new List<List<ulong[]>>();
 
     public Day05(string fileName)
     {
       lines = FileReader.AsStringArray(fileName).ToList();
-      // Get seeds from line 1, insert into tuples
-      string[] seedStrings = lines[0].Split(": ")[1].Split(" ");
-      foreach (string seedString in seedStrings)
-      {
-        ulong seedNum = ulong.Parse(seedString);
-        dictionary.Add(seedString, new Dictionary<string, ulong>{
-          {"value", seedNum},
-          {"touched", 0}
-        });
-      }
+      // Get seeds from line 1, insert into List
+      seedStrings = new List<string>(lines[0].Split(": ")[1].Split(" "));
+
       // Remove first line
       lines.RemoveAt(0);
       // Get all other three-number lines and add to list of mappings
@@ -49,7 +42,54 @@ namespace Solutions
       }
     }
 
-    public UInt64 PartOne()
+    public ulong PartOne()
+    {
+      Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
+      foreach (string seedString in seedStrings)
+      {
+        ulong seedNum = ulong.Parse(seedString);
+        seedMapper.Add(seedString, new Dictionary<string, ulong>{
+          {"value", seedNum},
+          {"touched", 0}
+        });
+      }
+      ProcessMaps(seedMapper);
+
+      return GetMinValue(seedMapper);
+    }
+
+    public ulong PartTwo()
+    {
+      List<ulong> smallestLocations = new List<ulong>();
+      for (int i = 0; i < seedStrings.Count; i += 2)
+      {
+        Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
+        ulong startingSeed = ulong.Parse(seedStrings[i]);
+        ulong range = ulong.Parse(seedStrings[i + 1]);
+        // Console.WriteLine($"{startingSeed} - {range}");
+
+        for (ulong j = startingSeed; j < startingSeed + range; j++)
+        {
+          seedMapper.Add($"{j}", new Dictionary<string, ulong>{
+            {"value", j},
+            {"touched", 0}
+          });
+        }
+        ProcessMaps(seedMapper);
+        // foreach (string key in seedMapper.Keys)
+        // {
+        //   Console.WriteLine($"{key}: {seedMapper[key]["value"]}");
+        // }
+        smallestLocations.Add(GetMinValue(seedMapper));
+      }
+      // foreach (ulong location in smallestLocations)
+      // {
+      //   Console.WriteLine(location);
+      // }
+      return smallestLocations.Min();
+    }
+
+    private void ProcessMaps(Dictionary<string, Dictionary<string, ulong>> seeds)
     {
       // Go through each group of mapping numbers
       foreach (List<ulong[]> map in mappings)
@@ -64,14 +104,14 @@ namespace Solutions
           // Console.WriteLine($"Values: {values[0]} {values[1]} {values[2]}");
 
           // For each of the seeds
-          foreach (string key in dictionary.Keys)
+          foreach (string key in seeds.Keys)
           {
             // Is the seed in the range of source + range? && hasn't already been touched this map
-            if (dictionary[key]["value"] >= sourceStart && dictionary[key]["value"] < sourceStart + range && dictionary[key]["touched"] == 0)
+            if (seeds[key]["value"] >= sourceStart && seeds[key]["value"] < sourceStart + range && seeds[key]["touched"] == 0)
             {
               // Then the number should change by the difference
-              dictionary[key]["value"] += difference;
-              dictionary[key]["touched"] = 1;
+              seeds[key]["value"] += difference;
+              seeds[key]["touched"] = 1;
             }
             else
             {
@@ -82,31 +122,24 @@ namespace Solutions
         }
 
         // Reset all keys to "untouched"
-        foreach (string key in dictionary.Keys)
+        foreach (string key in seeds.Keys)
         {
-          dictionary[key]["touched"] = 0;
+          seeds[key]["touched"] = 0;
           // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
         }
       }
-
-      return GetMinValue();
     }
 
-    public UInt64 PartTwo()
+    private ulong GetMinValue(Dictionary<string, Dictionary<string, ulong>> seeds)
     {
-      return 0;
-    }
-
-    private UInt64 GetMinValue()
-    {
-      UInt64 min = UInt64.MaxValue;
-      foreach (string key in dictionary.Keys)
+      ulong min = ulong.MaxValue;
+      foreach (string key in seeds.Keys)
       {
         // Console.WriteLine(dictionary[key]["value"]);
 
-        if (dictionary[key]["value"] < min)
+        if (seeds[key]["value"] < min)
         {
-          min = dictionary[key]["value"];
+          min = seeds[key]["value"];
         }
       }
       return min;
