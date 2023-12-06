@@ -66,7 +66,7 @@ namespace Solutions
         Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
         ulong startingSeed = ulong.Parse(seedStrings[i]);
         ulong range = ulong.Parse(seedStrings[i + 1]);
-        // Console.WriteLine($"{startingSeed} - {range}");
+        Console.WriteLine($"{startingSeed} - {range}");
 
         for (ulong j = startingSeed; j < startingSeed + range; j++)
         {
@@ -87,6 +87,102 @@ namespace Solutions
       //   Console.WriteLine(location);
       // }
       return smallestLocations.Min();
+    }
+
+    public ulong Part2v2()
+    {
+      object threadLock = new();
+      ulong smallestLocation = ulong.MaxValue;
+
+      Parallel.ForEach(seedStrings.Chunk(2), seedAndRange =>
+      {
+        ulong tempSmallestLocation = ulong.MaxValue;
+        ulong startingSeed = ulong.Parse(seedAndRange[0]);
+        ulong seedRange = ulong.Parse(seedAndRange[1]);
+        Console.WriteLine($"{startingSeed} - {seedRange}");
+        for (ulong currentSeed = startingSeed; currentSeed < startingSeed + seedRange; currentSeed++)
+        {
+          ulong seed = currentSeed;
+          foreach (List<ulong[]> map in mappings)
+          {
+            bool touched = false;
+            foreach (ulong[] values in map)
+            {
+              ulong destinationStart = values[0];
+              ulong sourceStart = values[1];
+              ulong range = values[2];
+              // What's the difference between the source and destination?
+              ulong difference = destinationStart - sourceStart;
+              // Console.WriteLine($"Values: {values[0]} {values[1]} {values[2]}");
+
+              // Is the seed in the range of source + range? && hasn't already been touched this map
+              if (seed >= sourceStart && seed < sourceStart + range && !touched)
+              {
+                // Then the number should change by the difference
+                seed += difference;
+                touched = true;
+              }
+              else
+              {
+                // Not in range, just leave the number intact
+              }
+              // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
+            }
+
+            // Reset all keys to "untouched"
+            touched = false;
+          }
+        }
+        lock (threadLock)
+        {
+          if (tempSmallestLocation < smallestLocation)
+          {
+            smallestLocation = tempSmallestLocation;
+          }
+        }
+      });
+
+      return smallestLocation;
+    }
+
+    public ulong Part2v3()
+    {
+      ulong minimumFertilizer = ulong.MaxValue;
+      ulong minimumSeeds = ulong.MaxValue;
+      // Convert seed strings to numbers
+      ulong[] seedData = seedStrings.Select(ulong.Parse).ToArray();
+      ulong fertilizerAmount = 1;
+      List<List<ulong>> mappedNumberGrid = new List<List<ulong>>();
+      foreach (List<ulong[]> map in mappings)
+      {
+        foreach (ulong[] row in map)
+        {
+          mappedNumberGrid.Add(new List<ulong>(row));
+        }
+      }
+
+      for (int i = 0; i < seedData.Length; i += 2)
+      {
+        for (ulong j = 0; j < seedData[i + 1]; j += fertilizerAmount)
+        {
+          Tuple<ulong, ulong> currentResult = mappings.Aggregate(new Tuple<ulong, ulong>(seedData[i], minimumSeeds), (accTuple, mapData) =>
+          {
+            ulong currentPosition = accTuple.Item1;
+            ulong minimumFertilizerAmount = accTuple.Item2;
+            ulong[] foundRange = mapData.Find(range => currentPosition >= range[1] && currentPosition < range[1] + range[2]) ?? null;
+            if (foundRange != null)
+            {
+              return new Tuple<ulong, ulong>(foundRange[0] + currentPosition - foundRange[1], Math.Min(foundRange[2] + foundRange[1] - currentPosition, minimumFertilizerAmount));
+            }
+            else
+            {
+              return new Tuple<ulong, ulong>(currentPosition, minimumFertilizerAmount);
+            }
+          });
+          minimumFertilizer = Math.Min(currentResult.Item1, minimumFertilizer);
+        }
+      }
+      return minimumFertilizer;
     }
 
     private void ProcessMaps(Dictionary<string, Dictionary<string, ulong>> seeds)
