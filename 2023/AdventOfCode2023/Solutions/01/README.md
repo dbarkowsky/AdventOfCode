@@ -48,3 +48,9 @@ In this example, the calibration values are `29, 83, 13, 24, 42, 14, and 76`. Ad
 What is the sum of all of the calibration values?
 
 Your puzzle answer was `54706`.
+
+## Personal Notes
+
+Part 2 was really bad for me. I didn't realize that regex with groups was not considering the overlap situations like `sevenine`, and because it reads from left to right, it would always catch the first number but ignore the second.
+
+Thankfully C# has a way to read from right to left, so I could always get the last number. Just took a while to realize this.
