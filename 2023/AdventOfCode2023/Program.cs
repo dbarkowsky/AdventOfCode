@@ -45,7 +45,7 @@ class AdventOfCode2023
         case 5:
           Day05 day05 = new Day05("Day05.txt");
           Console.WriteLine($"Part 1: {day05.PartOne()}");
-          Console.WriteLine($"Part 2: {day05.Part2v3()}");
+          Console.WriteLine($"Part 2: {day05.PartTwo()}");
           break;
         case 6:
           Day06 day06 = new Day06("Day06.txt");

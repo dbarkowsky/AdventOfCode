@@ -61,27 +61,55 @@ namespace Solutions
     public ulong PartTwo()
     {
       List<ulong> smallestLocations = new List<ulong>();
-      for (int i = 0; i < seedStrings.Count; i += 2)
+      Parallel.For(0, seedStrings.Count, i =>
       {
-        Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
-        ulong startingSeed = ulong.Parse(seedStrings[i]);
-        ulong range = ulong.Parse(seedStrings[i + 1]);
-        Console.WriteLine($"{startingSeed} - {range}");
-
-        for (ulong j = startingSeed; j < startingSeed + range; j++)
+        Console.WriteLine($"thread: {i} start");
+        if (i % 2 == 0)
         {
-          seedMapper.Add($"{j}", new Dictionary<string, ulong>{
+          Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
+          ulong startingSeed = ulong.Parse(seedStrings[i]);
+          ulong range = ulong.Parse(seedStrings[i + 1]);
+          // Console.WriteLine($"{startingSeed} - {range}");
+
+          for (ulong j = startingSeed; j < startingSeed + range; j++)
+          {
+            Console.WriteLine(j);
+            seedMapper.Add($"{j}", new Dictionary<string, ulong>{
             {"value", j},
             {"touched", 0}
           });
+          }
+          Console.WriteLine($"thread: {i} setup complete");
+
+          ProcessMaps(seedMapper);
+
+          Console.WriteLine($"thread: {i} process complete");
+
+          smallestLocations.Add(GetMinValue(seedMapper));
         }
-        ProcessMaps(seedMapper);
-        // foreach (string key in seedMapper.Keys)
-        // {
-        //   Console.WriteLine($"{key}: {seedMapper[key]["value"]}");
-        // }
-        smallestLocations.Add(GetMinValue(seedMapper));
-      }
+        Console.WriteLine($"thread: {i} end");
+      });
+      // for (int i = 0; i < seedStrings.Count; i += 2)
+      // {
+      //   Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
+      //   ulong startingSeed = ulong.Parse(seedStrings[i]);
+      //   ulong range = ulong.Parse(seedStrings[i + 1]);
+      //   // Console.WriteLine($"{startingSeed} - {range}");
+
+      //   for (ulong j = startingSeed; j < startingSeed + range; j++)
+      //   {
+      //     seedMapper.Add($"{j}", new Dictionary<string, ulong>{
+      //       {"value", j},
+      //       {"touched", 0}
+      //     });
+      //   }
+      //   ProcessMaps(seedMapper);
+      //   // foreach (string key in seedMapper.Keys)
+      //   // {
+      //   //   Console.WriteLine($"{key}: {seedMapper[key]["value"]}");
+      //   // }
+      //   smallestLocations.Add(GetMinValue(seedMapper));
+      // }
       // foreach (ulong location in smallestLocations)
       // {
       //   Console.WriteLine(location);
@@ -200,7 +228,7 @@ namespace Solutions
           // Console.WriteLine($"Values: {values[0]} {values[1]} {values[2]}");
 
           // For each of the seeds
-          foreach (string key in seeds.Keys)
+          Parallel.ForEach(seeds.Keys, key =>
           {
             // Is the seed in the range of source + range? && hasn't already been touched this map
             if (seeds[key]["value"] >= sourceStart && seeds[key]["value"] < sourceStart + range && seeds[key]["touched"] == 0)
@@ -214,7 +242,7 @@ namespace Solutions
               // Not in range, just leave the number intact
             }
             // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
-          }
+          });
         }
 
         // Reset all keys to "untouched"
