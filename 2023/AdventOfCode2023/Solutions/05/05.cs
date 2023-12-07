@@ -73,7 +73,6 @@ namespace Solutions
 
           for (ulong j = startingSeed; j < startingSeed + range; j++)
           {
-            Console.WriteLine(j);
             seedMapper.Add($"{j}", new Dictionary<string, ulong>{
             {"value", j},
             {"touched", 0}
@@ -89,31 +88,6 @@ namespace Solutions
         }
         Console.WriteLine($"thread: {i} end");
       });
-      // for (int i = 0; i < seedStrings.Count; i += 2)
-      // {
-      //   Dictionary<string, Dictionary<string, ulong>> seedMapper = new Dictionary<string, Dictionary<string, ulong>>();
-      //   ulong startingSeed = ulong.Parse(seedStrings[i]);
-      //   ulong range = ulong.Parse(seedStrings[i + 1]);
-      //   // Console.WriteLine($"{startingSeed} - {range}");
-
-      //   for (ulong j = startingSeed; j < startingSeed + range; j++)
-      //   {
-      //     seedMapper.Add($"{j}", new Dictionary<string, ulong>{
-      //       {"value", j},
-      //       {"touched", 0}
-      //     });
-      //   }
-      //   ProcessMaps(seedMapper);
-      //   // foreach (string key in seedMapper.Keys)
-      //   // {
-      //   //   Console.WriteLine($"{key}: {seedMapper[key]["value"]}");
-      //   // }
-      //   smallestLocations.Add(GetMinValue(seedMapper));
-      // }
-      // foreach (ulong location in smallestLocations)
-      // {
-      //   Console.WriteLine(location);
-      // }
       return smallestLocations.Min();
     }
 
@@ -179,31 +153,39 @@ namespace Solutions
       ulong minimumSeeds = ulong.MaxValue;
       // Convert seed strings to numbers
       ulong[] seedData = seedStrings.Select(ulong.Parse).ToArray();
-      ulong fertilizerAmount = 1;
-      List<List<ulong>> mappedNumberGrid = new List<List<ulong>>();
-      foreach (List<ulong[]> map in mappings)
-      {
-        foreach (ulong[] row in map)
-        {
-          mappedNumberGrid.Add(new List<ulong>(row));
-        }
-      }
+      // List<List<ulong[]>> mappedNumberGrid = new List<List<ulong[]>>();
+      // int k = 0;
+      // foreach (List<ulong[]> map in mappings)
+      // {
+      //   foreach (ulong[] row in map)
+      //   {
+      //     mappedNumberGrid.Add(new List<ulong>(row));
+      //   }
+      //   // Console.WriteLine($"{mappedNumberGrid[k][0]}, {mappedNumberGrid[k][1]}, {mappedNumberGrid[k][2]}");
+      //   k++;
+      // }
+
 
       for (int i = 0; i < seedData.Length; i += 2)
       {
-        for (ulong j = 0; j < seedData[i + 1]; j += fertilizerAmount)
+        for (ulong j = 0; j < seedData[i + 1]; j++)
         {
           Tuple<ulong, ulong> currentResult = mappings.Aggregate(new Tuple<ulong, ulong>(seedData[i], minimumSeeds), (accTuple, mapData) =>
           {
             ulong currentPosition = accTuple.Item1;
             ulong minimumFertilizerAmount = accTuple.Item2;
-            ulong[] foundRange = mapData.Find(range => currentPosition >= range[1] && currentPosition < range[1] + range[2]) ?? null;
+            ulong[] foundRange = mapData.Find(range => currentPosition >= range[1] && currentPosition < range[1] + range[2]);
             if (foundRange != null)
             {
               return new Tuple<ulong, ulong>(foundRange[0] + currentPosition - foundRange[1], Math.Min(foundRange[2] + foundRange[1] - currentPosition, minimumFertilizerAmount));
             }
             else
             {
+              ulong[] nextRange = mapData.Find(range => currentPosition < range[i]);
+              if (nextRange != null)
+              {
+                return new Tuple<ulong, ulong>(currentPosition, Math.Min(nextRange[1] - currentPosition, minimumFertilizerAmount));
+              }
               return new Tuple<ulong, ulong>(currentPosition, minimumFertilizerAmount);
             }
           });
@@ -225,7 +207,6 @@ namespace Solutions
           ulong range = values[2];
           // What's the difference between the source and destination?
           ulong difference = destinationStart - sourceStart;
-          // Console.WriteLine($"Values: {values[0]} {values[1]} {values[2]}");
 
           // For each of the seeds
           Parallel.ForEach(seeds.Keys, key =>
@@ -241,7 +222,6 @@ namespace Solutions
             {
               // Not in range, just leave the number intact
             }
-            // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
           });
         }
 
@@ -249,7 +229,6 @@ namespace Solutions
         foreach (string key in seeds.Keys)
         {
           seeds[key]["touched"] = 0;
-          // Console.WriteLine($"Current: {key}, {dictionary[key]["value"]}");
         }
       }
     }
@@ -259,8 +238,6 @@ namespace Solutions
       ulong min = ulong.MaxValue;
       foreach (string key in seeds.Keys)
       {
-        // Console.WriteLine(dictionary[key]["value"]);
-
         if (seeds[key]["value"] < min)
         {
           min = seeds[key]["value"];
