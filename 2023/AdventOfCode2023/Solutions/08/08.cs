@@ -25,6 +25,7 @@ namespace Solutions
       }
     }
 
+    // How many steps to get to ZZZ
     public int PartOne()
     {
       int stepCount = 0;
@@ -42,26 +43,26 @@ namespace Solutions
       }
     }
 
-    public long PartTwo()
+    // All the nodes need to end in Z to finish
+    // Numbers too big to finish with brute force
+    // Would never have guessed LCM if I hadn't read about it
+    public ulong PartTwo()
     {
-      int stepCount = 0;
+      ulong stepCount = 0;
       int index = 0;
       List<string> currentNodes = nodes.Keys.Where(key => key.Last() == 'A').ToList();
-      List<int> countsAtZ = new List<int>();
+      List<ulong> countsAtZ = new List<ulong>();
       while (true)
       {
         if (currentNodes.Count == 0)
         {
-          foreach (int value in countsAtZ)
-          {
-            Console.WriteLine(value);
-          }
-          return lcm_of_array_elements(countsAtZ);
+          return LCM(countsAtZ);
         }
         Parallel.For(0, currentNodes.Count, i =>
         {
           currentNodes[i] = FollowNode(currentNodes[i], directions[index]);
         });
+        stepCount++;
 
         for (int i = currentNodes.Count - 1; i >= 0; i--)
         {
@@ -72,11 +73,11 @@ namespace Solutions
           }
         }
 
-        stepCount++;
         index = (index + 1) % directions.Count;
       }
     }
 
+    // Gets the next node based on directions
     private string FollowNode(string key, char direction)
     {
       (string left, string right) = nodes[key];
@@ -90,83 +91,17 @@ namespace Solutions
       }
     }
 
-    private int GetGCD(int n1, int n2)
+    /** Some generic LCM code **/
+    private ulong LCM(List<ulong> numbers)
     {
-      if (n2 == 0)
-      {
-        return n1;
-      }
-      else
-      {
-        return GetGCD(n2, n1 % n2);
-      }
+      return numbers.Aggregate((x, y) => x * y / GCD(x, y));
     }
 
-    private int GetLCM(List<int> numbers)
+    private ulong GCD(ulong a, ulong b)
     {
-      return numbers.Aggregate((S, val) => S * val / GetGCD(S, val));
-    }
-
-    public long lcm_of_array_elements(List<int> element_array)
-    {
-      long lcm_of_array_elements = 1;
-      int divisor = 2;
-
-      while (true)
-      {
-
-        int counter = 0;
-        bool divisible = false;
-        for (int i = 0; i < element_array.Count; i++)
-        {
-
-          // lcm_of_array_elements (n1, n2, ... 0) = 0.
-          // For negative number we convert into
-          // positive and calculate lcm_of_array_elements.
-          if (element_array[i] == 0)
-          {
-            return 0;
-          }
-          else if (element_array[i] < 0)
-          {
-            element_array[i] = element_array[i] * (-1);
-          }
-          if (element_array[i] == 1)
-          {
-            counter++;
-          }
-
-          // Divide element_array by devisor if complete
-          // division i.e. without remainder then replace
-          // number with quotient; used for find next factor
-          if (element_array[i] % divisor == 0)
-          {
-            divisible = true;
-            element_array[i] = element_array[i] / divisor;
-          }
-        }
-
-        // If divisor able to completely divide any number
-        // from array multiply with lcm_of_array_elements
-        // and store into lcm_of_array_elements and continue
-        // to same divisor for next factor finding.
-        // else increment divisor
-        if (divisible)
-        {
-          lcm_of_array_elements = lcm_of_array_elements * divisor;
-        }
-        else
-        {
-          divisor++;
-        }
-
-        // Check if all element_array is 1 indicate 
-        // we found all factors and terminate while loop.
-        if (counter == element_array.Count)
-        {
-          return lcm_of_array_elements;
-        }
-      }
+      if (b == 0)
+        return a;
+      return GCD(b, a % b);
     }
   }
 }
