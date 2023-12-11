@@ -6,7 +6,6 @@ namespace Solutions
   {
     List<string> strings = new List<string>();
     List<List<char>> grid = new();
-    (int x, int y) start = (x: 0, y: 0);
     char startPipe = 'S';
 
     enum Direction
@@ -25,62 +24,205 @@ namespace Solutions
       {
         grid.Add(row.ToList());
       }
-      // Where is start?
-      start = FindStart();
-      // What kind of pipe is start?
-      startPipe = GetPipeFromSurroundings(start.x, start.y);
     }
 
     public int PartOne()
     {
+      // Where is start?
+      (int x, int y) start = FindStart(grid);
+      // Follow that pipe
+      FollowPipe(grid, (start.x, start.y), out int steps);
+      return steps;
+    }
+
+    public int PartTwo()
+    {
+      // Make a bigger, expanded grid so flood can fill between pipes
+      List<List<char>> expandedGrid = new();
+      // First, add a row of just ground
+      List<char> groundRow = new(Enumerable.Repeat('z', (grid.First().Count * 2) + 1));
+      expandedGrid.Add(groundRow);
+      foreach ((List<char> row, int x) in grid.WithIndex())
+      {
+        // Add a piece of ground at start
+        List<char> expandedRow = new();
+
+        // Add row, extending horizontal pipes
+        foreach ((char pipe, int y) in row.WithIndex())
+        {
+          // Can we add a horizontal pipe?
+          if (y > 0 && y < row.Count - 1 && (GetDirectionsFromPipe(grid[x][y - 1]).Contains(Direction.EAST) || grid[x][y - 1] == 'S') && (GetDirectionsFromPipe(grid[x][y]).Contains(Direction.WEST) || grid[x][y] == 'S'))
+          {
+            expandedRow.Add('-');
+          }
+          // Else, add an inserted value
+          else
+          {
+            expandedRow.Add('z');
+          }
+          // Then add the real value
+          expandedRow.Add(pipe);
+        }
+        // Add extra space on right side
+        expandedRow.Add('z');
+        // Add to grid
+        expandedGrid.Add(expandedRow);
+
+        // Add row extending vertical pipes
+        List<char> verticalRow = new();
+        // Can we add a vertical pipe?
+        foreach ((char pipe, int y) in expandedRow.WithIndex())
+        {
+          if (GetDirectionsFromPipe(expandedGrid.Last()[y]).Contains(Direction.SOUTH) || expandedGrid.Last()[y] == 'S')
+          {
+            verticalRow.Add('|');
+          }
+          else
+          {
+            verticalRow.Add('z');
+          }
+        }
+
+        // Add to grid
+        expandedGrid.Add(verticalRow);
+      }
+      // Add row of ground at the bottom too
+      expandedGrid.Add(groundRow);
+
+      // Find the start of the expanded grid
+      (int x, int y) start = FindStart(expandedGrid);
+      // Console.WriteLine(start);
+      foreach (List<char> row in expandedGrid)
+      {
+        string stringRow = row.Aggregate("", (acc, val) => acc + val);
+        Console.WriteLine(stringRow); // prints grid
+      }
+      // Follow this bigger pipe
+      HashSet<(int x, int y)> pipeLocations = FollowPipe(expandedGrid, start, out int steps);
+      // Console.WriteLine(steps);
+
+      // Flood the map from the outside corner. Only locations part of pipeLocations block the flood.
+      // Add flooded locations to this Set:
+      HashSet<(int x, int y)> floodedLocations = new();
+      Flood(floodedLocations, (0, 0), expandedGrid, pipeLocations);
+
+      // Go through all locations. If not part of the pipe loop, not flooded, and not added ('z'), then count it as within the pipe loop
+      int locationsWithinPipe = GetInsidePipeCount(expandedGrid, floodedLocations, pipeLocations);
+      return locationsWithinPipe;
+    }
+
+    private int GetInsidePipeCount(List<List<char>> grid, HashSet<(int x, int y)> floodedLocations, HashSet<(int x, int y)> pipeLocations)
+    {
+      int count = 0;
+      foreach ((List<char> row, int x) in grid.WithIndex())
+      {
+        foreach ((char pipe, int y) in row.WithIndex())
+        {
+          if (pipe != 'z' && !floodedLocations.Contains((x, y)) && !pipeLocations.Contains((x, y)))
+          {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    private void Flood(HashSet<(int x, int y)> floodedLocations, (int x, int y) start, List<List<char>> grid, HashSet<(int x, int y)> pipeLocations)
+    {
+      Queue<(int x, int y)> floodQueue = new();
+      floodQueue.Enqueue(start);
+      floodedLocations.Add((start.x, start.y));
+
+      while (floodQueue.Count > 0)
+      {
+        // Console.WriteLine(floodQueue.Count);
+        (int x, int y) current = floodQueue.Dequeue();
+
+        if (current.x > 0 && !floodedLocations.Contains((current.x - 1, current.y)) && !pipeLocations.Contains((current.x - 1, current.y)))
+        {
+          floodQueue.Enqueue((current.x - 1, current.y));
+          floodedLocations.Add((current.x - 1, current.y));
+        }
+
+        if (current.x < grid.Count - 1 && !floodedLocations.Contains((current.x + 1, current.y)) && !pipeLocations.Contains((current.x + 1, current.y)))
+        {
+          floodQueue.Enqueue((current.x + 1, current.y));
+          floodedLocations.Add((current.x + 1, current.y));
+        }
+
+        if (current.y > 0 && !floodedLocations.Contains((current.x, current.y - 1)) && !pipeLocations.Contains((current.x, current.y - 1)))
+        {
+          floodQueue.Enqueue((current.x, current.y - 1));
+          floodedLocations.Add((current.x, current.y - 1));
+        }
+
+        if (current.y < grid.First().Count - 1 && !floodedLocations.Contains((current.x, current.y + 1)) && !pipeLocations.Contains((current.x, current.y + 1)))
+        {
+          floodQueue.Enqueue((current.x, current.y + 1));
+          floodedLocations.Add((current.x, current.y + 1));
+        }
+      }
+    }
+
+    private HashSet<(int x, int y)> FollowPipe(List<List<char>> grid, (int x, int y) start, out int steps)
+    {
+      // Set to track pipe locations
+      HashSet<(int x, int y)> pipeLocations = new() { (start.x, start.y) };
+      // What kind of pipe is start?
+      startPipe = GetPipeFromSurroundings(start.x, start.y, grid);
+      // Console.WriteLine(startPipe);
       Direction[] directions = GetDirectionsFromPipe(startPipe);
       // Move the first steps
       (int x, int y) currentPipe1 = GetNextLocation(start.x, start.y, directions.First());
       // Console.WriteLine($"curr1: {currentPipe1.x}, {currentPipe1.y}");
       (int x, int y) currentPipe2 = GetNextLocation(start.x, start.y, directions.Last());
       // Console.WriteLine($"curr2: {currentPipe2.x}, {currentPipe2.y}");
-      Direction dir1 = GetNextDirection(currentPipe1.x, currentPipe1.y, GetOppositeDirection(directions.First()));
+      Direction dir1 = GetNextDirection(currentPipe1.x, currentPipe1.y, GetOppositeDirection(directions.First()), grid);
       // Console.WriteLine(dir1.ToString());
-      Direction dir2 = GetNextDirection(currentPipe2.x, currentPipe2.y, GetOppositeDirection(directions.Last()));
+      Direction dir2 = GetNextDirection(currentPipe2.x, currentPipe2.y, GetOppositeDirection(directions.Last()), grid);
       // Console.WriteLine(dir2.ToString());
+      // Add them to the set
+      pipeLocations.Add((currentPipe1.x, currentPipe1.y));
+      pipeLocations.Add((currentPipe2.x, currentPipe2.y));
 
-      int steps = 1;
+      // Console.WriteLine(currentPipe1.x + "," + currentPipe1.y + " " + dir1.ToString());
+
+
+      steps = 1;
 
       // Continue moving steps until they are the same position
       while (currentPipe1 != currentPipe2)
       {
-        // Console.WriteLine(currentPipe1.x + "," + currentPipe1.y + ", " + dir1.ToString());
+        // Console.WriteLine(currentPipe1.x + "," + currentPipe1.y + " " + dir1.ToString());
         // Move pipe location 1
         currentPipe1 = GetNextLocation(currentPipe1.x, currentPipe1.y, dir1);
         // Determine next direction
-        dir1 = GetNextDirection(currentPipe1.x, currentPipe1.y, GetOppositeDirection(dir1));
+        dir1 = GetNextDirection(currentPipe1.x, currentPipe1.y, GetOppositeDirection(dir1), grid);
 
         // Move pipe location 2
         currentPipe2 = GetNextLocation(currentPipe2.x, currentPipe2.y, dir2);
         // Determine next direction
-        dir2 = GetNextDirection(currentPipe2.x, currentPipe2.y, GetOppositeDirection(dir2));
+        dir2 = GetNextDirection(currentPipe2.x, currentPipe2.y, GetOppositeDirection(dir2), grid);
 
+        // Add them to the set
+        pipeLocations.Add((currentPipe1.x, currentPipe1.y));
+        pipeLocations.Add((currentPipe2.x, currentPipe2.y));
         steps++;
       }
 
-      return steps;
+      return pipeLocations;
     }
 
-    public int PartTwo()
-    {
-      return -1;
-    }
-
-    private Direction GetNextDirection(int x, int y, Direction from)
+    private Direction GetNextDirection(int x, int y, Direction from, List<List<char>> grid)
     {
       char pipe = grid[x][y];
       Direction[] pipeDirections = GetDirectionsFromPipe(pipe);
-      Console.WriteLine($"{from.ToString()} {pipeDirections.First().ToString()}, {pipeDirections.Last().ToString()}");
+      // Console.WriteLine($"{from.ToString()} {pipeDirections.First().ToString()}, {pipeDirections.Last().ToString()}");
       // Remove direction that would go back to origin
       pipeDirections = pipeDirections.Where(direction => direction != from).ToArray();
       // Remaining direction is the only way to go
       Direction nextDirection = pipeDirections.First();
-      Console.WriteLine(nextDirection.ToString());
+      // Console.WriteLine(nextDirection.ToString());
       return nextDirection;
     }
 
@@ -93,7 +235,7 @@ namespace Solutions
       return (currX, currY + 1);
     }
 
-    private (int, int) FindStart()
+    private (int, int) FindStart(List<List<char>> grid)
     {
       foreach ((List<char> row, int x) in grid.WithIndex())
       {
@@ -108,7 +250,7 @@ namespace Solutions
       return (0, 0);
     }
 
-    private char GetPipeFromSurroundings(int x, int y)
+    private char GetPipeFromSurroundings(int x, int y, List<List<char>> grid)
     {
       List<Direction> pipeDirections = new();
       // Check North
