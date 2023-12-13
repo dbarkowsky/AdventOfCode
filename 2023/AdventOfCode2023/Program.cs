@@ -77,6 +77,11 @@ class AdventOfCode2023
           Console.WriteLine($"Part 1: {day11.PartOne()}");
           Console.WriteLine($"Part 2: {day11.PartTwo()}");
           break;
+        case 12:
+          Day12 day12 = new Day12("Day12.txt");
+          Console.WriteLine($"Part 1: {day12.PartOne()}");
+          Console.WriteLine($"Part 2: {day12.PartTwo()}");
+          break;
         default:
           Console.WriteLine("Day not yet created/solved.");
           break;
