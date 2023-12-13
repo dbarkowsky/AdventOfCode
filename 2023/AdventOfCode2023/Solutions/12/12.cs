@@ -22,27 +22,64 @@ namespace Solutions
 
     public int PartOne()
     {
+      return Solve(records, damagedGroups);
+    }
+
+    public int PartTwo()
+    {
+      // Multiply lists times 5
+      List<string> bigRecords = records.Select(record =>
+      {
+        string bigRecord = "";
+        for (int i = 0; i < 5; i++)
+        {
+          bigRecord += record;
+          if (i < 4)
+          {
+            bigRecord += "?";
+          }
+        }
+        return bigRecord;
+      }).ToList();
+
+      List<int[]> bigDamagedGroups = damagedGroups.Select(group =>
+      {
+        int[] bigGroup = new int[group.Length * 5];
+        for (int i = 0; i < bigGroup.Length; i++)
+        {
+          bigGroup[i] = group[i % group.Length];
+        }
+        return bigGroup;
+      }).ToList();
+      Console.WriteLine("Start Solving PArt 2");
+      return Solve(bigRecords, bigDamagedGroups);
+    }
+
+    private int Solve(List<string> records, List<int[]> damagedGroups)
+    {
       int goodArrangements = 0;
       for (int i = 0; i < records.Count; i++)
       {
-        Console.WriteLine($"Record: {records[i]}");
+        // Console.WriteLine($"Record: {records[i]}");
         // How many unknown parts of a record?
         int numberUnknown = records[i].ToCharArray().Aggregate(0, (sum, character) =>
         {
           if (character == '?') sum++;
           return sum;
         });
+        Console.WriteLine($"Start {records[i]}, numberUnknown: {numberUnknown}");
+        // TODO: This next part takes way too long.
         // Create list of possible arrangements
         Queue<string> possibleArrangements = new();
         possibleArrangements.Enqueue(".");
         possibleArrangements.Enqueue("#");
-        // Console.WriteLine(numberUnknown);
         for (int j = 0; j < Math.Pow(2, numberUnknown) - 2; j++)
         {
           string current = possibleArrangements.Dequeue();
           possibleArrangements.Enqueue(current + ".");
           possibleArrangements.Enqueue(current + "#");
         }
+        Console.WriteLine("Got possible arrangements");
         // For each possible arrangement, create the full arrangement combined with original record
         List<string> arrangements = new();
         foreach (string possibleArrangement in possibleArrangements)
@@ -62,6 +99,7 @@ namespace Solutions
           // Console.WriteLine(new string(tempRecord));
           arrangements.Add(new string(tempRecord));
         }
+        Console.WriteLine("Got arrangements");
         // Create pattern in regex from damaged groups
         string pattern = "^[^#]*";
         foreach ((int numOfBroken, int index) in damagedGroups[i].WithIndex())
@@ -70,29 +108,19 @@ namespace Solutions
         }
         pattern = pattern.Substring(0, pattern.Length - 5);
         pattern += "[^#]*$";
-        Console.WriteLine(pattern);
+        // Console.WriteLine(pattern);
         // Go through these possible arrangements and see if they match pattern
         foreach (string arrangement in arrangements)
         {
           if (Regex.IsMatch(arrangement, pattern))
           {
-            Console.WriteLine("Good: " + arrangement);
+            // Console.WriteLine("Good: " + arrangement);
             goodArrangements++;
           }
-          else
-          {
-            // Console.WriteLine("Bad: " + arrangement);
-
-          }
         }
-        Console.WriteLine(goodArrangements);
+        Console.WriteLine($"{records[i]}: {goodArrangements}");
       }
       return goodArrangements;
-    }
-
-    public int PartTwo()
-    {
-      return -1;
     }
 
   }
