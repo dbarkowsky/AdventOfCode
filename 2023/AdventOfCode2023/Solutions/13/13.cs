@@ -134,4 +134,8 @@ namespace Solutions
   }
 }
 
+// Part 2 notes
+// Same as usual, but when you find a row that doesn't match following matching rows..
+// Find the single index that doesn't match, make it match, then run it again.
+// Assumption: puzzle input doesn't contain more than one fixable smudge
 
