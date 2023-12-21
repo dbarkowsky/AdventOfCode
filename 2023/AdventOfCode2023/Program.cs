@@ -20,6 +20,7 @@ class AdventOfCode2023
     Console.WriteLine("Running day " + day);
     try
     {
+      long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
       switch (day)
       {
         case 1:
@@ -116,6 +117,8 @@ class AdventOfCode2023
           Console.WriteLine("Day not yet created/solved.");
           break;
       }
+      long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+      Console.WriteLine($"Time elapsed (ms): {endTime - startTime}");
     }
     catch (Exception e)
     {
