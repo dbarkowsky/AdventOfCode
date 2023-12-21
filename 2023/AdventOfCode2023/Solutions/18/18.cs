@@ -20,14 +20,6 @@ namespace Solutions
       int currentY = 0;
       // Set to store all locations visited
       HashSet<(int x, int y)> path = new();
-      // Need to track this separately. 
-      // Shoelace doesn't consider entire coordinate to be within area
-      // Only half for the lines, but a full unit for the corners
-      HashSet<(int x, int y)> corners = new()
-      {
-          // Add starting location
-          (currentX, currentY)
-      };
 
       int area = 0;
 
@@ -36,8 +28,7 @@ namespace Solutions
       {
         // Log corner
         path.Add((currentX, currentY));
-        // Remember original x and y
-        (int x, int y) original = (currentX, currentY);
+
         for (int i = 0; i < instruction.distance; i++)
         {
           switch (instruction.direction)
@@ -57,24 +48,24 @@ namespace Solutions
           }
           path.Add((currentX, currentY));
         }
-        // Add to area
-        // area += Math.Abs((original.x * currentY) - (currentX * original.y));
       }
-      Console.WriteLine(path.Count);
-      Console.WriteLine(Math.Abs(area));
-      // Need to add the perimeter to the area
-      // area = area / 2 + lines.Count / 2;
-      // return area;
-      double sum1 = 0;
-      double sum2 = 0;
-      List<(int x, int y)> listOfHash = path.ToList();
-      for (int i = 0; i < path.Count - 1; i++)
+
+      // shoelace algorithm
+      // I was doing something wrong here for a long time. Was always like 2 off
+      // This for-loop solution from Ryan Heath
+      List<(int x, int y)> pathList = path.ToList();
+      for (int i = 0; i < pathList.Count; i++)
       {
-        sum1 += listOfHash[i].x * listOfHash[i + 1].y;
-        sum2 += listOfHash[i].y * listOfHash[i + 1].x;
+        int nextI = (i + 1) % pathList.Count;
+        int prevI = i - 1 < 0 ? pathList.Count - 1 : i - 1;
+        area += pathList[i].y * (pathList[nextI].x - pathList[prevI].x);
       }
-      double darea = 0.5 * Math.Abs(sum1 - sum2);
-      return darea;
+
+      area = Math.Abs(area) / 2;
+      // Need to add the perimeter to the area
+      area += pathList.Count / 2 + 1;
+
+      return area;
     }
 
     public int PartTwo()
