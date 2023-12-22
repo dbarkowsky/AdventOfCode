@@ -113,6 +113,41 @@ class AdventOfCode2023
           Console.WriteLine($"Part 1: {day18.PartOne()}");
           Console.WriteLine($"Part 2: {day18.PartTwo()}");
           break;
+        case 19:
+          Day19 day19 = new Day19("Day19.txt");
+          Console.WriteLine($"Part 1: {day19.PartOne()}");
+          Console.WriteLine($"Part 2: {day19.PartTwo()}");
+          break;
+        case 20:
+          Day20 day20 = new Day20("Day20.txt");
+          Console.WriteLine($"Part 1: {day20.PartOne()}");
+          Console.WriteLine($"Part 2: {day20.PartTwo()}");
+          break;
+        case 21:
+          Day21 day21 = new Day21("Day21.txt");
+          Console.WriteLine($"Part 1: {day21.PartOne()}");
+          Console.WriteLine($"Part 2: {day21.PartTwo()}");
+          break;
+        case 22:
+          Day22 day22 = new Day22("Day22.txt");
+          Console.WriteLine($"Part 1: {day22.PartOne()}");
+          Console.WriteLine($"Part 2: {day22.PartTwo()}");
+          break;
+        case 23:
+          Day23 day23 = new Day23("Day23.txt");
+          Console.WriteLine($"Part 1: {day23.PartOne()}");
+          Console.WriteLine($"Part 2: {day23.PartTwo()}");
+          break;
+        case 24:
+          Day24 day24 = new Day24("Day24.txt");
+          Console.WriteLine($"Part 1: {day24.PartOne()}");
+          Console.WriteLine($"Part 2: {day24.PartTwo()}");
+          break;
+        case 25:
+          Day25 day25 = new Day25("Day25.txt");
+          Console.WriteLine($"Part 1: {day25.PartOne()}");
+          Console.WriteLine($"Part 2: {day25.PartTwo()}");
+          break;
         default:
           Console.WriteLine("Day not yet created/solved.");
           break;
