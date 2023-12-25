@@ -33,14 +33,28 @@ namespace Solutions
     List<Dictionary<string, int>> parts = new List<Dictionary<string, int>>();
     Dictionary<string, Instructions> workflows = new Dictionary<string, Instructions>();
     List<string> strings = new List<string>();
+    Dictionary<string, long> mins = new Dictionary<string, long>();
+    Dictionary<string, long> maxes = new Dictionary<string, long>();
+
+
 
 
     public Day19(string fileName)
     {
+      // Add base values to dictionaries
+      mins.Add("x", long.MaxValue);
+      mins.Add("m", long.MaxValue);
+      mins.Add("a", long.MaxValue);
+      mins.Add("s", long.MaxValue);
+      maxes.Add("x", 0);
+      maxes.Add("m", 0);
+      maxes.Add("a", 0);
+      maxes.Add("s", 0);
+      // Parse strings
       strings = FileReader.AsStringArray(fileName).ToList();
       foreach (string input in strings)
       {
-        Console.WriteLine(input);
+        // Console.WriteLine(input);
         if (input != "")
         {
           // Is this an workflow or a part?
@@ -68,6 +82,8 @@ namespace Solutions
             string workflowName = newWorkflow.Split("{").First();
             string workflowBody = newWorkflow.Split("{").Last();
             workflows[workflowName] = new Instructions(workflowBody);
+            // Adjust min and max dicts
+
           }
         }
       }
@@ -90,13 +106,13 @@ namespace Solutions
             //// Check the condition
             //// If a condition is true, go to the outcome
             int partValue = part[condition["partLetter"]];
-            Console.WriteLine($"partValue: {condition["partLetter"]} {partValue}");
+            // Console.WriteLine($"partValue: {condition["partLetter"]} {partValue}");
             if (IsTrue(partValue, condition))
             {
-              Console.WriteLine("istrue");
+              // Console.WriteLine("istrue");
 
               current = condition["outcome"];
-              Console.WriteLine($"current: {current}");
+              // Console.WriteLine($"current: {current}");
               break;
             }
           }
@@ -123,6 +139,14 @@ namespace Solutions
     public int PartTwo()
     {
       return -1;
+    }
+
+    private void AdjustMinMaxes(Instructions instructions)
+    {
+      // Check each instruction
+      // If it leads to an accepted, check against current min for this value
+      // Depending on < or >, might have to check for maxes
+      // If it leads to a rejection, do the opposite...
     }
 
     public long GetPartSum(Dictionary<string, int> part)
