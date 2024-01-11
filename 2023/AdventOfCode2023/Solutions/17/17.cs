@@ -24,6 +24,11 @@ namespace Solutions
         this.y = y;
         heatloss = h;
       }
+
+      public override string ToString()
+      {
+        return $"{x},{y}: {heatloss}";
+      }
     }
     List<string> strings = new List<string>();
     List<List<Node>> grid = new();
@@ -48,15 +53,20 @@ namespace Solutions
       (int x, int y) end = (grid.Count - 1, grid.First().Count - 1);
       Dictionary<string, Node?> pathRecord = AStarPath(grid[start.x][start.y], grid[end.x][end.y]);
 
+      foreach (Node node in pathRecord.Values)
+      {
+        Console.WriteLine(node);
+      }
       // Starting from end, work way backwards to build path.
       List<Node> path = new List<Node>();
       Node? current = pathRecord[$"{end.x},{end.y}"];
       while (current != null)
       {
-        // Console.WriteLine($"{current.x},{current.y}");
+        Console.WriteLine(current.ToString());
         path.Add(current);
         current = pathRecord[$"{current.x},{current.y}"];
       }
+      // Console.WriteLine(pathRecord[$"12,12"]);
       return path.Aggregate(0, (acc, curr) => acc + curr.heatloss);
     }
 
@@ -82,31 +92,39 @@ namespace Solutions
       {
         Node current = frontier.Dequeue();
 
-        if (start.x == end.x && start.y == end.y)
-        {
-          break;
-        }
-
         // Get all neighbouring nodes
         List<Node> neighbours = GetNeighbours(current);
+        // Console.WriteLine($"{current}'s neighbours:");
+        // foreach (Node neighbour in neighbours)
+        // {
+        //   Console.WriteLine(neighbour);
+        // }
         // For each node, determine priority and add to frontier
         foreach (Node next in neighbours)
         {
+          Console.WriteLine(next);
+
           // New cost is what we've done so far plus the heat cost of next Node
           int newCost = costSoFar[$"{current.x},{current.y}"] + next.heatloss;
           // Check if we've already moved three consecutive spaces
-          int consecutiveMoves = ConsecutiveMoves(current, cameFrom[$"{current.x},{current.y}"]);
-          Console.WriteLine($"Consecutive moves: {consecutiveMoves}");
+          int consecutiveMoves = ConsecutiveMoves(current, cameFrom[$"{current.x},{current.y}"], cameFrom);
+          // Console.WriteLine($"Consecutive moves: {consecutiveMoves}");
           const int MAX_CONSECUTIVE_MOVES = 3;
+          if (next.x == end.x && next.y == end.y && consecutiveMoves < MAX_CONSECUTIVE_MOVES)
+          {
+            cameFrom[$"{next.x},{next.y}"] = current;
+            return cameFrom;
+          }
           // If we haven't already done 3 consecutive moves in this direction... then
           // If the next node isn't the node we just came from... then
           // If we haven't visited this node, or if this new cost is better than a previous route to this node
           if (
             consecutiveMoves < MAX_CONSECUTIVE_MOVES &&
-            (cameFrom[$"{current.x},{current.y}"] == null || !(next.x == cameFrom[$"{current.x},{current.y}"].x && next.y == cameFrom[$"{current.x},{current.y}"].y)) &&
-            (!costSoFar.ContainsKey($"{next.x},{next.y}") || newCost < costSoFar[$"{next.x},{next.y}"])
+            // (cameFrom[$"{current.x},{current.y}"] == null || !(next.x == cameFrom[$"{current.x},{current.y}"].x && next.y == cameFrom[$"{current.x},{current.y}"].y)) &&
+            (!costSoFar.ContainsKey($"{next.x},{next.y}") || newCost <= costSoFar[$"{next.x},{next.y}"])
           )
           {
+            Console.WriteLine($"New or better entry: {next} - {newCost}");
             // Set the cost
             costSoFar[$"{next.x},{next.y}"] = newCost;
             // Determine priority and store in queue
@@ -120,29 +138,33 @@ namespace Solutions
       return cameFrom;
     }
 
-    private int ConsecutiveMoves(Node current, Node previous, Direction? d = null)
+    private int ConsecutiveMoves(Node current, Node? previous, Dictionary<string, Node?> cameFrom, Direction? d = null)
     {
+      // Console.WriteLine($"Current: {current.ToString()}");
+      // Console.WriteLine($"previous: {(previous != null ? previous.ToString() : "null")}");
+      // Console.WriteLine(d.ToString());
+
       if (previous == null) return 0;
       // What direction are we coming from?
       if (current.x - previous.x == 1 && (d == null || d == Direction.UP))
       {
         // up
-        return 1 + ConsecutiveMoves(previous, grid[current.x - 1][current.y], Direction.UP);
+        return 1 + ConsecutiveMoves(previous, cameFrom[$"{previous.x},{previous.y}"], cameFrom, Direction.UP);
       }
       else if (current.x - previous.x == -1 && (d == null || d == Direction.DOWN))
       {
         // down
-        return 1 + ConsecutiveMoves(previous, grid[current.x + 1][current.y], Direction.DOWN);
+        return 1 + ConsecutiveMoves(previous, cameFrom[$"{previous.x},{previous.y}"], cameFrom, Direction.DOWN);
       }
       else if (current.y - previous.y == 1 && (d == null || d == Direction.LEFT))
       {
         // left
-        return 1 + ConsecutiveMoves(previous, grid[current.x][current.y - 1], Direction.LEFT);
+        return 1 + ConsecutiveMoves(previous, cameFrom[$"{previous.x},{previous.y}"], cameFrom, Direction.LEFT);
       }
       else if (current.y - previous.y == -1 && (d == null || d == Direction.RIGHT))
       {
         // right
-        return 1 + ConsecutiveMoves(previous, grid[current.x][current.y + 1], Direction.RIGHT);
+        return 1 + ConsecutiveMoves(previous, cameFrom[$"{previous.x},{previous.y}"], cameFrom, Direction.RIGHT);
       }
       return 0;
     }
