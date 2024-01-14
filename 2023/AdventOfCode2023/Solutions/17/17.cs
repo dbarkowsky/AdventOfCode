@@ -42,6 +42,31 @@ namespace Solutions
         entry = d;
         steps = s;
       }
+
+      // Needed the Equals and GetHashCode overrides.
+      // Dictionary didn't recognise States as identical keys without these. (used reference, not values) 
+      public override bool Equals(object obj)
+      {
+          if (obj == null || GetType() != obj.GetType())
+          {
+              return false;
+          }
+
+          State other = (State)obj;
+          return position.x == other.position.x && position.y == other.position.y && entry == other.entry && steps == other.steps;
+      }
+
+       public override int GetHashCode()
+      {
+          unchecked
+          {
+            int hash = 17;
+            hash = hash * 23 + position.GetHashCode();
+            hash = hash * 23 + entry.GetHashCode();
+            hash = hash * 23 + steps.GetHashCode();
+            return hash;
+          }
+      }
     }
     List<string> strings = new List<string>();
     List<List<Node>> grid = new();
@@ -49,21 +74,6 @@ namespace Solutions
     public Day17(string fileName)
     {
       strings = FileReader.AsStringArray(fileName).ToList();
-      // strings = new List<string>{
-      //   "2413432311323", 
-      //   "3215453535623", 
-      //   "3255245654254", 
-      //   "3446585845452", 
-      //   "4546657867536", 
-      //   "1438598798454", 
-      //   "4457876987766", 
-      //   "3637877979653", 
-      //   "4654967986887",
-      //   "4564679986453",
-      //   "1224686865563",
-      //   "2546548887735",
-      //   "4322674655533"
-      // };
       foreach ((string line, int x) in strings.WithIndex())
       {
         List<Node> newLine = new();
@@ -77,66 +87,54 @@ namespace Solutions
 
     public int PartOne()
     {
-
-      // Dictionary<string, Node?> pathRecord = AStarPath(grid[start.x][start.y], grid[end.x][end.y]);
-
-      // foreach (Node node in pathRecord.Values)
-      // {
-      //   Console.WriteLine(node);
-      // }
-      // // Starting from end, work way backwards to build path.
-      // List<Node> path = new List<Node>();
-      // Node? current = pathRecord[$"{end.x},{end.y}"];
-      // while (current != null)
-      // {
-      //   Console.WriteLine(current.ToString());
-      //   path.Add(current);
-      //   current = pathRecord[$"{current.x},{current.y}"];
-      // }
-      // // Console.WriteLine(pathRecord[$"12,12"]);
-      // return path.Aggregate(0, (acc, curr) => acc + curr.heatloss);
-      return ABetterAStar(1, 3);
+      // Min is 0 here because there is no min, and 1 would cause the first step from start to go RIGHT. 
+      // This happens because the start position thinks it was entered from the LEFT.
+      return ABetterAStar(0, 3);
     }
 
     public int PartTwo()
     {
-      return -1;
+      return ABetterAStar(4, 10);
     }
 
     private int ABetterAStar(int minMoves, int maxMoves)
     {
+      // Start and end locations. Top-left to bottom-right.
       (int x, int y) start = (0, 0);
       (int x, int y) end = (grid.Count - 1, grid.First().Count - 1);
 
+      // Every state knows its position, the direction it was entered from, and steps from that direction so far.
       State firstState = new State(start, Direction.LEFT, 0);
       State endState = new State(end, Direction.DOWN, 0);
+      // Dictionary tracks if we've entered a square from this direction before, and how much it cost previously
       Dictionary<State, int> costMap = new Dictionary<State, int>();
       costMap[firstState] = 0;
+      // Needs to be priority to focus on the ones that have the best heatloss + distance to end combo.
       PriorityQueue<State, int> queue = new PriorityQueue<State, int>();
       queue.Enqueue(firstState, 0);
 
       while (queue.Count > 0)
       {
         State current = queue.Dequeue();
-        // Console.WriteLine($"current {current.position.x},{current.position.y}");
         if (current.position == end && current.steps >= minMoves)
         {
-          Console.WriteLine($"exit {current.position.x},{current.position.y}");
+          // We know the first entry point will be the best, because its neighbours are resolved in priority.
           return costMap[current];
         }
 
+        // Check all the neighbouring squares for better paths
         foreach (State neighbour in GetNeighboursAsStates(current, minMoves, maxMoves))
         {
           if (IsValidPosition(neighbour.position.x, neighbour.position.y))
           {
             int newCost = costMap[current] + grid[neighbour.position.x][neighbour.position.y].heatloss;
-            // Console.WriteLine("after new cost");
+            // If this new entry to a square is better than our previous entry or if it's the first entry to this square
             if (newCost < costMap.GetValueOrDefault(neighbour, int.MaxValue))
             {
-              // Console.WriteLine($"neighbour {neighbour.position.x},{neighbour.position.y}");
-
+              // Remember this new cost and add it to the queue
               costMap[neighbour] = newCost;
-              queue.Enqueue(neighbour, costMap[neighbour] + GetManhattanDistance(neighbour, endState) * (grid.Count / 4));
+              // Manhattan Distance keeps us moving the right direction.
+              queue.Enqueue(neighbour, costMap[neighbour] + GetManhattanDistance(neighbour, endState));
             }
           }
         }
@@ -180,7 +178,6 @@ namespace Solutions
       // If we're at the max, we need to take a turn. Return left and right from entry direction.
       if (current.steps >= minMoves)
       {
-        // Console.WriteLine("too many steps");
         // Get left and right directions from entry point
         List<Direction> turnDirections = GetTurnDirections(current.entry);
         foreach (Direction d in turnDirections)
@@ -193,7 +190,6 @@ namespace Solutions
       // We can keep going straight as well, so include that direction
       if (current.steps < maxMoves)
       {
-        // Console.WriteLine("low enough steps");
         (int x, int y) nextPosition = GetNeighbourCoordsFromDirection(current, current.entry);
         neighbours.Add(new State(nextPosition, current.entry, current.steps + 1));
       }
@@ -225,6 +221,11 @@ namespace Solutions
       list.Add((Direction)(((int)entry + 3) % 4));
       return list;
     }
+
+    // *********************************************
+    // ORIGINAL ATTEMPT BELOW
+    // IT WAS GETTING COMPLETELY WRONG NUMBERS
+    // *********************************************
 
     private Dictionary<string, Node?> AStarPath(Node start, Node end)
     {
