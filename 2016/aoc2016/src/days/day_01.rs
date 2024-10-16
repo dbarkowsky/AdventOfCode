@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+
 use crate::utils;
-use std::num;
 
 const DAY: &str = "01";
 const TEST: bool = false;
+
+const UNLIKELY_ENDING: [i32; 2] = [-9999, -9999];
 
 enum Direction {
     North,
@@ -12,7 +15,7 @@ enum Direction {
 }
 
 pub fn part_one() {
-  let starting_coords: [i32; 2] = [0, 0];
+    let starting_coords: [i32; 2] = [0, 0];
     let mut current_coords: [i32; 2] = [0, 0];
     let mut direction = Direction::North;
     let input: Vec<String> = parse_input();
@@ -23,12 +26,131 @@ pub fn part_one() {
         direction = get_new_direction(direction, turn);
         current_coords = move_elf(current_coords, *count, &direction);
     }
-    let distance = get_manhattan_distance(current_coords[0], current_coords[1], starting_coords[0],starting_coords[1]);
+    let distance = get_manhattan_distance(
+        current_coords[0],
+        current_coords[1],
+        starting_coords[0],
+        starting_coords[1],
+    );
     println!("{}", distance)
 }
 
+// First visited location includes crossing points
+pub fn part_two() {
+    let starting_coords: [i32; 2] = [0, 0];
+    let mut current_coords: [i32; 2] = [0, 0];
+    let mut direction = Direction::North;
+    let input: Vec<String> = parse_input();
+    let mut locations = HashMap::new();
+    let mut duplicate: [i32; 2] = UNLIKELY_ENDING;
+    for step in input {
+        // Horrible way of getting turn and movement count
+        let turn = &step[0..1];
+        let count = &step[1..].parse::<i32>().unwrap();
+        direction = get_new_direction(direction, turn);
+        (current_coords, duplicate) =
+            move_elf_point_by_point(current_coords, *count, &direction, &mut locations);
+        // Duplicate value changed? Then we found a crossing point.
+        if duplicate[0] != UNLIKELY_ENDING[0] || duplicate[1] != UNLIKELY_ENDING[1] {
+            break;
+        }
+    }
+    let distance = get_manhattan_distance(
+        duplicate[0],
+        duplicate[1],
+        starting_coords[0],
+        starting_coords[1],
+    );
+    println!("{}", distance)
+}
+
+fn move_elf_point_by_point(
+    current_coords: [i32; 2],
+    distance: i32,
+    direction: &Direction,
+    locations: &mut HashMap<String, i32>,
+) -> ([i32; 2], [i32; 2]) {
+    let mut coord_copy: [i32; 2] = current_coords;
+    let mut duplicate: [i32; 2] = UNLIKELY_ENDING;
+    match direction {
+        Direction::East => {
+            for _ in 0..distance {
+                coord_copy[0] = coord_copy[0] + 1;
+                let key = String::from(format!(
+                    "{x},{y}",
+                    x = coord_copy[0],
+                    y = coord_copy[1]
+                ));
+                // If already visited, break from loop
+                if locations.contains_key(&key) {
+                    duplicate = coord_copy;
+                    println!("{:#?}", duplicate);
+                    break;
+                }
+                // Otherwise, add to map of visited locations
+                locations.insert(key, 1);
+            }
+        }
+        Direction::North => {
+            for _ in 0..distance {
+                coord_copy[1] = coord_copy[1] + 1;
+                let key = String::from(format!(
+                    "{x},{y}",
+                    x = coord_copy[0],
+                    y = coord_copy[1]
+                ));
+                // If already visited, break from loop
+                if locations.contains_key(&key) {
+                    duplicate = coord_copy;
+                    println!("{:#?}", duplicate);
+                    break;
+                }
+                // Otherwise, add to map of visited locations
+                locations.insert(key, 1);
+            }
+        }
+        Direction::South => {
+            for _ in 0..distance {
+                coord_copy[1] = coord_copy[1] - 1;
+                let key = String::from(format!(
+                    "{x},{y}",
+                    x = coord_copy[0],
+                    y = coord_copy[1]
+                ));
+                // If already visited, break from loop
+                if locations.contains_key(&key) {
+                    duplicate = coord_copy;
+                    println!("{:#?}", duplicate);
+                    break;
+                }
+                // Otherwise, add to map of visited locations
+                locations.insert(key, 1);
+            }
+        }
+        Direction::West => {
+            for _ in 0..distance {
+                coord_copy[0] = coord_copy[0] - 1;
+                let key = String::from(format!(
+                    "{x},{y}",
+                    x = coord_copy[0],
+                    y = coord_copy[1]
+                ));
+                // If already visited, break from loop
+                if locations.contains_key(&key) {
+                    duplicate = coord_copy;
+                    println!("{:#?}", duplicate);
+                    break;
+                }
+                // Otherwise, add to map of visited locations
+                locations.insert(key, 1);
+            }
+        }
+    }
+    return (coord_copy, duplicate);
+}
+
 fn move_elf(current_coords: [i32; 2], distance: i32, direction: &Direction) -> [i32; 2] {
-   let mut coord_copy = current_coords;
+    let mut coord_copy = current_coords;
     match direction {
         Direction::East => coord_copy[0] += distance,
         Direction::North => coord_copy[1] += distance,
@@ -39,7 +161,7 @@ fn move_elf(current_coords: [i32; 2], distance: i32, direction: &Direction) -> [
 }
 
 fn get_manhattan_distance(x1: i32, y1: i32, x2: i32, y2: i32) -> i32 {
-  return (x2 - x1).abs() + (y2 - y1).abs();
+    return (x2 - x1).abs() + (y2 - y1).abs();
 }
 
 fn get_new_direction(current: Direction, turn: &str) -> Direction {
