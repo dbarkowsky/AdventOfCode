@@ -138,7 +138,6 @@ fn move_elf_point_by_point(
                 // If already visited, break from loop
                 if locations.contains_key(&key) {
                     duplicate = coord_copy;
-                    println!("{:#?}", duplicate);
                     break;
                 }
                 // Otherwise, add to map of visited locations
