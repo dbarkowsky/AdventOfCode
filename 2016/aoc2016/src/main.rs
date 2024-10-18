@@ -12,6 +12,7 @@ fn main() {
         }
         2 => {
             days::day_02::part_one();
+            days::day_02::part_two();
         }
         i32::MIN..=0_i32 | 2_i32..=i32::MAX => todo!(),
     }
