@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-Stream<String> fileToArray({fileName= String}) {
-  final file = File(fileName);
+Stream<String> fileToArray({required String fileName, bool useTestData = false}) {
+  final file = File('./input${useTestData ? '/test' : ''}/${fileName}'); // Path works from project root
   Stream<String> lines = file.openRead().transform(utf8.decoder).transform(LineSplitter());
   return lines;
 }
