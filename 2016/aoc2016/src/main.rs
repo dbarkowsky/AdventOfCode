@@ -18,6 +18,10 @@ fn main() {
             days::day_03::part_one();
             days::day_03::part_two();
         }
+        4 => {
+            days::day_04::part_one();
+            days::day_04::part_two();
+        }
         i32::MIN..=0_i32 | 2_i32..=i32::MAX => todo!(),
     }
 }
