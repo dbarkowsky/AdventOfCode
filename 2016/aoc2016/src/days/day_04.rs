@@ -34,6 +34,7 @@ pub fn part_one() {
         for i in 0..checksum_length {
             top_five_string.push_str(&sorted_counts[i].0.to_string());
         }
+        // Add to the sum if the checksum matches
         if top_five_string.cmp(&instruction.checksum) == Ordering::Equal {
             id_sum += instruction.id;
         }
@@ -42,9 +43,41 @@ pub fn part_one() {
     println!("{}", id_sum);
 }
 
-// Same, but have to assemble triangles vertically from input instead
-pub fn part_two() {}
+// Caesar cypher, move as many times as sector id
+pub fn part_two() {
+    const LOOKING_FOR: &str = "northpoleobjectstorage"; // Only knew this after first run
+    let instructions: Vec<Instruction> = parse_input();
+    for instruction in instructions {
+        // Build a new string, using the hash
+        const LETTERS_IN_ALPHABET: i32 = 26;
+        const ASCII_START: i32 = 97; // lowercase a
+        let move_amount = instruction.id % LETTERS_IN_ALPHABET; // Because 26 * 5 moves is the same as 26 moves
+        let mut new_message = String::new();
+        for mut letter in instruction.hash.chars() {
+            let char_ascii = letter as i32; //
+            let char_index = char_ascii - ASCII_START;
+            // Can move forwards or backwards on ascii table depending on position
+            // Goal is not to wrap around and have to deal with that logic
+            if move_amount + char_index >= LETTERS_IN_ALPHABET {
+                // Move backwards
+                letter = char::from_u32((char_ascii - (LETTERS_IN_ALPHABET - move_amount)) as u32)
+                    .unwrap();
+            } else {
+                // Move forwards
+                letter = char::from_u32((char_ascii + move_amount) as u32).unwrap();
+            }
+            // Add to new string to construct message
+            new_message.push_str(letter.to_string().as_str());
+        }
+        // Print and stop if we find it
+        if new_message.eq(LOOKING_FOR) {
+            println!("{}", instruction.id);
+            break;
+        }
+    }
+}
 
+// derive piece allows for printing
 #[derive(Debug)]
 struct Instruction {
     id: i32,
@@ -59,14 +92,17 @@ fn parse_input() -> Vec<Instruction> {
     return input_to_instruction(input);
 }
 
+// Convert the input list to a list of instructions
 fn input_to_instruction(input: Vec<String>) -> Vec<Instruction> {
+    // Regex to get groupings
     let pattern: Regex = Regex::new(r"(.*)([\d]{3})\[([a-z]+)\]").unwrap();
     return input
-        .iter()
+        .iter() // Convert to an iterable
         .map(|plain_input| {
             let temp: Vec<Instruction> = pattern
                 .captures_iter(&plain_input)
                 .filter_map(|mat| {
+                    // This takes the matches and constructs an Instruction
                     let groups = (mat.get(1), mat.get(2), mat.get(3));
                     match groups {
                         (Some(hash), Some(id), Some(checksum)) => {
