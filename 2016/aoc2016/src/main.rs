@@ -24,8 +24,12 @@ fn main() {
         }
         5 => {
           println!("{}", "Day 05 can take a minute. Be patient.");
-          days::day05::part_one();
-          days::day05::part_two();
+          days::day_05::part_one();
+          days::day_05::part_two();
+        }
+        6 => {
+          days::day_06::part_one();
+          days::day_06::part_two();
         }
         i32::MIN..=0_i32 | 2_i32..=i32::MAX => todo!(),
     }
