@@ -1,4 +1,4 @@
-abba[mnop]qrst
-abcd[bddb]xyyx
-aaaa[qwer]tyui
-ioxxoj[asdfgh]zxcvbn
+abbaaba[mnopbab]qrstxyz
+abcdxyx[bddbxyx]xyyxxyx
+aaaaaaa[qwerkek]tyuieke
+ioxxojzazbz[asdfghbzb]zxcvbncdb
