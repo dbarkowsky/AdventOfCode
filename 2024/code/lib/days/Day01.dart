@@ -1,9 +1,11 @@
-import 'package:code/fileReader.dart' as fileReader;
+import 'package:code/days/Day.dart';
 
-class Day01 {
-  static void part1(bool useTestData){
-    String fileName = 'day01';
-    final input = fileReader.fileToArray(fileName: fileName, useTestData: useTestData);
-    fileReader.printArray(array: input);
+class Day01 extends Day {
+  Day01(super.fileName, super.useTestData);
+
+  void part1() {
+    super.printInput();
   }
+
+  void part2() {}
 }
