@@ -1,7 +1,7 @@
 import 'package:code/fileReader.dart' as fileReader;
 
 abstract class Day {
-  late Stream<String> input;
+  late List<String> input;
   Day(String fileName, bool useTestData) {
     input =
         fileReader.fileToArray(fileName: fileName, useTestData: useTestData);
