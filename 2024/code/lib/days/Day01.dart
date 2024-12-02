@@ -4,7 +4,6 @@ class Day01 extends Day {
   Day01(super.fileName, super.useTestData);
 
   /// Getting the sum of differences between the two lists.
-  @override
   void part1() {
     List<num> lefts = [];
     List<num> rights = [];
@@ -26,7 +25,6 @@ class Day01 extends Day {
   }
 
   /// Finding the sum of scores (key * number of occurences)
-  @override
   void part2() {
     Map<num, num> tracker = {};
     List<num> lefts = [];

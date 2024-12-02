@@ -10,8 +10,4 @@ abstract class Day {
   void printInput() {
     fileReader.printArray(array: input);
   }
-
-  // Defining abstract methods that must be implemented in children
-  void part1();
-  void part2();
 }
