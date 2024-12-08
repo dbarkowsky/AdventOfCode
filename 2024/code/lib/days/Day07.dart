@@ -23,7 +23,7 @@ class Day07 extends Day {
     int sum = 0;
     for (int i = 0; i < testValues.length; i++) {
       List<List<Operator>> possibleOperatorConfigs =
-        generateBinaryOperators(components[i].length - 1);
+          generateBinaryOperators(components[i].length - 1);
       for (List<Operator> config in possibleOperatorConfigs) {
         if (isEquivalent(testValues[i], components[i], config)) {
           sum += testValues[i];
@@ -31,7 +31,7 @@ class Day07 extends Day {
         }
       }
     }
-    
+
     print(sum);
   }
 
@@ -40,7 +40,7 @@ class Day07 extends Day {
     int sum = 0;
     for (int i = 0; i < testValues.length; i++) {
       List<List<Operator>> possibleOperatorConfigs =
-        generateTernaryOperators(components[i].length - 1);
+          generateTernaryOperators(components[i].length - 1);
       for (List<Operator> config in possibleOperatorConfigs) {
         if (isEquivalent(testValues[i], components[i], config)) {
           sum += testValues[i];
@@ -48,7 +48,7 @@ class Day07 extends Day {
         }
       }
     }
-    
+
     print(sum);
   }
 
@@ -99,28 +99,29 @@ class Day07 extends Day {
 
     for (int i = 0; i <= max; i++) {
       String ternaryString = toTernary(i).padLeft(length, "0");
-      List<Operator> onePossibleConfig = ternaryString.split("").map(stringToOp).toList();
+      List<Operator> onePossibleConfig =
+          ternaryString.split("").map(stringToOp).toList();
       convertedOps.add(onePossibleConfig);
     }
     return convertedOps;
   }
 
   // Converts an integer to a ternary (base-3) string
-String toTernary(int num) {
-  if (num == 0) return "0";
-  String ternary = "";
-  while (num > 0) {
-    ternary = (num % 3).toString() + ternary;
-    num ~/= 3; // This is int division, but by 3. So num = num / 3 using int math.
+  String toTernary(int num) {
+    if (num == 0) return "0";
+    String ternary = "";
+    while (num > 0) {
+      ternary = (num % 3).toString() + ternary;
+      num ~/= 3; // This is int division, but by 3. So num = num / 3 using int math.
+    }
+    return ternary;
   }
-  return ternary;
-}
 
   Operator stringToOp(String s) {
     int n = int.parse(s);
     if (n == Operator.ADD.index) {
       return Operator.ADD;
-    } else if (n == Operator.MULTIPLY.index){
+    } else if (n == Operator.MULTIPLY.index) {
       return Operator.MULTIPLY;
     } else {
       return Operator.CONCAT;
