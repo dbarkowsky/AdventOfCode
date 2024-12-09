@@ -38,20 +38,20 @@ class Day09 extends Day {
   List<int> defragmentHdd(List<int?> hdd){
     List<int?> defragmentedDrive = List.from(hdd);
     int currentIndex = 0;
-    int lastNonNullIndex = defragmentedDrive.length - 1;
-    while (currentIndex < defragmentedDrive.length){
+    int lastNonNullIndex = defragmentedDrive.lastIndexWhere((test) => test != null);
+    bool sorted = false;
+    while (!sorted){
       if (defragmentedDrive[currentIndex] == null){
-        while (defragmentedDrive[lastNonNullIndex] == null){
-          lastNonNullIndex--;
-        }
-        int endEl = defragmentedDrive.elementAt(lastNonNullIndex)!;
-        defragmentedDrive[currentIndex] = endEl;
-         defragmentedDrive.removeAt(lastNonNullIndex)!;
-        lastNonNullIndex--;
+        // Swap current and lastNonNull
+        int temp = defragmentedDrive[lastNonNullIndex]!;
+        defragmentedDrive[currentIndex] = temp;
+        defragmentedDrive[lastNonNullIndex] = null;
+        // Move last pointer to next non-null
+        lastNonNullIndex = defragmentedDrive.lastIndexWhere((test) => test != null);
       }
       currentIndex++;
+      if (currentIndex >= lastNonNullIndex) sorted = true;
     }
-    print(defragmentedDrive);
     return defragmentedDrive.whereType<int>().toList();
   }
 
