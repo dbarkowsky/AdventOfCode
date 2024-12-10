@@ -8,42 +8,38 @@ class Day10 extends Day {
 
   // Counting unique endpoints for each trailhead
   void part1() {
-    List<(int, int)> zeros = findAllZeros(map);
-
-    int count = 0;
-
-    for (final zero in zeros) {
-      // Using Set so that each peak is only counted once, even if multiple paths
-      Set<String> uniquePeaks = {};
-      List<List<bool>> visited = makeVisited();
-      List<(int, int)> peaks = countPathsFrom(zero, visited);
-      for (final peak in peaks) {
-        uniquePeaks.add(peak.toString());
-      }
-      count += uniquePeaks.length;
-    }
-
-    print(count);
+    print(countAllPaths(Set));
   }
 
   // Counting all possible routes from trailhead (0) to end (9)
   void part2() {
+    print(countAllPaths(List));
+  }
+
+  int countAllPaths(Type collectorType) {
     List<(int, int)> zeros = findAllZeros(map);
 
     int count = 0;
 
     for (final zero in zeros) {
-      List<String> pathEnds =
-          []; // This is the key difference. We count all possible routes
+      dynamic pathEnds;
+      if (collectorType == Set) {
+        // Using Set so that each peak is only counted once, even if multiple paths
+        pathEnds = <String>{};
+      } else {
+        // Using a list so we count all possible paths, even with same peak
+        pathEnds = [];
+      }
+
       List<List<bool>> visited = makeVisited();
       List<(int, int)> peaks = countPathsFrom(zero, visited);
       for (final peak in peaks) {
         pathEnds.add(peak.toString());
       }
-      count += pathEnds.length;
+      count += pathEnds.length! as int;
     }
 
-    print(count);
+    return (count);
   }
 
   // Makes grid of visited locations
