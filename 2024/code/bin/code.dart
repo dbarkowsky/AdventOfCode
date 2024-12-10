@@ -64,7 +64,7 @@ void main(List<String> arguments) {
       break;
     case 10:
       Day10 day10 = Day10('day10', useTestData);
-      day10.part1();
+      // day10.part1();
       day10.part2();
       break;
     default:
