@@ -149,7 +149,7 @@ class Day14 extends Day {
           quadrantMap[3]!.length / robots.length > minClusterRatio ||
           quadrantMap[4]!.length / robots.length > minClusterRatio) {
         // Uncomment to manually find image
-        // print(i);
+        // print(i + 1);
         // printGrid(robots);
       }
     }
