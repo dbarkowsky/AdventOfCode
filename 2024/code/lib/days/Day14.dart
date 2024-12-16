@@ -65,7 +65,7 @@ class Day14 extends Day {
   }
 
   // Find out which quadrant robots end up in and then get product
-  void part1() async {
+  void part1() {
     List<Robot> robots = buildRobots();
     // Robots move for 100 seconds
     for (int i = 0; i < 100; i++) {
