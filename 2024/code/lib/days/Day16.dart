@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:code/days/Day.dart';
@@ -16,7 +15,9 @@ class Day16 extends Day {
   (int, int) start = (0, 0);
   (int, int) end = (0, 0);
   List<List<String>> maze = [];
+  List<(List<(int, int)>, int)> bestPaths = []; // Save paths for part 2
   Day16(super.fileName, super.useTestData) {
+    // Building the grid
     for (int x = 0; x < input.length; x++) {
       List<String> newRow = input[x].split("");
       maze.add(newRow);
@@ -29,29 +30,30 @@ class Day16 extends Day {
 
   void part1() {
     PriorityQueue<MazeState> queue =
-        PriorityQueue<MazeState>((a, b) => a.score.compareTo(b.score));
-    Map<(int, int, int?, int?), int> scoreKeeper = {};
+        PriorityQueue<MazeState>((a, b) => a.score.compareTo(b.score)); // Used to prioritize shortest paths
+    Map<(int, int, int?, int?), int> scoreKeeper = {}; // Tracks best scores at this point
     queue.add(MazeState(start, [], 0, (start.$1, start.$2 - 1)));
     bool endFound = false;
+    // Keep going until all paths are found
     while (queue.isNotEmpty) {
       MazeState current = queue.removeFirst();
+      // check if we've been here before (from this direction) and if it was a better score.
       (int, int, int?, int?) key = (current.location.$1, current.location.$2, current.from?.$1, current.from?.$2);
-      if (scoreKeeper.containsKey(key) && scoreKeeper[key]! <= current.score){
+      if (scoreKeeper.containsKey(key) && scoreKeeper[key]! < current.score){
+              // If not better, don't bother continuing
         continue;
       } else {
+        // It was better, add to cache
         scoreKeeper[key] = current.score;
       }
       // Is this the end?
       if (current.location.$1 == end.$1 && current.location.$2 == end.$2){
         endFound = true;
-        // print(current.score);
-        // printGrid(current.visited);
-        // break;
-      }
-      List<(int, int)> neighbours = getNeighbours(current.location);
-      // For each one, make a maze state, but then check if we've been here before and if it was a better score.
-      // Will have to keep a map cache probably.
-      // If this score isn't better, don't add to queue. If it is better, update cache and add to queue
+        // Add this path for part 2...
+        bestPaths.add(([...current.visited, end], current.score));
+      } else {
+        List<(int, int)> neighbours = getNeighbours(current.location);
+      // For each one, make a maze state with new score, neighbours, and updated visited list
       List<MazeState> possibleStates = neighbours.where((n) => !current.visited.contains(n) && current.location != current.from).map(
           (n) => MazeState(
               n,
@@ -59,8 +61,10 @@ class Day16 extends Day {
               (current.score +
                   getAdditionalScore(current.from, current.location, n)),
               current.location)).toList();
-
+      // Add them all to the queue
       queue.addAll(possibleStates);
+      }
+      
     }
     if (!endFound) {
       print("Warning: end not found");
@@ -69,7 +73,21 @@ class Day16 extends Day {
     print(min(possibleScores.first, possibleScores.last));
   }
 
-  void part2() {}
+  // Find all the unique points our best paths have touched.
+  void part2() {
+    // Filter out any ending paths that aren't actually the best ones
+    int min = 99999999;
+    for (final path in bestPaths){
+      if (path.$2 < min) min = path.$2;
+    }
+    List<(List<(int, int)>, int)> actualBestPaths = bestPaths.where((path) => path.$2 == min).toList();
+    // Keep a set of unique points visited, then just count its length
+    Set<(int, int)> uniquePoints = {};
+    for (final path in actualBestPaths){
+      uniquePoints.addAll(path.$1);
+    }
+    print(uniquePoints.length);
+  }
 
   void printGrid(List<(int, int)> visited){
     for(int x = 0; x < maze.length; x++){
