@@ -1,10 +1,8 @@
-import 'dart:math';
-
 import 'package:code/days/Day.dart';
-import 'package:code/days/Day13.dart';
 
 enum Type { ROBOT, BOX, WALL }
 
+// Special class for part 2
 class WideItem {
   List<Coordinate> occupies;
   Type type;
@@ -23,6 +21,7 @@ class WideItem {
   }
 }
 
+// Defines a coordinate of x and y
 class Coordinate {
   int x;
   int y;
@@ -46,6 +45,8 @@ class Coordinate {
 class Day15 extends Day {
   Day15(super.fileName, super.useTestData);
 
+  // Break down input into robot, walls, and boxes.
+  // Returns a weird tuple of the coordinate map, a robot coordinate, and a list of instructions
   (Map<Coordinate, Type>, Coordinate, List<String>) buildItems() {
     List<String> instructions = [];
     Coordinate robot = Coordinate(-1, -1);
@@ -122,7 +123,9 @@ class Day15 extends Day {
     print(score);
   }
 
+  // This time everything except robot is twice as wide
   void part2() {
+    print("Part 2 can take some time. Be patient.");
     // Turn old items into wide items
     var (oldItems, robot, instructions) = buildItems();
     List<WideItem> items = [];
@@ -136,37 +139,47 @@ class Day15 extends Day {
       }
     }
     robot = Coordinate(robot.x, robot.y * 2);
-    int i = 0;
+
     // Actually solve problem
     for (final instruction in instructions) {
+      // Getting multiple positions, although robot only gets one
       List<Coordinate> hopefulPositions =
           getNextPositions(instruction, [robot], filter: true);
-      if (canMove(items, [robot], hopefulPositions, instruction)) {
-        // Just move the robot. Everything else should be okay.
+      // Track which items will have to move
+      List<WideItem> itemsToMove = [];
+      if (canMove(items, [robot], hopefulPositions, instruction, itemsToMove)) {
+        // Move the robot.
         robot =
             hopefulPositions.first; // There should only be one from the robot
+        // Move other items too
+        // Using this set because somewhere I was getting duplicates...
+        for (final itemToMove in itemsToMove.toSet()) {
+          items.removeWhere((item) => item == itemToMove);
+          items.add(WideItem(getNextPositions(instruction, itemToMove.occupies),
+              itemToMove.type));
+        }
       }
-      int printnum = 650;
-      // if (i > printnum && i <= printnum + 50){
-      // print(instruction);
-      // printGrid(items, robot);}
-      i++;
-      
     }
-    printGrid(items, robot);
+
     // Calculate score
     int score = 0;
     for (final item in items) {
       if (item.type == Type.BOX) {
-        print(item);
         score += 100 * item.occupies.first.x + item.occupies.first.y;
       }
     }
     print(score);
   }
 
-  bool canMove(List<WideItem> items, List<Coordinate> originalPositions,
-      List<Coordinate> hopefulPositions, String instruction) {
+  // Checks if an item can move.
+  // All items past it must be able to move as well.
+  bool canMove(
+      List<WideItem> items,
+      List<Coordinate> originalPositions,
+      List<Coordinate> hopefulPositions,
+      String instruction,
+      List<WideItem> itemsToMove) {
+    // Sets are a good way to check for overlap
     List<WideItem> itemsInHopefulPositions = items
         .where((item) => item.occupies
             .toSet()
@@ -189,19 +202,19 @@ class Day15 extends Day {
         items,
         item.occupies,
         getNextPositions(instruction, item.occupies, filter: true),
-        instruction));
+        instruction,
+        itemsToMove));
     if (allCanMove) {
-      // Update their positions, then pass the true upwards
+      // Mark that they should be updated, then pass the true upwards
       for (final hopefulItem in itemsInHopefulPositions) {
-        items.removeWhere((item) => item == hopefulItem);
-        items.add(WideItem(getNextPositions(instruction, hopefulItem.occupies),
-            hopefulItem.type));
+        itemsToMove.add(hopefulItem);
       }
       return true;
     }
     return false;
   }
 
+  // Used for part 1 only.
   Coordinate moveRobot(
       Coordinate newPosition, Map<Coordinate, Type> items, Coordinate robot) {
     // Remove the old entry from the map and add new one
@@ -211,11 +224,13 @@ class Day15 extends Day {
     return newPosition;
   }
 
+  // Used for part 1 only
   void moveBox(Coordinate from, Coordinate to, Map<Coordinate, Type> items) {
     items[to] = Type.BOX;
     items.remove(from);
   }
 
+  // Part 1 only. Single position
   Coordinate getNewPosition(String instruction, Coordinate current) {
     switch (instruction) {
       case "<":
@@ -231,6 +246,7 @@ class Day15 extends Day {
     }
   }
 
+  // Part 2 only. Many positions
   List<Coordinate> getNextPositions(
       String instruction, List<Coordinate> currents,
       {bool filter = false}) {
@@ -260,21 +276,21 @@ class Day15 extends Day {
     return coords;
   }
 
-  void printGrid(List<WideItem> items, Coordinate robot){
+  void printGrid(List<WideItem> items, Coordinate robot) {
     // 100 x 100 assumed
     int size = 20;
-    for (int x = 0; x < size / 2; x++){
+    for (int x = 0; x < size / 2; x++) {
       List<String> row = [];
-      for (int y = 0; y < size; y++){
-          if (items.contains(WideItem([Coordinate(x, y)], Type.BOX))){
-            row.add("O");
-          } else if (items.contains(WideItem([Coordinate(x, y)], Type.WALL))){
-            row.add("#");
-          } else if (robot.x == x && robot.y == y){
-            row.add("@");
-          } else {
-            row.add(".");
-          }
+      for (int y = 0; y < size; y++) {
+        if (items.contains(WideItem([Coordinate(x, y)], Type.BOX))) {
+          row.add("O");
+        } else if (items.contains(WideItem([Coordinate(x, y)], Type.WALL))) {
+          row.add("#");
+        } else if (robot.x == x && robot.y == y) {
+          row.add("@");
+        } else {
+          row.add(".");
+        }
       }
       print(row.join(""));
     }
