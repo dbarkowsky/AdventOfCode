@@ -14,6 +14,7 @@ import 'package:code/days/Day13.dart';
 import 'package:code/days/Day14.dart';
 import 'package:code/days/Day15.dart';
 import 'package:code/days/Day16.dart';
+import 'package:code/days/Day17.dart';
 
 void main(List<String> arguments) {
   if (arguments.isEmpty) {
@@ -102,6 +103,11 @@ void main(List<String> arguments) {
       Day16 day16 = Day16('day16', useTestData);
       day16.part1();
       day16.part2();
+      break;
+    case 17:
+      Day17 day17 = Day17('day17', useTestData);
+      day17.part1();
+      day17.part2();
       break;
     default:
   }
