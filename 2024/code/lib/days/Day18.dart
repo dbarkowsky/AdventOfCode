@@ -1,8 +1,5 @@
 import 'dart:collection';
-import 'dart:math';
 import 'package:code/days/Day.dart';
-import 'package:code/days/Day13.dart';
-import 'package:code/days/Day15.dart';
 
 typedef Coordinate = ({int x, int y});
 
@@ -29,43 +26,34 @@ class Day18 extends Day {
     return obstacles;
   }
 
+  // Just getting shortest path
   void part1() {
     Set<Coordinate> obstacles = buildObstacles(useTestData ? 12 : 1024);
-    Coordinate start = (x: 0, y: 0);
-    Coordinate end = (x: gridSize, y: gridSize);
-    Queue<SearchState> queue = Queue();
-    Set<Coordinate> visited = {};
-    queue.add(SearchState(start, 0, (x: -1, y: -1)));
-    printGrid(visited, obstacles);
-    while (queue.isNotEmpty) {
-      SearchState current = queue.removeFirst();
-      visited.add(current.location);
-      printGrid(visited, obstacles);
-      if (current.location == end) {
-        print(current.steps);
-        printGrid(visited, obstacles);
-        break;
-      }
-      List<Coordinate> neighbours =
-          getNextNeighbours(current.location, gridSize, current.previous)
-              .where((n) => !visited.contains(n))
-              .where((coord) => !obstacles.contains(coord))
-              .toList();
-      // print(neighbours);
-      queue.addAll(neighbours
-          .map((n) => SearchState(n, current.steps + 1, current.location)));
-    }
+    print(bfs(obstacles));
   }
 
-  void part2() {}
+  // Testing when the path may be blocked by adding an obstacle
+  // Uses brute force. Could be optimized
+  void part2() {
+    print("Part 2 can take a few seconds. Be patient.");
+    // Start at last known good path
+    int obstacleCount = useTestData ? 12 : 1024;
+    Set<Coordinate> obstacles = buildObstacles(obstacleCount);
+    // Until it can't reach the end, try again with more obstacles
+    while (bfs(obstacles) != -1) {
+      obstacleCount++;
+      obstacles = buildObstacles(obstacleCount);
+    }
+    print(input[obstacleCount - 1]); // -1 because index vs count
+  }
 
-    void printGrid(Set<Coordinate> visited, Set<Coordinate> obstacles){
-    for(int x = 0; x <= gridSize; x++){
+  void printGrid(Set<Coordinate> visited, Set<Coordinate> obstacles) {
+    for (int x = 0; x <= gridSize; x++) {
       List<String> row = [];
-      for(int y = 0; y <= gridSize; y++){
-        if (visited.contains((x: x, y: y))){
+      for (int y = 0; y <= gridSize; y++) {
+        if (visited.contains((x: x, y: y))) {
           row.add("O");
-        }else if (obstacles.contains((x: x, y: y))){
+        } else if (obstacles.contains((x: x, y: y))) {
           row.add("X");
         } else {
           row.add(".");
@@ -73,7 +61,38 @@ class Day18 extends Day {
       }
       print(row.join(""));
     }
-          print("");
+    print("");
+  }
+
+  // breadth-first search
+  int bfs(Set<Coordinate> obstacles) {
+    Coordinate start = (x: 0, y: 0);
+    Coordinate end = (x: gridSize, y: gridSize);
+    // queue for search and set to remember visited spaces
+    Queue<SearchState> queue = Queue();
+    Set<Coordinate> visited = {};
+    // Add start and mark as visited
+    queue.add(SearchState(start, 0, (x: -1, y: -1)));
+    visited.add(start);
+
+    while (queue.isNotEmpty) {
+      SearchState current = queue.removeFirst();
+      if (current.location == end) {
+        return current.steps;
+      }
+      // Gets valid neighbours, then filters by visited and obstacles
+      List<Coordinate> neighbours =
+          getNextNeighbours(current.location, gridSize, current.previous)
+              .where((n) => !visited.contains(n))
+              .where((coord) => !obstacles.contains(coord))
+              .toList();
+      // Mark these as visited now to avoid returning to space (direction doesn't matter)
+      visited.addAll(neighbours);
+      queue.addAll(neighbours
+          .map((n) => SearchState(n, current.steps + 1, current.location)));
+    }
+    // No path?
+    return -1;
   }
 
   List<Coordinate> getNextNeighbours(
