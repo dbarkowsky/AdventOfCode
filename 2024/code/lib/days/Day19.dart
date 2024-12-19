@@ -1,63 +1,63 @@
 import 'package:code/days/Day.dart';
 
 class Day19 extends Day {
-  Set<String> possiblePatterns = {};
+  Map<String, int> patternCount = {};
+  List<String> existingPatterns = [];
   List<String> desiredPatterns = [];
   Day19(super.fileName, super.useTestData) {
-    possiblePatterns.addAll(input[0].split(", "));
+    existingPatterns = input[0].split(", ");
+    for (final pattern in existingPatterns) {
+      patternCount[pattern] = 1;
+    }
     desiredPatterns.addAll(input.sublist(2));
   }
 
   void part1() {
     int count = 0;
     for (String desiredPattern in desiredPatterns) {
-      final result = isPatternPossible(desiredPattern);
-      if (result.isPossible) {
-        print(desiredPattern);
-        possiblePatterns.addAll(result.newPatterns);
+      print(desiredPattern);
+      if (getValueFromCache(desiredPattern) != 0) {
         count++;
       }
     }
     print(count);
   }
 
-  ({bool isPossible, List<String> newPatterns}) isPatternPossible(
-      String pattern) {
-    String desiredPattern = pattern;
-    // Start with the whole piece. Is that a valid pattern?
-    int start = 0;
-    int end = desiredPattern.length - 1;
-    List<String> parts = [];
-    while (end >= start) {
-      print('$start, $end');
-      String slice = desiredPattern.substring(start, end);
-      while (!possiblePatterns.contains(slice) && end > start) {
-        // If not, remove shrink it down until it is.
-        end--;
-        slice = desiredPattern.substring(start, end);
-        if (slice.isEmpty) {
-          return (isPossible: false, newPatterns: []);
-        }
-        print('slice: $slice');
-      }
-
-      // Otherwise, we assume we have a valid pattern
-      parts.add(slice);
-      desiredPattern = desiredPattern.substring(slice.length);
-      print('desiredPatter: $desiredPattern');
-      end = desiredPattern.length - 1;
-
-      if (desiredPattern.length == 1) {
-        if (possiblePatterns.contains(desiredPattern)) {
-          parts.add(desiredPattern);
-          return (isPossible: true, newPatterns: parts);
-        } else {
-          return (isPossible: false, newPatterns: []);
-        }
-      }
-    }
-    return (isPossible: false, newPatterns: []);
+  void part2() {
+    List<int> counts = desiredPatterns.map(getValueFromCache).toList();
+    print(patternCount);
+    print(counts.reduce((a, b) => a + b));
   }
 
-  void part2() {}
+  int countValidPatternsWithin(String desiredPattern) {
+    if (desiredPattern.isEmpty) return 1;
+    Set<String> choppedLeftovers = <String>{
+      ...existingPatterns
+          .where(
+              (existingPattern) => desiredPattern.startsWith(existingPattern))
+          .map((existingPattern) =>
+              desiredPattern.substring(existingPattern.length)),
+      ...existingPatterns
+          .where((existingPattern) => desiredPattern.endsWith(existingPattern))
+          .map((existingPattern) => desiredPattern.substring(
+              0, desiredPattern.length - existingPattern.length - 1))
+    };
+
+    List<int> values = choppedLeftovers
+        .toList()
+        .map((choppedLeftover) => getValueFromCache(choppedLeftover))
+        .toList();
+    int count = values.isEmpty ? 0 : values.reduce((a, b) => a + b);
+
+    return count;
+  }
+
+  int getValueFromCache(String pattern) {
+    if (patternCount.containsKey(pattern)) {
+      return patternCount[pattern]!;
+    }
+    int count = countValidPatternsWithin(pattern);
+    patternCount[pattern] = count;
+    return patternCount[pattern]!;
+  }
 }
