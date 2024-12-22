@@ -36,8 +36,6 @@ class Day21 extends Day {
     '>': (x: 1, y: 2),
   };
 
-  Map<(String, String), String> cache = {};
-
   void part1() {
     int total = 0;
     for (final code in input) {
@@ -64,19 +62,44 @@ class Day21 extends Day {
   }
 
   void part2() {
+    // cache = {};
+    // dirCache = {};
+    Map<String, String> numCache = {};
+    Map<String, String> dirCache = {};
     int total = 0;
+    int steps = 25;
     for (final code in input) {
+      print(code);
       String start = 'A';
       String joinedDirections = "";
       for (int i = 0; i < code.length; i++) {
         String end = code[i];
+        if (numCache.containsKey('$start,$end')) {
+          joinedDirections += numCache['$start,$end']!;
+          start = code[i];
+          continue;
+        }
         // Get initial inputs for possible keypad presses
         List<List<Coordinate>> paths = getShortestPaths(start, end, numPad);
         // Convert to direction strings
         List<List<String>> directions =
             paths.map(convertPathToInstructions).toList();
         // Use converter to get smallest amount of steps at x depth of robots
-        String convertedDirections = layerRobots(25, directions);
+        String convertedDirections = layerRobots(1, directions);
+        for (int i = 0; i < steps; i++) {
+          // FIXME: This string keeps getting bigger. Need to break it up and get all parts instead.
+          // FIXME: Maybe just track the number side instead.
+          print(convertedDirections);
+          if (dirCache.containsKey(convertedDirections)) {
+            convertedDirections = dirCache[convertedDirections]!;
+          } else {
+            String newDirections =
+                layerRobots(1, [convertedDirections.split("")]);
+            dirCache[convertedDirections] = newDirections;
+            convertedDirections = newDirections;
+          }
+        }
+        numCache['$start,$end'] = convertedDirections;
         joinedDirections += convertedDirections;
         start = code[i];
       }
@@ -89,6 +112,7 @@ class Day21 extends Day {
   }
 
   String layerRobots(int remainingLayers, List<List<String>> directions) {
+    String key = makeDirectionsKey(directions, remainingLayers);
     if (directions.isEmpty) return "";
     if (remainingLayers == 0) {
       return directions.first.join("");
@@ -100,6 +124,7 @@ class Day21 extends Day {
       String joinedDirections = "";
       for (int i = 0; i < possibleDirections.length; i++) {
         String end = possibleDirections[i];
+
         // Get initial inputs for possible keypad presses
         List<List<Coordinate>> paths = getShortestPaths(start, end, dirPad);
         // Convert to direction strings
@@ -110,6 +135,7 @@ class Day21 extends Day {
         String convertedDirections =
             layerRobots(remainingLayers - 1, directions);
         joinedDirections += convertedDirections;
+
         start = possibleDirections[i];
       }
       newDirections.add(joinedDirections.split("").toList());
@@ -118,6 +144,12 @@ class Day21 extends Day {
     List<String> stringDirs = newDirections.map((e) => e.join("")).toList();
     stringDirs.sort((a, b) => a.length - b.length);
     return stringDirs.first;
+  }
+
+  String makeDirectionsKey(List<List<String>> dirList, int layers) {
+    List<String> directions = dirList.map((e) => e.join("")).toList();
+    directions.sort();
+    return directions.join("") + layers.toString();
   }
 
   List<String> convertPathToInstructions(List<Coordinate> path) {
