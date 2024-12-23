@@ -3,6 +3,7 @@ import 'package:code/days/Day.dart';
 class Day22 extends Day {
   Day22(super.fileName, super.useTestData);
 
+// TODO: Comment this file
   void part1() {
     int sum = 0;
     for (final secretString in input) {
