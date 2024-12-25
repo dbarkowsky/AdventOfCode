@@ -60,6 +60,7 @@ class Day25 extends Day {
     print(count);
   }
 
+  // Part 2 is based on whether you have all previous stars
   void part2() {}
 
   // Key fits if its height is less than the remainder from the lock's pin
