@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:code/days/Day.dart';
 
 enum Operation { AND, OR, XOR }
@@ -36,7 +38,7 @@ class Day24 extends Day {
     }
   }
 
-  int getBinaryForLetter(String letter){
+  int getBinaryForLetter(String letter) {
     // Get all letter entries
     List<MapEntry<String, int>> entries =
         register.entries.where((e) => e.key.startsWith(letter)).toList();
@@ -90,66 +92,101 @@ class Day24 extends Day {
         .toList();
 
     // That should be 6 gates to swap so far, but how do we find the last two?
-    final falseCarryGates = () {
-      // For each gate in badZGates, swap it with the other bad gate that uses it as an input
-      for (var a in badOtherGates) {
-        final b = badZGates
-            .firstWhere((g) => register[g] == register[firstWhereThatUsesOutput(a)]);
-        Instruction temp = tree[a]!;
-        tree[a] = tree[b]!;
-        tree[b] = temp;
+    // final falseCarryGates = () {
+    //   // For each gate in badZGates, swap it with the other bad gate that uses it as an input
+    //   for (var a in badOtherGates) {
+    //     final b = badZGates
+    //         .firstWhere((g) => register[g] == register[firstWhereThatUsesOutput(a)]);
+    //     Instruction temp = tree[a]!;
+    //     tree[a] = tree[b]!;
+    //     tree[b] = temp;
+    //   }
+
+    //   run();
+    //   final expectedResult = getBinaryForLetter('x') + getBinaryForLetter('y');
+    //   final actualResult = getBinaryForLetter('z');
+    //   final falseCarryBit = countTrailingZeroBits(expectedResult ^ actualResult)
+    //       .toString()
+    //       .padLeft(2, '0');
+
+    //   final filteredWires = tree.values
+    //       .where((wire) =>
+    //           wire.left.endsWith(falseCarryBit) &&
+    //           wire.right.endsWith(falseCarryBit))
+    //       .toList();
+
+    //   assert(filteredWires.length == 2,
+    //       "Did not find exactly two false carry gates to swap.");
+    //   return filteredWires;
+    // }();
+
+    // print(falseCarryGates);
+
+    List<String> remainingNodes = tree.keys
+        .where((k) => !badZGates.contains(k) && !badOtherGates.contains(k))
+        .toList();
+    int swapIndexA = 0;
+    while (swapIndexA < remainingNodes.length - 1) {
+      for (int swapIndexB = swapIndexA + 1;
+          swapIndexB < remainingNodes.length;
+          swapIndexB++) {
+        reset();
+        // Swap known bad nodes
+        for (int i = 0; i < badZGates.length; i++) {
+          swapOutputs(badZGates[i], badOtherGates[i]);
+        }
+        // Swap two other nodes at random
+        swapOutputs(remainingNodes[swapIndexA], remainingNodes[swapIndexB]);
+        run();
+
+        if (thisSwapWorked()){
+          List<String> swappedNodes = [...badZGates, ...badOtherGates, remainingNodes[swapIndexA], remainingNodes[swapIndexB]];
+          swappedNodes.sort();
+          print(swappedNodes.join(","));
+          exit(0);
+        }
       }
+      swapIndexA++;
+    }
+    print('Failure');
+  }
 
-      run();
-      final expectedResult = getBinaryForLetter('x') + getBinaryForLetter('y');
-      final actualResult = getBinaryForLetter('z');
-      final falseCarryBit = countTrailingZeroBits(expectedResult ^ actualResult)
-          .toString()
-          .padLeft(2, '0');
+  bool thisSwapWorked(){
+    return getBinaryForLetter('x') ^ getBinaryForLetter('y') == getBinaryForLetter('z');
+  }
 
-      final filteredWires = tree.values
-          .where((wire) =>
-              wire.left.endsWith(falseCarryBit) &&
-              wire.right.endsWith(falseCarryBit))
-          .toList();
-
-      assert(filteredWires.length == 2,
-          "Did not find exactly two false carry gates to swap.");
-      return filteredWires;
-    }();
-
-    print(falseCarryGates);
+  void swapOutputs(String a, String b) {
+    Instruction temp = tree[a]!;
+    tree[a] = tree[b]!;
+    tree[b] = temp;
   }
 
   String firstWhereThatUsesOutput(String out) {
-  // Filter gates that use 'out' in their left or right output
-  final candidates = tree.entries.where((gate) => gate.value.left == out || gate.value.right == out).toList();
+    // Filter gates that use 'out' in their left or right output
+    final candidates = tree.entries
+        .where((gate) => gate.value.left == out || gate.value.right == out)
+        .toList();
 
-  // Check if we have a gate with an output starting with 'z'
-  final zGate = candidates.firstWhere(
-    (gate) => gate.key.startsWith('z'),
-    orElse: () => 
-      // If no 'z' gate is found, recursively call for the next gate that uses the output
-      candidates.firstWhere(
-      (gate) => tree.containsKey(gate.key),
-    )
-    
-  );
+    // Check if we have a gate with an output starting with 'z'
+    final zGate = candidates.firstWhere((gate) => gate.key.startsWith('z'),
+        orElse: () =>
+            // If no 'z' gate is found, recursively call for the next gate that uses the output
+            candidates.firstWhere(
+              (gate) => tree.containsKey(gate.key),
+            ));
     // If a 'z' gate is found, modify its output as per the original Kotlin logic
     final newOut = "z${int.parse(zGate.key.substring(1))}".padLeft(2, '0');
     return newOut;
   }
 
-
-
   int countTrailingZeroBits(int value) {
-  int count = 0;
-  while ((value & 1) == 0 && value != 0) {
-    count++;
-    value >>= 1; // Shift right by one bit.
+    int count = 0;
+    while ((value & 1) == 0 && value != 0) {
+      count++;
+      value >>= 1; // Shift right by one bit.
+    }
+    return count;
   }
-  return count;
-}
 
   int getRegisterValue(String key) {
     if (register.containsKey(key)) {
