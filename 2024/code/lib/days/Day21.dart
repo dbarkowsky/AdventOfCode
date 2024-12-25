@@ -35,7 +35,7 @@ class Day21 extends Day {
     'v': (x: 1, y: 1),
     '>': (x: 1, y: 2),
   };
-
+  Map<String, String> cache = {};
   void part1() {
     int total = 0;
     for (final code in input) {
@@ -62,13 +62,9 @@ class Day21 extends Day {
   }
 
   void part2() {
-    // cache = {};
-    // dirCache = {};
-    Map<String, String> numCache = {};
-    Map<String, String> dirCache = {};
     int total = 0;
     int steps = 25;
-    for (final code in ["029A"]) {
+    for (final code in input) {
       print(code);
       String start = 'A';
       String joinedDirections = "";
@@ -78,15 +74,16 @@ class Day21 extends Day {
         // Get initial inputs for possible keypad presses
         List<List<Coordinate>> paths = getShortestPaths(start, end, numPad);
         // Convert to direction strings
-        List<String> directions = paths
+        List<List<String>> directions = paths
             .map(convertPathToInstructions)
             .where(hasNoInefficiencies)
-            .toList()
-            .first;
-        // Use converter to get smallest amount of steps at x depth of robots
-        String convertedDirections = layerRobots(steps, [directions]);
+            .toList();
+        // print(directions);
+        String convertedDirections = "";
 
-        numCache['$start,$end'] = convertedDirections;
+        // Use converter to get smallest amount of steps at x depth of robots
+        convertedDirections = layerRobots(steps, directions);
+
         joinedDirections += convertedDirections;
         start = code[i];
       }
@@ -112,34 +109,46 @@ class Day21 extends Day {
     }
     List<List<String>> newDirections = [];
     for (final possibleDirections in directions) {
+      String dirKey = possibleDirections.join("");
+      if (cache.containsKey(dirKey)) {
+          newDirections.add(cache[dirKey]!.split("").toList());
+      } else {
+// print('possibleDirections: $possibleDirections');
       if (possibleDirections.isEmpty) continue;
       String start = 'A';
       String joinedDirections = "";
       for (int i = 0; i < possibleDirections.length; i++) {
         String end = possibleDirections[i];
+        String key = '$start,$end,$remainingLayers';
+        if (cache.containsKey(key)) {
+          joinedDirections += cache[key]!;
+        } else {
+// Get initial inputs for possible keypad presses
+          List<List<Coordinate>> paths = getShortestPaths(start, end, dirPad);
+          // Convert to direction strings
+          List<List<String>> directions = paths
+              .map(convertPathToInstructions)
+              .where(hasNoInefficiencies)
+              .toList();
+          // print('$start, $end, ${directions.join("")}');
 
-        // Get initial inputs for possible keypad presses
-        List<List<Coordinate>> paths = getShortestPaths(start, end, dirPad);
-        // Convert to direction strings
-        List<List<String>> directions = paths
-            .map(convertPathToInstructions)
-            .where(hasNoInefficiencies)
-            .toList();
-        // print('$start, $end, ${directions.join("")}');
-
-        // Use converter to get smallest amount of steps at x depth of robots
-        String convertedDirections =
-            layerRobots(remainingLayers - 1, directions);
-        List<String> dividedDirections =
-            convertedDirections.split("A").map((e) => '${e}A').toList();
-        List<String> trimmedDirections =
-            dividedDirections.sublist(0, dividedDirections.length - 1);
-        print(trimmedDirections);
-        joinedDirections += convertedDirections;
+          // Use converter to get smallest amount of steps at x depth of robots
+          String convertedDirections =
+              layerRobots(remainingLayers - 1, directions);
+          cache[key] = convertedDirections;
+          // List<String> dividedDirections =
+          //     convertedDirections.split("A").map((e) => '${e}A').toList();
+          // List<String> trimmedDirections =
+          //     dividedDirections.sublist(0, dividedDirections.length - 1);
+          // print('trimmedDrections ${trimmedDirections}');
+          // print('convertedDirections: $convertedDirections');
+          joinedDirections += convertedDirections;
+        }
 
         start = possibleDirections[i];
       }
       newDirections.add(joinedDirections.split("").toList());
+      }
     }
     // All sublists have been converted, find the shortest one.
     List<String> stringDirs = newDirections.map((e) => e.join("")).toList();
