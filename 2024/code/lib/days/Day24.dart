@@ -77,7 +77,7 @@ class Day24 extends Day {
     List<String> badZGates = tree.entries
         .where((entry) => entry.key.startsWith("z"))
         .where((entry) => tree[entry.key]!.op != Operation.XOR)
-        .where((entry) => entry.key != 'z$highest')
+        // .where((entry) => entry.key != 'z$highest')
         .map((e) => e.key)
         .toList();
 
@@ -96,23 +96,42 @@ class Day24 extends Day {
         .where((k) => !badZGates.contains(k) && !badOtherGates.contains(k))
         .toList();
     // What are all the possible combinations of swaps for these known bad gates?
-    // Should be 9 total
+    // Should be 9? (maybe 12) total
     List<({String a, String b})> combinations = [];
     for (String item1 in badZGates) {
       for (String item2 in badOtherGates) {
         combinations.add((a: item1, b: item2));
       }
     }
-    // Combine these into triplets of the swaps to take place
-    List<List<({String a, String b})>> swapTriplets = [];
-    swapTriplets.add([combinations[0], combinations[4], combinations[8]]);
-    swapTriplets.add([combinations[0], combinations[5], combinations[7]]);
-    swapTriplets.add([combinations[1], combinations[3], combinations[8]]);
-    swapTriplets.add([combinations[1], combinations[5], combinations[6]]);
-    swapTriplets.add([combinations[2], combinations[3], combinations[7]]);
-    swapTriplets.add([combinations[2], combinations[4], combinations[6]]);
 
-    for (final triplet in swapTriplets) {
+    // Generate all groups of 3 pairs with unique values
+    List<List<({String a, String b})>> groups = [];
+    for (int i = 0; i < combinations.length; i++) {
+      for (int j = i + 1; j < combinations.length; j++) {
+        for (int k = j + 1; k < combinations.length; k++) {
+          var group = [combinations[i], combinations[j], combinations[k]];
+
+          // Check if all values in the group are unique
+          Set<String> usedValues = {};
+          bool isValid = true;
+          for (var pair in group) {
+            if (usedValues.contains(pair.a) || usedValues.contains(pair.b)) {
+              isValid = false;
+              break;
+            }
+            usedValues.add(pair.a);
+            usedValues.add(pair.b);
+          }
+
+          if (isValid) {
+            groups.add(group);
+          }
+        }
+      }
+    }
+    print(groups);
+
+    for (final triplet in groups) {
       int swapIndexA = 0;
       while (swapIndexA < remainingNodes.length - 1) {
         for (int swapIndexB = swapIndexA + 1;
@@ -129,8 +148,12 @@ class Day24 extends Day {
 
           if (thisSwapWorked()) {
             List<String> swappedNodes = [
-              ...badZGates,
-              ...badOtherGates,
+              triplet[0].a,
+              triplet[0].b,
+              triplet[1].a,
+              triplet[1].b,
+              triplet[2].a,
+              triplet[2].b,
               remainingNodes[swapIndexA],
               remainingNodes[swapIndexB]
             ];
@@ -146,7 +169,7 @@ class Day24 extends Day {
   }
 
   bool thisSwapWorked() {
-    return getBinaryForLetter('x') ^ getBinaryForLetter('y') ==
+    return getBinaryForLetter('x') & getBinaryForLetter('y') ==
         getBinaryForLetter('z');
   }
 
