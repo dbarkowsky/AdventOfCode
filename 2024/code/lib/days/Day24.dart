@@ -254,6 +254,10 @@ class Day24 extends Day {
   // This is a much better way of solving the problem
   // Based off another solution I read online
   void part2() {
+    if (useTestData) {
+      print("Test data not designed for Part 2.");
+      exit(0);
+    }
     reset();
     // Set x to 0 and y to 1. Makes things easier to test.
     for (final key in register.keys) {
