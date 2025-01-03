@@ -45,9 +45,9 @@ class Day24 extends Day {
     }
   }
 
-  // Gets the binary value of all registers with a given prefix
+  // Gets the decimal value of all registers with a given prefix
   // Only used for x, y, and z
-  int getBinaryForLetter(String letter) {
+  int getDecimalForLetter(String letter) {
     // Get all letter entries
     List<MapEntry<String, int>> entries =
         register.entries.where((e) => e.key.startsWith(letter)).toList();
@@ -58,14 +58,21 @@ class Day24 extends Day {
       binaryString += entry.value.toString();
     }
     // Convert to decimal
-    int binary = int.parse(binaryString, radix: 2);
-    return binary;
+    int decimal = int.parse(binaryString, radix: 2);
+    return decimal;
+  }
+
+  String getBinaryForLetter(String letter) {
+    List<MapEntry<String, int>> letterEntries =
+        register.entries.where((e) => e.key.startsWith(letter)).toList();
+    letterEntries.sort((a, b) => b.key.compareTo(a.key));
+    return letterEntries.map((e) => e.value.toString()).join("");
   }
 
   // Just get the z outcome
   void part1() {
     run();
-    int binary = getBinaryForLetter('z');
+    int binary = getDecimalForLetter('z');
     print(binary);
   }
 
@@ -73,9 +80,9 @@ class Day24 extends Day {
   // Which wires are these?
   // This is my initial solution. It's not good, but produces
   // multiple possible answers, one of which is correct.
-  void part2() {
+  void part2BruteForce() {
     // Doesn't work for test input
-    if (useTestData){
+    if (useTestData) {
       print("Not intended for test input");
       exit(0);
     }
@@ -199,8 +206,8 @@ class Day24 extends Day {
   }
 
   bool thisSwapWorked() {
-    return getBinaryForLetter('x') + getBinaryForLetter('y') ==
-        getBinaryForLetter('z');
+    return getDecimalForLetter('x') + getDecimalForLetter('y') ==
+        getDecimalForLetter('z');
   }
 
   void swapOutputs(String a, String b) {
@@ -242,5 +249,124 @@ class Day24 extends Day {
       default:
         return Operation.AND; // should never hit
     }
+  }
+
+  // This is a much better way of solving the problem
+  // Based off another solution I read online
+  void part2() {
+    reset();
+    // Set x to 0 and y to 1. Makes things easier to test.
+    for (final key in register.keys) {
+      if (key.startsWith("x"))
+        register[key] = 0;
+      else if (key.startsWith("y")) register[key] = 1;
+    }
+    run();
+    // Record swaps for later
+    List<({String a, String b})> swaps = [];
+    // Find which wires are causing a bad result
+    // This is basically just detecting which full adders give the wrong output
+    List<String> badWires = getBadWires();
+    while (badWires.isNotEmpty) {
+      // Select the next wire
+      String currentName = badWires.first;
+      Instruction currentInstruction = tree[currentName]!;
+      // This is the register that will feed this adder
+      String inputName = currentName.replaceRange(0, 1, 'x');
+      // Output wires (z) should be the result of a XOR
+      if (currentInstruction.op != Operation.XOR) {
+        // Not a XOR? This is a problem. Must find the related XOR
+        // In full adder, x XOR y should lead to another XOR -> z
+        String firstXor = tree.entries
+            .where((e) => isXorWithInput(e.value, inputName))
+            .first
+            .key;
+        String secondXor = tree.entries
+            .where((e) => isXorWithInput(e.value, firstXor))
+            .first
+            .key;
+        // Now we have the initial z output and the element of the XOR, we can swap them
+        swaps.add((a: currentName, b: secondXor));
+      } else {
+        // It is a XOR. It should be fed by the result of an OR op (previous full adder)
+        // and the result of the XOR op
+        Instruction gateInput1 = tree[currentInstruction.left]!;
+        Instruction gateInput2 = tree[currentInstruction.right]!;
+
+        // If either of the instructions that led to this are AND, we know there's a problem
+        MapEntry<String, Instruction>? badWire;
+        if (gateInput1.op == Operation.AND) {
+          badWire = MapEntry(currentInstruction.left, gateInput1);
+        } else if (gateInput2.op == Operation.AND) {
+          badWire = MapEntry(currentInstruction.right, gateInput2);
+        }
+
+        // If we didn't find AND, it's not a bad wire maybe?
+        if (badWire == null) throw Exception("No bad gate here");
+
+        // Otherwise, we should have a bad wire and
+        // this bad wire should have XOR with x and y inputs
+        String inputXor = tree.entries
+            .where((e) => isXorWithInput(e.value, inputName))
+            .first
+            .key;
+
+        // We can now record the swap of the bad wire with the input XOR
+        swaps.add((a: inputXor, b: badWire.key));
+      }
+
+      // Refresh which wires are the bad ones to find the next issue
+      // This works because we should have just fixed the last one with swapping
+      // So running again will go until next issue is found or we reach the end
+      reset();
+      for (final key in register.keys) {
+        if (key.startsWith("x"))
+          register[key] = 0;
+        else if (key.startsWith("y")) register[key] = 1;
+      }
+      for (final swap in swaps) {
+        swapOutputs(swap.a, swap.b);
+      }
+      run();
+      badWires = getBadWires();
+    }
+    // Print the answer
+    List<String> swapKeys = swaps.expand((e) => [e.a, e.b]).toList();
+    swapKeys.sort();
+    print(swapKeys.join(","));
+  }
+
+  // Helper function to see if instruction matches XOR with key
+  bool isXorWithInput(Instruction i, String key) {
+    return i.op == Operation.XOR && (i.left == key || i.right == key);
+  }
+
+  // Returns a list of wire keys. 
+  // Relies on indices of each bit in the z output
+  List<String> getBadWires() {
+    return getBadIndices()
+        .map((i) => "z${i.toString().padLeft(2, '0')}")
+        .toList();
+  }
+
+  // This is the key to finding the bad full adders
+  List<int> getBadIndices() {
+    int x = getDecimalForLetter("x");
+    int y = getDecimalForLetter("y");
+    String zAsBinary = getBinaryForLetter("z");
+    String expectedBinary =
+        (x + y).toRadixString(2).padLeft(zAsBinary.length, "0");
+    List<String> expectedBits = expectedBinary.split("");
+    List<String> actualBits = zAsBinary.split("");
+    // Compare the actual bits to the expected bits.
+    // If they don't match, we add that index to the list of bad ones.
+    List<int> badIndices = [];
+    for (int i = 0; i < expectedBits.length; i++) {
+      if (expectedBits[expectedBits.length - i - 1] !=
+          actualBits[actualBits.length - i - 1]) {
+        badIndices.add(i);
+      }
+    }
+    return badIndices;
   }
 }
