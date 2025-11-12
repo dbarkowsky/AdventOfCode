@@ -20,7 +20,7 @@ So far:
 - 2016: Rust (Ongoing)
 - 2022: JavaScript
 - 2023: C# (Ongoing)
-- 2024: Dart (Ongoing)
+- 2024: Dart
 
 Languages I would still like to try for other years:
 
