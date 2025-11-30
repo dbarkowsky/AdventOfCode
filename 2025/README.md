@@ -23,3 +23,5 @@ For example, for Day 1 and the test data, you'd use:
 From the `aoc2025` folder, run one of the `run.ps1` or `run.sh` scripts provided.
 
 You still add the arguements like this: `run.ps1 1 test`, but it handles the build for you.
+
+The config for debugging also exists if you use VS Code, so F5 should also run the application, although you'll have to change the args in the `launch.json` file.
