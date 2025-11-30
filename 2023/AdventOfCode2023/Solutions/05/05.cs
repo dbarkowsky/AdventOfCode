@@ -195,185 +195,190 @@ namespace Solutions
     //   return minimumFertilizer;
     // }
 
-    public ulong Part2v4()
-    {
-      Dictionary<ulong, ulong> seedRangeMap = new Dictionary<ulong, ulong> { };
-      // Examine seed ranges. Determine if there are overlaps and establish final ranges.
-      for (int i = 0; i < seedStrings.Count; i += 2)
-      {
-        ulong start = ulong.Parse(seedStrings[i]);
-        ulong length = ulong.Parse(seedStrings[i + 1]);
-        ulong end = start + length - 1;
-        // Console.WriteLine($"{start}, {length}");
-        // Is there overlap with an existing value?
-        if (seedRangeMap.Keys.Count > 0)
-        {
-          // Does our starting value already fall in a range?
-          ulong[] existingStarts = seedRangeMap.Keys.ToArray();
-          int currentIndex = 0;
-          bool overlapFound = false;
-          ulong newStart = 0;
-          ulong newEnd = 0;
-          // Keep checking while start is greater or equal to key
-          while (currentIndex < existingStarts.Length && !overlapFound)
-          {
-            // Is the start between key and value?
-            if (start >= existingStarts[currentIndex] && start <= seedRangeMap[existingStarts[currentIndex]])
-            {
-              overlapFound = true;
-              // Then we see if it all fits in this range already
-              // Can see just by comparing the end values
-              // If new end is less than existing end, do nothing.
-              // If new end is more, then we just expand this key.
-              if (end > seedRangeMap[existingStarts[currentIndex]])
-              {
-                seedRangeMap[existingStarts[currentIndex]] = end;
-              }
-              newStart = existingStarts[currentIndex];
-              newEnd = end > seedRangeMap[existingStarts[currentIndex]] ? end : seedRangeMap[existingStarts[currentIndex]];
-              break;
-            }
-            // Is the end between key and value?
-            else if (end >= existingStarts[currentIndex] && end <= seedRangeMap[existingStarts[currentIndex]])
-            {
-              overlapFound = true;
-              if (start < existingStarts[currentIndex])
-              {
-                // Add with new start key and delete the old one.
-                seedRangeMap.Add(start, seedRangeMap[existingStarts[currentIndex]]);
-                seedRangeMap.Remove(existingStarts[currentIndex]);
-              }
-              newStart = start < existingStarts[currentIndex] ? start : existingStarts[currentIndex];
-              newEnd = seedRangeMap[existingStarts[currentIndex]];
-              break;
-            }
-            currentIndex++;
-          }
-          // Was any overlap found?
-          if (overlapFound)
-          {
-            // Need to check if there are any other entries that got engulfed by the expanded entry.
-            // Only entries between the currently updated entry
-            for (int j = 0; j < existingStarts.Length; j++)
-            {
-              if (existingStarts[currentIndex] > start && seedRangeMap[existingStarts[currentIndex]] < end)
-              {
-                seedRangeMap.Remove(existingStarts[currentIndex]);
-              }
-            }
-          }
-          else
-          {
-            // No overlap, just add it to the map
-            seedRangeMap.Add(start, end);
-          }
-        }
-        else
-        {
-          // First entry, can't be overlap
-          seedRangeMap.Add(start, start + length - 1);
-        }
-      }
-      Console.WriteLine("Starting Ranges");
-      seedRangeMap.OrderBy(pair => pair.Key).ToList().ForEach((e) =>
-      {
-        Console.WriteLine(e);
-      });
-      // For each set of ranges, apply and adjust ranges as needed
-      Dictionary<ulong, ulong> currentMap = new Dictionary<ulong, ulong>(seedRangeMap);
-      foreach (List<ulong[]> map in mappings)
-      {
-        // We change the current map with each iteration so it doesn't affect the changes in weird ways.
-        Dictionary<ulong, ulong> updatedMap = new Dictionary<ulong, ulong>(currentMap);
-        foreach (ulong[] values in map)
-        {
-          ulong destinationStart = values[0];
-          ulong sourceStart = values[1];
-          ulong range = values[2];
-          ulong sourceEnd = sourceStart + range - 1;
-          ulong destinationEnd = destinationStart + range - 1;
-          ulong difference = destinationStart - sourceStart;
+    // This one didn't work either. Got the sample input, but I think it might have been a fluke.
+    // Some issues with how the ranges are updated, causing duplication.
+    // public ulong Part2v4()
+    // {
+    //   Dictionary<ulong, ulong> seedRangeMap = new Dictionary<ulong, ulong> { };
+    //   // Examine seed ranges. Determine if there are overlaps and establish final ranges.
+    //   for (int i = 0; i < seedStrings.Count; i += 2)
+    //   {
+    //     ulong start = ulong.Parse(seedStrings[i]);
+    //     ulong length = ulong.Parse(seedStrings[i + 1]);
+    //     ulong end = start + length - 1;
+    //     // Console.WriteLine($"{start}, {length}");
+    //     // Is there overlap with an existing value?
+    //     if (seedRangeMap.Keys.Count > 0)
+    //     {
+    //       // Does our starting value already fall in a range?
+    //       ulong[] existingStarts = seedRangeMap.Keys.ToArray();
+    //       int currentIndex = 0;
+    //       bool overlapFound = false;
+    //       ulong newStart = 0;
+    //       ulong newEnd = 0;
+    //       // Keep checking while start is greater or equal to key
+    //       while (currentIndex < existingStarts.Length && !overlapFound)
+    //       {
+    //         // Is the start between key and value?
+    //         if (start >= existingStarts[currentIndex] && start <= seedRangeMap[existingStarts[currentIndex]])
+    //         {
+    //           overlapFound = true;
+    //           // Then we see if it all fits in this range already
+    //           // Can see just by comparing the end values
+    //           // If new end is less than existing end, do nothing.
+    //           // If new end is more, then we just expand this key.
+    //           if (end > seedRangeMap[existingStarts[currentIndex]])
+    //           {
+    //             seedRangeMap[existingStarts[currentIndex]] = end;
+    //           }
+    //           newStart = existingStarts[currentIndex];
+    //           newEnd = end > seedRangeMap[existingStarts[currentIndex]] ? end : seedRangeMap[existingStarts[currentIndex]];
+    //           break;
+    //         }
+    //         // Is the end between key and value?
+    //         else if (end >= existingStarts[currentIndex] && end <= seedRangeMap[existingStarts[currentIndex]])
+    //         {
+    //           overlapFound = true;
+    //           if (start < existingStarts[currentIndex])
+    //           {
+    //             // Add with new start key and delete the old one.
+    //             seedRangeMap.Add(start, seedRangeMap[existingStarts[currentIndex]]);
+    //             seedRangeMap.Remove(existingStarts[currentIndex]);
+    //           }
+    //           newStart = start < existingStarts[currentIndex] ? start : existingStarts[currentIndex];
+    //           newEnd = seedRangeMap[existingStarts[currentIndex]];
+    //           break;
+    //         }
+    //         currentIndex++;
+    //       }
+    //       // Was any overlap found?
+    //       if (overlapFound)
+    //       {
+    //         // Need to check if there are any other entries that got engulfed by the expanded entry.
+    //         // Only entries between the currently updated entry
+    //         for (int j = 0; j < existingStarts.Length; j++)
+    //         {
+    //           if (existingStarts[currentIndex] > start && seedRangeMap[existingStarts[currentIndex]] < end)
+    //           {
+    //             seedRangeMap.Remove(existingStarts[currentIndex]);
+    //           }
+    //         }
+    //       }
+    //       else
+    //       {
+    //         // No overlap, just add it to the map
+    //         seedRangeMap.Add(start, end);
+    //       }
+    //     }
+    //     else
+    //     {
+    //       // First entry, can't be overlap
+    //       seedRangeMap.Add(start, start + length - 1);
+    //     }
+    //   }
+    //   Console.WriteLine("Starting Ranges");
+    //   seedRangeMap.OrderBy(pair => pair.Key).ToList().ForEach((e) =>
+    //   {
+    //     Console.WriteLine(e);
+    //   });
+    //   // For each set of ranges, apply and adjust ranges as needed
+    //   Dictionary<ulong, ulong> currentMap = new Dictionary<ulong, ulong>(seedRangeMap);
+    //   foreach (List<ulong[]> map in mappings)
+    //   {
+    //     // We change the current map with each iteration so it doesn't affect the changes in weird ways.
+    //     Dictionary<ulong, ulong> updatedMap = new Dictionary<ulong, ulong>(currentMap);
+    //     foreach (ulong[] values in map)
+    //     {
+    //       ulong destinationStart = values[0];
+    //       ulong sourceStart = values[1];
+    //       ulong range = values[2];
+    //       ulong sourceEnd = sourceStart + range - 1;
+    //       ulong destinationEnd = destinationStart + range - 1;
+    //       ulong difference = destinationStart - sourceStart;
 
-          // Console.WriteLine($"{destinationStart}, {sourceStart}, {range}");
-          // Is there any overlap with existing ranges?
-          // No point looking at ones if some part is not in existing range
-          ulong[] validRangeKeys = currentMap.Keys.Where(key => IsBetween(key, sourceStart, sourceEnd) || IsBetween(currentMap[key], sourceStart, sourceEnd)).ToArray();
-          // For every valid range in the map, adjust the keys and values based on incoming map
-          foreach(ulong rangeStart in validRangeKeys)
-          {
-            ulong rangeEnd = currentMap[rangeStart];
-            // Does some of the change happen before this range starts?
-            bool someBefore = sourceStart < rangeStart && sourceEnd >= rangeStart && sourceEnd <= rangeEnd;
-            // Does some of the change happen after the range ends?
-            bool someAfter = sourceStart >= rangeStart && sourceStart <= sourceEnd && sourceEnd > rangeEnd;
-            // Is the change fully encompassed within the existing range?
-            bool changeInRange = sourceStart >= rangeStart && sourceEnd <= rangeEnd;
-            // Is the existing range fully encompassed in the change?
-            bool rangeInChange = rangeStart >= sourceStart && rangeEnd <= sourceEnd;
+    //       // Console.WriteLine($"{destinationStart}, {sourceStart}, {range}");
+    //       // Is there any overlap with existing ranges?
+    //       // No point looking at ones if some part is not in existing range
+    //       ulong[] validRangeKeys = currentMap.Keys.Where(key => IsBetween(key, sourceStart, sourceEnd) || IsBetween(currentMap[key], sourceStart, sourceEnd)).ToArray();
+    //       // For every valid range in the map, adjust the keys and values based on incoming map
+    //       foreach (ulong rangeStart in validRangeKeys)
+    //       {
+    //         ulong rangeEnd = currentMap[rangeStart];
+    //         // Does some of the change happen before this range starts?
+    //         bool someBefore = sourceStart < rangeStart && sourceEnd >= rangeStart && sourceEnd <= rangeEnd;
+    //         // Does some of the change happen after the range ends?
+    //         bool someAfter = sourceStart >= rangeStart && sourceStart <= sourceEnd && sourceEnd > rangeEnd;
+    //         // Is the change fully encompassed within the existing range?
+    //         bool changeInRange = sourceStart >= rangeStart && sourceEnd <= rangeEnd;
+    //         // Is the existing range fully encompassed in the change?
+    //         bool rangeInChange = rangeStart >= sourceStart && rangeEnd <= sourceEnd;
 
-            // I messed this up originally. I had added values outside the original range. 
-            // Instead, I needed to keep the values in the original ranges that weren't advanced.
-            if (someBefore)
-            {
-              // Range that updates
-              ulong inRangeStart = rangeStart;
-              ulong inRangeEnd = sourceEnd;
-              // Range that stays
-              ulong outRangeStart = sourceEnd + 1;
-              ulong outRangeEnd = rangeEnd;
-              // Remove entry
-              updatedMap.Remove(rangeStart);
-              // Add changed entries
-              updatedMap[inRangeStart + difference] = inRangeEnd + difference;
-              // Add the unchanged entries
-              updatedMap[outRangeStart] = outRangeEnd;
-            } else if (someAfter)
-            {
-              // Identify what's in range and what's after.
-              ulong inRangeStart = sourceStart;
-              ulong inRangeEnd = rangeEnd;
-              ulong outRangeStart = rangeStart;
-              ulong outRangeEnd = sourceStart - 1;
-              // Remove original
-              updatedMap.Remove(rangeStart);
-              // Add changed entries
-              updatedMap[inRangeStart + difference] = inRangeEnd + difference;
-              // Add the unchanged entries
-              updatedMap[outRangeStart] = outRangeEnd;
-            } else if (changeInRange)
-            {
-              // Identify 2-3 subranges: area before, area in, area after.
-              ulong beforeRangeStart = rangeStart;
-              ulong beforeRangeEnd = sourceStart - 1;
-              ulong inRangeStart = sourceStart;
-              ulong inRangeEnd = sourceEnd;
-              ulong afterRangeStart = sourceEnd + 1;
-              ulong afterRangeEnd = rangeEnd;
-              // Remove original entry
-              updatedMap.Remove(rangeStart);
-              // Add entry that gets changed by difference
-              updatedMap[inRangeStart + difference] = inRangeEnd + difference;
-              // Carry over unaltered part of previous range
-              updatedMap[beforeRangeStart] = beforeRangeEnd;
-              updatedMap[afterRangeStart] = afterRangeEnd;
-            } else if (rangeInChange)
-            {
-              // Remove original entry
-              updatedMap.Remove(rangeStart);
-              // Add changed entry
-              updatedMap[rangeStart + difference] = rangeEnd + difference;
-            }
-          }
-        }
-        currentMap = new Dictionary<ulong, ulong>(updatedMap);
-      }
-      Console.WriteLine("Ending Ranges");
-      currentMap.OrderBy(pair => pair.Key).ToList().ForEach((e) =>
-      {
-        Console.WriteLine(e);
-      });
-      return currentMap.OrderBy(pair => pair.Key).ToList().First().Key;
-    }
+    //         // I messed this up originally. I had added values outside the original range. 
+    //         // Instead, I needed to keep the values in the original ranges that weren't advanced.
+    //         if (someBefore)
+    //         {
+    //           // Range that updates
+    //           ulong inRangeStart = rangeStart;
+    //           ulong inRangeEnd = sourceEnd;
+    //           // Range that stays
+    //           ulong outRangeStart = sourceEnd + 1;
+    //           ulong outRangeEnd = rangeEnd;
+    //           // Remove entry
+    //           updatedMap.Remove(rangeStart);
+    //           // Add changed entries
+    //           updatedMap[inRangeStart + difference] = inRangeEnd + difference;
+    //           // Add the unchanged entries
+    //           updatedMap[outRangeStart] = outRangeEnd;
+    //         }
+    //         else if (someAfter)
+    //         {
+    //           // Identify what's in range and what's after.
+    //           ulong inRangeStart = sourceStart;
+    //           ulong inRangeEnd = rangeEnd;
+    //           ulong outRangeStart = rangeStart;
+    //           ulong outRangeEnd = sourceStart - 1;
+    //           // Remove original
+    //           updatedMap.Remove(rangeStart);
+    //           // Add changed entries
+    //           updatedMap[inRangeStart + difference] = inRangeEnd + difference;
+    //           // Add the unchanged entries
+    //           updatedMap[outRangeStart] = outRangeEnd;
+    //         }
+    //         else if (changeInRange)
+    //         {
+    //           // Identify 2-3 subranges: area before, area in, area after.
+    //           ulong beforeRangeStart = rangeStart;
+    //           ulong beforeRangeEnd = sourceStart - 1;
+    //           ulong inRangeStart = sourceStart;
+    //           ulong inRangeEnd = sourceEnd;
+    //           ulong afterRangeStart = sourceEnd + 1;
+    //           ulong afterRangeEnd = rangeEnd;
+    //           // Remove original entry
+    //           updatedMap.Remove(rangeStart);
+    //           // Add entry that gets changed by difference
+    //           updatedMap[inRangeStart + difference] = inRangeEnd + difference;
+    //           // Carry over unaltered part of previous range
+    //           updatedMap[beforeRangeStart] = beforeRangeEnd;
+    //           updatedMap[afterRangeStart] = afterRangeEnd;
+    //         }
+    //         else if (rangeInChange)
+    //         {
+    //           // Remove original entry
+    //           updatedMap.Remove(rangeStart);
+    //           // Add changed entry
+    //           updatedMap[rangeStart + difference] = rangeEnd + difference;
+    //         }
+    //       }
+    //     }
+    //     currentMap = new Dictionary<ulong, ulong>(updatedMap);
+    //   }
+    //   Console.WriteLine("Ending Ranges");
+    //   currentMap.OrderBy(pair => pair.Key).ToList().ForEach((e) =>
+    //   {
+    //     Console.WriteLine(e);
+    //   });
+    //   return currentMap.OrderBy(pair => pair.Key).ToList().First().Key;
+    // }
 
     private static bool IsBetween(ulong value, ulong start, ulong end)
     {
@@ -430,5 +435,170 @@ namespace Solutions
       }
       return min;
     }
+
+    // Insert or merge new ranges as needed.
+    private void AddRange(Dictionary<ulong, ulong> dict, ulong start, ulong end)
+    {
+      ulong s = start;
+      ulong e = end;
+
+      // Find overlapping existing entries
+      List<ulong> keys = dict.Keys.OrderBy(k => k).ToList();
+      // For each key, we're going to see if this even needs to be done.
+      // Remember the key is the start of an existing range and the value is the end
+      foreach (ulong key in keys)
+      {
+        ulong value = dict[key];
+        if (value + 1 < s) continue; // This new start is past the existing end. Does not affect, keep looking.
+        if (e + 1 < key) break; // This new end is before the existing start. Does not affect and we can stop looking.
+
+        // At this point, we have identified overlap. 
+        // Expand the range by finding the new start and end, removing the original, then adding the new range.
+        s = Math.Min(s, key);
+        e = Math.Max(e, value);
+        dict.Remove(key);
+      }
+
+      dict[s] = e;
+    }
+
+    // Different approach to creating the initial range map
+    private Dictionary<ulong, ulong> CreateSeedMap(List<string> seedStrings)
+    {
+      List<(ulong, ulong)> ranges = new List<(ulong, ulong)>();
+      // Adding starts and ends of ranges
+      for (int i = 0; i < seedStrings.Count; i += 2)
+      {
+        ulong start = ulong.Parse(seedStrings[i]);
+        ulong len = ulong.Parse(seedStrings[i + 1]);
+        ulong end = start + len - 1;
+
+        ranges.Add((start, end));
+      }
+
+      return ranges.ToDictionary(t => t.Item1, t => t.Item2);
+    }
+
+
+    public ulong Part2v5()
+    {
+      Dictionary<ulong, ulong> seedRanges = CreateSeedMap(seedStrings);
+
+      // For each mapping block (seed->soil, soil->fertilizer, etc.)
+      foreach (List<ulong[]> block in mappings)
+      {
+        // Build the map blocks into a list we can use.
+        List<(ulong sourceStart, ulong sourceEnd, ulong destStart)> instructions = new();
+        foreach (ulong[] row in block)
+        {
+          ulong destStart = row[0];
+          ulong sourceStart = row[1];
+          ulong length = row[2];
+          if (length == 0) continue; // This does happen in my input... 
+          ulong sourceEnd = sourceStart + length - 1;
+          instructions.Add((sourceStart, sourceEnd, destStart));
+        }
+
+        // This sort matters because of how we iterate to find an index later...
+        instructions = instructions.OrderBy(s => s.sourceStart).ToList();
+
+        // We don't want to affect the source seed ranges while we adjust them.
+        // Starting with a blank dict and building it out instead.
+        Dictionary<ulong, ulong> next = new();
+
+        // Handling one range at a time
+        // I wasn't sure if order would matter here, but tried both and it doesn't seem to.
+        // No noticable time difference at least.
+        foreach (KeyValuePair<ulong, ulong> kv in seedRanges)
+        {
+          ulong rangeStart = kv.Key;
+          ulong rangeEnd = kv.Value;
+
+          // Tracking current position as we try to split existing ranges.
+          // This is why the sort mattered.
+          ulong currentValue = rangeStart;
+          int instructionIndex = 0;
+
+          // From the list of instructions in this block, we're trying to find which one actually applies to our current range.
+          // Only works if instructions are sorted. We continue along instructions until we find one where the end has surpassed our current value.
+          while (instructionIndex < instructions.Count && instructions[instructionIndex].sourceEnd < currentValue)
+            instructionIndex++;
+
+          // Walk the seed range. We do this in chunks, updating the seed map as necessary. 
+          // Ends only when the end of the existing range has been traversed.
+          // I felt this approach was cool. It moves through the values without having to iterate through the huge numbers.
+          // This eliminates the nasty O(N) runtime, but it's hard to follow mentally.
+          // Looping through like this means you can re-use the if blocks, so an area with no changes is treated the same as the leftover area (no changes).
+          while (currentValue <= rangeEnd)
+          {
+            // If no more instructions or the start of the change range is bigger than the end of the seed range.
+            // This means nothing is changed. We can end this loop here. All is copied forward.
+            if (instructionIndex >= instructions.Count || instructions[instructionIndex].sourceStart > rangeEnd)
+            {
+              // remainder
+              AddRange(next, currentValue, rangeEnd);
+              break;
+            }
+
+            // Fun deconstruction here.
+            (ulong sourceStart, ulong sourceEnd, ulong destStart) = instructions[instructionIndex];
+
+            // If the sourceStart is after currentValue, it means there's a gap of unchanged values before we start changing things
+            if (sourceStart > currentValue)
+            {
+              // Find the end of this gap and add it as-is to the next iteration
+              ulong gapEnd = Math.Min(rangeEnd, sourceStart - 1);
+              AddRange(next, currentValue, gapEnd);
+              currentValue = gapEnd + 1; // This is important to skip ahead without iterating one-by-one
+              // Why don't we advance to the next instruction?
+              // There's still another section to update.
+              continue;
+            }
+
+            // The current value is in the range, so we need to update some of the range at least.
+            // There still could be some after the range that gets copied over again verbatim
+            if (currentValue >= sourceStart && currentValue <= sourceEnd)
+            {
+              // The part that is inside this source and inside our current range:
+              ulong inStart = currentValue;
+              ulong inEnd = Math.Min(rangeEnd, sourceEnd); 
+
+              // Map this [inStart, inEnd] to destination by preserving offset
+              // destinationStart = inStart - sourceStart + destStart
+              ulong offset = inStart - sourceStart;
+              ulong mappedStart = destStart + offset;
+              ulong mappedEnd = destStart + (inEnd - sourceStart);
+
+              // Adding changed range
+              AddRange(next, mappedStart, mappedEnd);
+
+              // Move currentValue up to where it the changed range ended.
+              currentValue = inEnd + 1;
+
+              // If inEnd == sourceStart we should advance to next source
+              // It means the change range ends exactly where the existing seed range ends
+              // Otherwise, there's a bit leftover that's unchanged, but the first if statement here should take care of it.
+              if (inEnd >= sourceEnd)
+                instructionIndex++;
+              // else pos > rEnd and loop will break
+              continue;
+            }
+
+            // If here: s.srcStart <= rEnd but pos < s.srcStart would have been handled.
+            // Fallback advance
+            instructionIndex++;
+          } 
+        } 
+
+        // Done with block, use as basis for next block.
+        seedRanges = next;
+      }
+
+      // After all blocks, return smallest key
+      return seedRanges.OrderBy(k => k.Key).First().Key;
+    }
+
   }
+
+
 }
