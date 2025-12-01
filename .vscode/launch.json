@@ -3,23 +3,23 @@
   // Comment out the configurations you are not using.
   // It is not automatically determined by language.
   "configurations": [
-    {
-      "name": "Run C# Code",
-      "type": "coreclr",
-      "request": "launch",
-      "program": "${workspaceFolder}/2023/AdventOfCode2023/bin/Debug/net7.0/AdventOfCode2023.dll",
-      "args": ["5"],
-      "cwd": "${workspaceFolder}/2023/AdventOfCode2023",
-      "stopAtEntry": false,
-      "console": "internalConsole"
-    },
-    {
-      "name": "Run Dart Code",
-      "cwd": "2024\\code",
-      "request": "launch",
-      "type": "dart",
-      "args": ["21", "test"]
-    },
+    // {
+    //   "name": "Run C# Code",
+    //   "type": "coreclr",
+    //   "request": "launch",
+    //   "program": "${workspaceFolder}/2023/AdventOfCode2023/bin/Debug/net7.0/AdventOfCode2023.dll",
+    //   "args": ["5"],
+    //   "cwd": "${workspaceFolder}/2023/AdventOfCode2023",
+    //   "stopAtEntry": false,
+    //   "console": "internalConsole"
+    // },
+    // {
+    //   "name": "Run Dart Code",
+    //   "cwd": "2024\\code",
+    //   "request": "launch",
+    //   "type": "dart",
+    //   "args": ["21", "test"]
+    // },
     {
       "name": "Run Java Code",
       "cwd": "${workspaceFolder}/2025/aoc2025",

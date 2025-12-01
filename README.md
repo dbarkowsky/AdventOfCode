@@ -21,6 +21,7 @@ So far:
 - 2022: JavaScript
 - 2023: C# (Ongoing)
 - 2024: Dart
+- 2025: Java (Ongoing)
 
 Languages I would still like to try for other years:
 
@@ -30,7 +31,6 @@ Languages I would still like to try for other years:
 - C++
 - TypeScript
 - Perl
-- Java
 - Kotlin
 - Powershell
 - Bash
