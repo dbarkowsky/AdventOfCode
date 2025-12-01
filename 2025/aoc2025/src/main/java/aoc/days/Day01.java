@@ -41,7 +41,7 @@ public class Day01 {
 
   public void Part2() {
     // Implement Part 1 logic here
-    System.out.println("Day 01, Part 1");
+    System.out.println("Day 01, Part 2");
     int currentValue = 50;
     int zeroCount = 0;
     for (String line : lines) {
