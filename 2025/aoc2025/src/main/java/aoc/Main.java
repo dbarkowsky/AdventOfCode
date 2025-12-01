@@ -10,16 +10,20 @@ public class Main {
       System.out.println("Please provide the day number as an argument.");
       return;
     }
-    int day = Integer.parseInt(args[0]);
+    // print the working path
+    System.out.println("Working Directory = " + System.getProperty("user.dir"));
+    // Deal with args
+    int dayNum = Integer.parseInt(args[0]);
     boolean test = args.length > 1 && args[1].equals("test");
-    switch (day) {
+    // Load file
+    String filePath =  String.format(test ? "input/%02d_test.txt" : "input/%02d.txt", dayNum);
+    FileReader fileReader = new FileReader(filePath);
+    // Call correct day
+    switch (dayNum) {
       case 1:
-        // print the working path
-        System.out.println("Working Directory = " + System.getProperty("user.dir"));
-        String filePath = test ? "input/01_test.txt" : "input/01.txt";
-        FileReader fileReader = new FileReader(filePath);
-        Day01.Part1(fileReader.lines);
-        Day01.Part2(fileReader.lines);
+        Day01 day = new Day01(fileReader.lines);
+        day.Part1();
+        day.Part2();
         break;
       // Add more cases for other days
       default:
