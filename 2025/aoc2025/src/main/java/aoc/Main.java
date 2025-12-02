@@ -23,9 +23,14 @@ public class Main {
     // Call correct day
     switch (dayNum) {
       case 1:
-        Day01 day = new Day01(fileReader.lines);
-        day.Part1();
-        day.Part2();
+        Day01 day01 = new Day01(fileReader.lines);
+        day01.Part1();
+        day01.Part2();
+        break;
+      case 2:
+        Day02 day02 = new Day02(fileReader.lines);
+        day02.Part1();
+        day02.Part2();
         break;
       // Add more cases for other days
       default:
