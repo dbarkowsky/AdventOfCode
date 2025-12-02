@@ -1,6 +1,8 @@
 package aoc.days;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Day02 {
 
@@ -117,5 +119,28 @@ public class Day02 {
       validDivision++;
     }
     return false;
+  }
+
+  // Then I realized regex was an option
+  // I thought this would be faster, but it's actually slower somehow.
+  public void UseRegex() {
+    Pattern part1Pattern = Pattern.compile("^(.+)\\1$");
+    Pattern part2Pattern = Pattern.compile("^(.+)\\1+$");
+    long part1Sum = 0;
+    long part2Sum = 0;
+    // For each range
+    for (String range : ranges) {
+      // Get start and end of range
+      long start = Long.parseLong(range.split("-")[0]);
+      long end = Long.parseLong(range.split("-")[1]);
+
+      // Loop through range and look for repeating (invalid) IDs
+      for (long i = start; i <= end; i++) {
+        if (part1Pattern.matcher(String.valueOf(i)).find()) part1Sum += i;
+        if (part2Pattern.matcher(String.valueOf(i)).find()) part2Sum += i;
+      }
+    }
+    System.out.printf("Part 1: %d\n", part1Sum);
+    System.out.printf("Part 2: %d\n", part2Sum);
   }
 }
