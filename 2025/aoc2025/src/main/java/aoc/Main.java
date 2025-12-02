@@ -18,6 +18,8 @@ public class Main {
     // Load file
     String filePath =  String.format(test ? "input/%02d_test.txt" : "input/%02d.txt", dayNum);
     FileReader fileReader = new FileReader(filePath);
+    // Start timer
+    long startingMillis = System.currentTimeMillis();
     // Call correct day
     switch (dayNum) {
       case 1:
@@ -29,5 +31,7 @@ public class Main {
       default:
         System.out.println("Invalid day number.");
     }
+    // Print time
+    System.out.printf("Time taken: %dms", System.currentTimeMillis() - startingMillis);
   }
 }
