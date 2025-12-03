@@ -150,7 +150,8 @@ public class Day02 {
   }
 
   // This version inspired by a friend who wanted to try this way.
-  // I needed to see if this was faster.
+  // Generates all duplicate numbers in a range first, then checks them against existing ranges.
+  // I needed to see if this was faster. IT'S SO MUCH FASTER.
   // Only for Part 2
   public void NumGenVersion() {
     Map<Long, Long> rangesMap = new HashMap<>();
