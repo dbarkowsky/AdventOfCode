@@ -3,6 +3,7 @@ package aoc.days;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Stack;
 
 public class Day03 {
   private ArrayList<String> lines;
@@ -50,12 +51,54 @@ public class Day03 {
     System.out.println(joltageSum);
   }
 
+  // Second attempt after some research.
+  // Totally different approach.
+  public void Part2() {
+    System.out.println("Day 03, Part 2");
+    long joltageSum = 0;
+    // For each battery bank (row)
+    for (String bank : lines) {
+      int targetLength = 12;
+      Stack<Character> stack = new Stack<>();
+      // Iterate left to right over number.
+      for (int i = 0; i < bank.length(); i++) {
+        char currentNum = bank.charAt(i);
+
+        // This has a few parts:
+        // 1. The stack obviously can't be empty
+        // 2. We need to make sure there's still 12 items on the stack and there's
+        // potential to fill it up to 12 still in the row.
+        // That's the stack.size() + (bank.length() - i) > targetLength
+        // 3. If the top item on the stack is smaller, we remove it so it can be
+        // replaced.
+        while (!stack.isEmpty() &&
+            stack.size() + (bank.length() - i) > targetLength &&
+            stack.peek() < currentNum) {
+          stack.pop();
+        }
+
+        // Then, if there's room, we replace it with the bigger number.
+        if (stack.size() < targetLength) {
+          stack.push(currentNum);
+        }
+      }
+      
+      // Combining stack to final value here
+      String result = "";
+      for (char num : stack) {
+        result += num;
+      }
+      joltageSum += Long.valueOf(result);
+    }
+    System.out.println(joltageSum);
+  }
+
   // Same concept, but turns on twelve batteries.
   // This approach didn't work. It's very greedy, and it messes up with numbers
   // like 234234234234278.
   // It will prioritize the higher number for some reason, so misses smaller
   // numbers that would result in an overall bigger value.
-  public void Part2() {
+  public void Part2Original() {
     // Similar concept to start.
     System.out.println("Day 03, Part 2");
     long joltageSum = 0;
