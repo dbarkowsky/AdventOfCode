@@ -39,8 +39,8 @@ public class Main {
         break;
       case 4:
         Day04 day04 = new Day04(fileReader.lines);
-        day04.Part1();
-        day04.Part2();
+        day04.part1();
+        day04.part2();
         break;
       // Add more cases for other days
       default:

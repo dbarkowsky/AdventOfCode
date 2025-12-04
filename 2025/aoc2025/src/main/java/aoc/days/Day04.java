@@ -25,36 +25,49 @@ public class Day04 {
     }
   }
 
-  public void Part1() {
+  public void part1() {
     System.out.println("Day 04, Part 1");
     // Cycle through each entry in the paper roll set
     // Check the surrounding area and add it to count if
     // surrounded by less than 4 other paper rolls.
     int accessiblePaperRollCount = 0;
-    int threshold = 4;
+    final int THRESHOLD = 4;
     for (PaperRoll roll : paperRolls) {
-      if (!hasXPaperRollsAdjacent(roll, threshold)){
+      if (!hasXPaperRollsAdjacent(roll, THRESHOLD, paperRolls)) {
         accessiblePaperRollCount++;
       }
     }
     System.out.println(accessiblePaperRollCount);
   }
 
-  public void Part2() {
+  public void part2() {
     System.out.println("Day 04, Part 2");
     // Similar approach, but we need to remove the rolls and run again.
     // Repeat until all removable rolls have been taken.
-    // int accessiblePaperRollCount = 0;
-    // int threshold = 4;
-    // for (PaperRoll roll : paperRolls) {
-    //   if (!hasXPaperRollsAdjacent(roll, threshold)){
-    //     accessiblePaperRollCount++;
-    //   }
-    // }
-    // System.out.println(accessiblePaperRollCount);
+    int accessiblePaperRollCount = 0;
+    final int THRESHOLD = 4;
+    int rollsTakenThisRound;
+    do {
+      // Reset rolls
+      rollsTakenThisRound = 0;
+      Set<PaperRoll> rollsToRemove = new HashSet<Day04.PaperRoll>();
+      for (PaperRoll roll : paperRolls) {
+        if (!hasXPaperRollsAdjacent(roll, THRESHOLD, paperRolls)) {
+          accessiblePaperRollCount++;
+          rollsTakenThisRound++;
+          rollsToRemove.add(roll);
+        }
+      }
+      // Notably, it seems we only remove them at the end like a wave.
+      // This seems wrong to me, but it's easier to deal with.
+      for (PaperRoll roll: rollsToRemove){
+        paperRolls.remove(roll);
+      }
+    } while (rollsTakenThisRound > 0);
+    System.out.println(accessiblePaperRollCount);
   }
 
-  private boolean hasXPaperRollsAdjacent(PaperRoll roll, int threshold) {
+  private boolean hasXPaperRollsAdjacent(PaperRoll roll, int threshold, Set<PaperRoll> rolls) {
     ArrayList<PaperRoll> rollsToCheck = new ArrayList<>();
     rollsToCheck.add(new PaperRoll(roll.x - 1, roll.y - 1)); // Top left
     rollsToCheck.add(new PaperRoll(roll.x - 1, roll.y)); // Top
@@ -66,8 +79,9 @@ public class Day04 {
     rollsToCheck.add(new PaperRoll(roll.x + 1, roll.y + 1)); // Bottom right
 
     int rollCount = 0;
-    for (PaperRoll r : rollsToCheck){
-      if (paperRolls.contains(r)) rollCount++;
+    for (PaperRoll r : rollsToCheck) {
+      if (rolls.contains(r))
+        rollCount++;
     }
 
     return rollCount >= threshold;
