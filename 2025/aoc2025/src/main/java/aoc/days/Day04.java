@@ -60,7 +60,7 @@ public class Day04 {
       }
       // Notably, it seems we only remove them at the end like a wave.
       // This seems wrong to me, but it's easier to deal with.
-      for (PaperRoll roll: rollsToRemove){
+      for (PaperRoll roll : rollsToRemove) {
         paperRolls.remove(roll);
       }
     } while (rollsTakenThisRound > 0);
@@ -82,6 +82,9 @@ public class Day04 {
     for (PaperRoll r : rollsToCheck) {
       if (rolls.contains(r))
         rollCount++;
+      // Exit early if reach threshold early
+      if (rollCount >= threshold)
+        return true;
     }
 
     return rollCount >= threshold;
