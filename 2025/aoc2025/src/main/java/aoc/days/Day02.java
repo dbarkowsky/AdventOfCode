@@ -19,7 +19,7 @@ public class Day02 {
    * Looking for repeating numbers, were one half is the same as the other. e.g.
    * 123123.
    */
-  public void Part1() {
+  public void part1() {
     System.out.println("Day 02, Part 1");
     long repeatingValueSum = 0;
     // For each range
@@ -30,7 +30,7 @@ public class Day02 {
 
       // Loop through range and look for repeating (invalid) IDs
       for (long i = start; i <= end;) {
-        if (HasRepeatingHalves(i)) {
+        if (hasRepeatingHalves(i)) {
           repeatingValueSum += i;
         }
         i++;
@@ -51,7 +51,7 @@ public class Day02 {
   /**
    * Now any digit entirely made of repeating numbers counts. e.g. 121212.
    */
-  public void Part2() {
+  public void part2() {
     System.out.println("Day 02, Part 2");
     long repeatingValueSum = 0;
     // For each range
@@ -62,7 +62,7 @@ public class Day02 {
 
       // Loop through range and look for repeating (invalid) IDs
       for (long i = start; i <= end;) {
-        if (HasRepeatingChunks(i)) {
+        if (hasRepeatingChunks(i)) {
           repeatingValueSum += i;
         }
         i++;
@@ -72,7 +72,7 @@ public class Day02 {
   }
 
   // Just checks if both halves are the same string
-  private boolean HasRepeatingHalves(long num) {
+  private boolean hasRepeatingHalves(long num) {
     String stringNum = String.valueOf(num);
     // Can't be repeating if odd length
     if (stringNum.length() % 2 == 1)
@@ -86,7 +86,7 @@ public class Day02 {
 
   // Starts with the half division, but then breaks it down into smaller and
   // smaller divisions.
-  private boolean HasRepeatingChunks(long num) {
+  private boolean hasRepeatingChunks(long num) {
     String stringNum = String.valueOf(num);
     // Could now potentially repeat if odd. e.g. 111
     // Start with halves, but if a repeating value isn't found, break it up by the
@@ -126,7 +126,7 @@ public class Day02 {
 
   // Then I realized regex was an option
   // I thought this would be faster, but it's actually slower somehow.
-  public void UseRegex() {
+  public void useRegex() {
     Pattern part1Pattern = Pattern.compile("^(.+)\\1$");
     Pattern part2Pattern = Pattern.compile("^(.+)\\1+$");
     long part1Sum = 0;
@@ -153,7 +153,7 @@ public class Day02 {
   // Generates all duplicate numbers in a range first, then checks them against existing ranges.
   // I needed to see if this was faster. IT'S SO MUCH FASTER.
   // Only for Part 2
-  public void NumGenVersion() {
+  public void numGenVersion() {
     Map<Long, Long> rangesMap = new HashMap<>();
     // Identify lowest and highest number of digits in ranges.
     long smallest = Long.MAX_VALUE;

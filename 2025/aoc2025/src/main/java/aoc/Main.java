@@ -24,18 +24,18 @@ public class Main {
     switch (dayNum) {
       case 1:
         Day01 day01 = new Day01(fileReader.lines);
-        day01.Part1();
-        day01.Part2();
+        day01.part1();
+        day01.part2();
         break;
       case 2:
         Day02 day02 = new Day02(fileReader.lines);
-        day02.Part1();
-        day02.Part2();
+        day02.part1();
+        day02.part2();
         break;
       case 3:
         Day03 day03 = new Day03(fileReader.lines);
-        day03.Part1();
-        day03.Part2();
+        day03.part1();
+        day03.part2();
         break;
       case 4:
         Day04 day04 = new Day04(fileReader.lines);

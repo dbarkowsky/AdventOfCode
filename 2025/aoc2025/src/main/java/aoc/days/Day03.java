@@ -13,7 +13,7 @@ public class Day03 {
   }
 
   // Turns on the batteries to make the biggest two-digit number
-  public void Part1() {
+  public void part1() {
     System.out.println("Day 03, Part 1");
     int joltageSum = 0;
     // For each battery bank (row)
@@ -53,7 +53,7 @@ public class Day03 {
 
   // Second attempt after some research.
   // Totally different approach.
-  public void Part2() {
+  public void part2() {
     System.out.println("Day 03, Part 2");
     long joltageSum = 0;
     // For each battery bank (row)
@@ -98,7 +98,7 @@ public class Day03 {
   // like 234234234234278.
   // It will prioritize the higher number for some reason, so misses smaller
   // numbers that would result in an overall bigger value.
-  public void Part2Original() {
+  public void part2Original() {
     // Similar concept to start.
     System.out.println("Day 03, Part 2");
     long joltageSum = 0;
@@ -127,7 +127,7 @@ public class Day03 {
 
       int targetOnBatteries = 12;
       int searchStartIndex = 0;
-      while (CountOnBatteries(onOffList) < targetOnBatteries) {
+      while (countOnBatteries(onOffList) < targetOnBatteries) {
         // Find highest value
         int biggestNumber = -1;
         for (int i = searchStartIndex; i < batteries.size(); i++) {
@@ -140,14 +140,14 @@ public class Day03 {
 
         // Start turning on batteries with that number, right to left.
         // Don't exceed total number allowed on.
-        for (int i = batteries.size() - 1; i >= 0 && CountOnBatteries(onOffList) < targetOnBatteries; i--) {
+        for (int i = batteries.size() - 1; i >= 0 && countOnBatteries(onOffList) < targetOnBatteries; i--) {
           if (batteries.get(i) == biggestNumber) {
             onOffList[i] = true;
           }
         }
 
         // If we're at the target, we can stop.
-        int onBatteries = CountOnBatteries(onOffList);
+        int onBatteries = countOnBatteries(onOffList);
         if (onBatteries == targetOnBatteries)
           break;
 
@@ -158,16 +158,16 @@ public class Day03 {
 
         int remainingNeeded = targetOnBatteries - onBatteries;
         int batteriesAfterLast = -1;
-        int indexOfLastOnBattery = GetLastOnBattery(onOffList);
+        int indexOfLastOnBattery = getLastOnBattery(onOffList);
         do {
           // Are there enough numbers after this to get all 12?
-          batteriesAfterLast = CountOffBatteriesAfterIndex(indexOfLastOnBattery, onOffList);
+          batteriesAfterLast = countOffBatteriesAfterIndex(indexOfLastOnBattery, onOffList);
           if (batteriesAfterLast >= remainingNeeded) {
             // Things are okay, reduce the search space.
             searchStartIndex = indexOfLastOnBattery + 1;
           } else {
             // Not enough numbers to the right, check previous ON number
-            indexOfLastOnBattery = GetLastOnBattery(onOffList, indexOfLastOnBattery);
+            indexOfLastOnBattery = getLastOnBattery(onOffList, indexOfLastOnBattery);
           }
         } while (batteriesAfterLast < remainingNeeded);
       }
@@ -180,14 +180,14 @@ public class Day03 {
           finalNumber.add(batteriesAsStrings.get(i));
         }
       }
-      System.out.println(ConstructNumberAsLong(finalNumber));
-      joltageSum += ConstructNumberAsLong(finalNumber);
+      System.out.println(constructNumberAsLong(finalNumber));
+      joltageSum += constructNumberAsLong(finalNumber);
     }
 
     System.out.println(joltageSum);
   }
 
-  private int CountOffBatteriesAfterIndex(int index, boolean[] batteries) {
+  private int countOffBatteriesAfterIndex(int index, boolean[] batteries) {
     int count = 0;
     for (int i = index + 1; i < batteries.length; i++) {
       if (!batteries[i])
@@ -196,12 +196,12 @@ public class Day03 {
     return count;
   }
 
-  private int GetLastOnBattery(boolean[] batteries) {
-    return GetLastOnBattery(batteries, batteries.length);
+  private int getLastOnBattery(boolean[] batteries) {
+    return getLastOnBattery(batteries, batteries.length);
   }
 
   // Assumes at least one is on.
-  private int GetLastOnBattery(boolean[] batteries, int endingPoint) {
+  private int getLastOnBattery(boolean[] batteries, int endingPoint) {
     int index = -1;
     for (int i = 0; i < endingPoint; i++) {
       if (batteries[i])
@@ -210,7 +210,7 @@ public class Day03 {
     return index;
   }
 
-  private String ConstructNumberAsString(ArrayList<String> nums) {
+  private String constructNumberAsString(ArrayList<String> nums) {
     String returnValue = "";
     for (String num : nums) {
       returnValue += num;
@@ -218,11 +218,11 @@ public class Day03 {
     return returnValue;
   }
 
-  private long ConstructNumberAsLong(ArrayList<String> nums) {
-    return Long.parseLong(ConstructNumberAsString(nums));
+  private long constructNumberAsLong(ArrayList<String> nums) {
+    return Long.parseLong(constructNumberAsString(nums));
   }
 
-  private int CountOnBatteries(boolean[] batteries) {
+  private int countOnBatteries(boolean[] batteries) {
     int count = 0;
     for (boolean cell : batteries) {
       if (cell)

@@ -10,7 +10,7 @@ public class Day01 {
     lines = input;
   }
 
-  public void Part1() {
+  public void part1() {
     // Implement Part 1 logic here
     System.out.println("Day 01, Part 1");
     int currentValue = 50;
@@ -39,7 +39,7 @@ public class Day01 {
     System.out.println(zeroCount);
   }
 
-  public void Part2() {
+  public void part2() {
     // Implement Part 1 logic here
     System.out.println("Day 01, Part 2");
     int currentValue = 50;
