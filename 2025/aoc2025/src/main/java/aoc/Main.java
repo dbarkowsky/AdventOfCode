@@ -42,6 +42,11 @@ public class Main {
         day04.part1();
         day04.part2();
         break;
+      case 5:
+        Day05 day05 = new Day05(fileReader.lines);
+        day05.part1();
+        day05.part2();
+        break;
       // Add more cases for other days
       default:
         System.out.println("Invalid day number.");
