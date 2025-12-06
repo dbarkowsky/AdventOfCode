@@ -1,12 +1,15 @@
 package aoc.days;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Day06 {
   // We'll make parallel arrays. Store numbers here
   private ArrayList<ArrayList<Integer>> numbers = new ArrayList<>();
   // Store operators in this array
   private ArrayList<String> operators = new ArrayList<>();
+  // For part 2
+  private ArrayList<ArrayList<Integer>> transposedEntries = new ArrayList<>();
 
   public Day06(ArrayList<String> input) {
     // Need to first transpose the input.
@@ -27,6 +30,49 @@ public class Day06 {
         numbers.get(rowIndex).add(Integer.parseInt(stringValue));
       }
     }
+
+    // Realized for part 2 you also need to know the whitespace.
+    // New input specifically for that part.
+    createPart2NumberList(input);
+  }
+
+  private void createPart2NumberList(ArrayList<String> input) {
+    // Need to do this based on number of spaces...
+    // Order should be the same, so we'll use the operators from before
+    // Fortunately, all the rows are the same length
+    ArrayList<String[]> rowsAsArrays = new ArrayList<>();
+    for (int rowIndex = 0; rowIndex < input.size() - 1; rowIndex++) {
+      rowsAsArrays.add(input.get(rowIndex).split(""));
+    }
+
+    // Let's move left to right.
+    // Build out the new entries as we go
+    // If all values in this column are blank, add to the list and proceed.
+    ArrayList<String> currentEntryNumbers = new ArrayList<>();
+
+    for (int columnIndex = 0; columnIndex < rowsAsArrays.get(0).length; columnIndex++) {
+      // Build the vertical number
+      String verticalNumber = "";
+      for (int rowIndex = 0; rowIndex < rowsAsArrays.size(); rowIndex++) {
+        verticalNumber += rowsAsArrays.get(rowIndex)[columnIndex];
+      }
+      if (verticalNumber.isBlank()) {
+        // Add current entry numbers to numbers with whitespace list
+        transposedEntries.add(convertStringListToIntList(currentEntryNumbers));
+        // Clear current entry numbers
+        currentEntryNumbers.clear();
+      } else {
+        // include this number in this entry
+        currentEntryNumbers.add(verticalNumber);
+      }
+    }
+    // It's possible we get to the end of the columns but there's no whitespace
+    // Add the last value just in case
+    transposedEntries.add(convertStringListToIntList(currentEntryNumbers));
+  }
+
+  private ArrayList<Integer> convertStringListToIntList(ArrayList<String> list) {
+    return new ArrayList<>(list.stream().map(item -> Integer.parseInt(item.trim())).collect(Collectors.toList()));
   }
 
   // First, just perform operations on a column of numbers
@@ -52,6 +98,9 @@ public class Day06 {
     System.out.println(sum);
   }
 
+  // Attempt 2
+  // Realized that the whitespace mattered, because not all numbers are
+  // right-aligned.
   // This time, each position is a column of numbers. So...
   // 13
   // 45
@@ -60,12 +109,12 @@ public class Day06 {
   public void part2() {
     System.out.println("Day 06, Part 2");
     long sum = 0;
-    // For each entry
+    // We have numbers transposed already
     for (int entryIndex = 0; entryIndex < operators.size(); entryIndex++) {
       // Perform the operation on all numbers on that location
       String operator = operators.get(entryIndex);
       // Get new numbers made from columns
-      ArrayList<Integer> transposedNumbers = transposeToColumns(entryIndex);
+      ArrayList<Integer> transposedNumbers = transposedEntries.get(entryIndex);
       // First one is here.
       long result = transposedNumbers.get(0);
       for (int numberIndex = 1; numberIndex < transposedNumbers.size(); numberIndex++) {
@@ -83,6 +132,9 @@ public class Day06 {
 
   // Given a list of numbers, create a new list of numbers
   // based on the column reading direction
+  // Original transpose when I thought things were right-aligned
+  // Now unused
+  @SuppressWarnings("unused")
   private ArrayList<Integer> transposeToColumns(int entryIndex) {
     ArrayList<Integer> returnNumbers = new ArrayList<>();
     // For this entry, get all numbers and put them in a list
