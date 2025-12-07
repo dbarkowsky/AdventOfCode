@@ -1,7 +1,9 @@
 package aoc.days;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class Day07 {
@@ -60,43 +62,45 @@ public class Day07 {
   public void part2() {
     System.out.println("Day 07, Part 2");
     // Easier than it sounds.
-    // If you add all the paths of the beam at each level it splits, it equals the number of unique paths
     // It is fortunate that the beam only splits on specific rows
+    // Every time it splits, it needs to be recorded, keeping the existing quantity of beams there.
+    // For this reason, we keep a map, not a set
 
-    // Use the same algo as part 1
-    Set<Integer> currentRowBeamsIndex = new HashSet<>();
+    // Almost the same, but we track both column index and quantity
+    Map<Integer, Long> currentRowBeams = new HashMap<>();
     String[] firstRow = rows.get(0);
     for (int column = 0; column < firstRow.length; column ++){
       if (firstRow[column].equals(START)){
-        currentRowBeamsIndex.add(column);
+        currentRowBeams.put(column, Long.valueOf(1));
       }
     }
-    int timelineSum = 0;
+
     for (int rowIndex = 1; rowIndex < rows.size(); rowIndex++){
-      Set<Integer> previousRowBeamsIndex = new HashSet<>(currentRowBeamsIndex);
-      currentRowBeamsIndex = new HashSet<>();
-      boolean rowContainsSplit = false;
-      for (int columnIndex : previousRowBeamsIndex){
+      Map<Integer, Long> previousRowBeams = new HashMap<>(currentRowBeams);
+      currentRowBeams = new HashMap<>();
+      for (Map.Entry<Integer, Long> record : previousRowBeams.entrySet()){
+        int columnIndex = record.getKey();
+        long quantity = record.getValue();
         if (rows.get(rowIndex)[columnIndex].equals(SPLITTER)){
-          currentRowBeamsIndex.add(columnIndex + 1);
-          currentRowBeamsIndex.add(columnIndex - 1);
-          // NEW FOR PART 2
-          // This row contained a split. Record this
-          rowContainsSplit = true;
+          // Is there already an entry for this location? Need to add the quantities
+          // Left first
+          long newLeftQuantity  = quantity + (currentRowBeams.get(columnIndex - 1) != null ? currentRowBeams.get(columnIndex - 1) : 0);
+          currentRowBeams.put(columnIndex - 1, newLeftQuantity);
+          // Then right
+          long newRightQuantity  = quantity + (currentRowBeams.get(columnIndex + 1) != null ? currentRowBeams.get(columnIndex + 1) : 0);
+          currentRowBeams.put(columnIndex + 1, newRightQuantity);
         } else {
-          currentRowBeamsIndex.add(columnIndex);
+          // There could be a case here where a beam comes from above as well as from the sides...
+          long newQuantity = quantity + (currentRowBeams.get(columnIndex) != null ? currentRowBeams.get(columnIndex) : 0);
+          currentRowBeams.put(columnIndex, newQuantity);
         }
       }
-      // NEW FOR PART 2
-      if (rowContainsSplit){
-        // Count the number of beams in this row and add to total
-        timelineSum += currentRowBeamsIndex.size();
-      }
     }
-    System.out.println(timelineSum);
-  }
-
-  private class ManifoldUnit {
-
+    // At the end, it should just be the total sum of all quantities.
+    long sum = 0;
+    for (Map.Entry<Integer, Long> record : currentRowBeams.entrySet()){
+      sum += record.getValue();
+    }
+    System.out.println(sum);
   }
 }
