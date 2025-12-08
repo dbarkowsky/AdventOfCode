@@ -40,7 +40,7 @@ public class Day08 {
     }
     // Let's just get the top 10 here instead.
     PriorityQueue<JunctionBoxPair> topXPairs = new PriorityQueue<>();
-    for (int i = 0; i < numOfConnections; i++){
+    for (int i = 0; i < numOfConnections; i++) {
       topXPairs.add(allPairs.poll());
     }
     // At this point, we should have a queue/list of the shortest connections
@@ -52,29 +52,17 @@ public class Day08 {
     Map<String, JunctionBox> uniqueBoxes = new HashMap<>();
     while (topXPairs.size() > 0) {
       JunctionBoxPair pair = topXPairs.poll();
-      JunctionBox a = pair.a;
-      JunctionBox b = pair.b;
-      // Check if already in map
-      // Make sure they are listed in each other's connections
-      if (uniqueBoxes.containsKey(a.getName())) {
-        JunctionBox entry = uniqueBoxes.get(a.getName());
-        // Update the connections and update map
-        entry.addConnection(b);
-        uniqueBoxes.put(a.getName(), entry);
-      } else {
-        a.addConnection(b);
-        uniqueBoxes.put(a.getName(), a);
-      }
-      // Same for b box
-      if (uniqueBoxes.containsKey(b.getName())) {
-        JunctionBox entry = uniqueBoxes.get(b.getName());
-        // Update the connections and update map
-        entry.addConnection(a);
-        uniqueBoxes.put(b.getName(), entry);
-      } else {
-        b.addConnection(a);
-        uniqueBoxes.put(b.getName(), b);
-      }
+      // ALWAYS use new instances for the graph
+      JunctionBox a = uniqueBoxes.computeIfAbsent(
+          pair.a.getName(),
+          k -> new JunctionBox(pair.a.x, pair.a.y, pair.a.z));
+
+      JunctionBox b = uniqueBoxes.computeIfAbsent(
+          pair.b.getName(),
+          k -> new JunctionBox(pair.b.x, pair.b.y, pair.b.z));
+
+      a.addConnection(b);
+      b.addConnection(a);
     }
 
     // Track the visited Junction Boxes
@@ -224,7 +212,7 @@ public class Day08 {
 
     @Override
     public int hashCode() {
-      return a.hashCode() ^ b.hashCode(); // order-insensitive
+      return a.hashCode() + b.hashCode();
     }
   }
 }
