@@ -28,23 +28,20 @@ public class Day08 {
     // We'll add them to a priority queue, and if the queue is greater than the
     // threshold,
     // we'll de-queue one from the back of the queue
-    PriorityQueue<JunctionBoxPair> topXPairs = new PriorityQueue<>();
-    for (JunctionBox boxA : boxes) {
-      for (JunctionBox boxB : boxes) {
-        // No sense in doing this for self. Skip
-        if (boxA.equals(boxB))
-          continue;
-        // Also skip if already in queue
+    PriorityQueue<JunctionBoxPair> allPairs = new PriorityQueue<>();
+    // Looping like this instead means we shouldn't have to check for duplicates
+    for (int i = 0; i < boxes.size(); i++) {
+      for (int j = i + 1; j < boxes.size(); j++) {
+        JunctionBox boxA = boxes.get(i);
+        JunctionBox boxB = boxes.get(j);
         JunctionBoxPair pair = new JunctionBoxPair(boxA, boxB);
-        if (topXPairs.contains(pair))
-          continue;
-        // So now we add it to the queue
-        topXPairs.add(pair);
-        // If it's larger than the threshold, we need to trim the queue
-        if (topXPairs.size() > numOfConnections) {
-          topXPairs = cutQueueToSize(topXPairs, numOfConnections);
-        }
+        allPairs.add(pair);
       }
+    }
+    // Let's just get the top 10 here instead.
+    PriorityQueue<JunctionBoxPair> topXPairs = new PriorityQueue<>();
+    for (int i = 0; i < numOfConnections; i++){
+      topXPairs.add(allPairs.poll());
     }
     // At this point, we should have a queue/list of the shortest connections
     // We can treat this like a collection of subgraphs.
@@ -91,7 +88,7 @@ public class Day08 {
     }
     // Now we should have a list of subgraph sizes. Just get top three
     ArrayList<Integer> top3 = new ArrayList<>();
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
       top3.add(subgraphSizes.poll());
     }
     // Multiply them
@@ -109,7 +106,7 @@ public class Day08 {
       // Mark as visited right away
       visited.add(startingBox.getName());
       // Now visit other neighbours
-      for (JunctionBox neighbour : startingBox.connections.keySet()){
+      for (JunctionBox neighbour : startingBox.connections.keySet()) {
         subgraphSize += findSizeOfSubgraph(neighbour, visited);
       }
       return subgraphSize;
@@ -223,6 +220,11 @@ public class Day08 {
       if (this.a == other.b && this.b == other.a)
         return true;
       return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return a.hashCode() ^ b.hashCode(); // order-insensitive
     }
   }
 }
