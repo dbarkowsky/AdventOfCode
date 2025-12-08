@@ -25,7 +25,7 @@
       "cwd": "${workspaceFolder}/2025/aoc2025",
       "request": "launch",
       "type": "java",
-      "args": ["7"],
+      "args": ["8", "test"],
       "mainClass": "aoc.Main"
     }
   ]
