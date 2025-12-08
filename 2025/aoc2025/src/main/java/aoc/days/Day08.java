@@ -81,7 +81,7 @@ public class Day08 {
     }
     // Multiply them
     long product = top3.get(0) * top3.get(1) * top3.get(2);
-    System.out.println(product); // Wrong at first attempt. Value 12256 too low
+    System.out.println(product);
   }
 
   public void part2() {
@@ -144,8 +144,8 @@ public class Day08 {
     }
 
     public double getDistanceToBox(JunctionBox toBox) {
-      int[] fromVector = new int[] { this.x, this.y, this.z };
-      int[] toVector = new int[] { toBox.x, toBox.y, toBox.z };
+      long[] fromVector = new long[] { this.x, this.y, this.z };
+      long[] toVector = new long[] { toBox.x, toBox.y, toBox.z };
       // Find the square differential
       double squareDiff = 0.0;
       for (int i = 0; i < fromVector.length; i++) {
