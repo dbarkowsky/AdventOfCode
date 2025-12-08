@@ -143,6 +143,8 @@ public class Day08 {
       connections.remove(toBox);
     }
 
+    // It is really important that you process these as longs for the real input.
+    // With 32-bit int, it was overflowing.
     public double getDistanceToBox(JunctionBox toBox) {
       long[] fromVector = new long[] { this.x, this.y, this.z };
       long[] toVector = new long[] { toBox.x, toBox.y, toBox.z };
