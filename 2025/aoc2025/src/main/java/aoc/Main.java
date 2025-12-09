@@ -62,6 +62,11 @@ public class Main {
         day08.part1(test ? 10 : 1000);
         day08.part2();
         break;
+      case 9:
+        Day09 day09 = new Day09(fileReader.lines);
+        day09.part1();
+        day09.part2();
+        break;
       // Add more cases for other days
       default:
         System.out.println("Invalid day number.");
