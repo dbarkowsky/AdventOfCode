@@ -31,11 +31,108 @@ public class Day09 {
     System.out.println(rectangleArea);
   }
 
+  public void part2() {
+    System.out.println("Day 09, Part 2");
+    // Create grid set of coordinate points
+    Set<Point> grid = new HashSet<>();
+    // Populate grid with red tiles and their connections
+    for (int i = 0; i < redTiles.size() - 1; i++) {
+      makeLineBetweenPoints(grid, redTiles.get(i), redTiles.get(i + 1));
+    }
+    // Then connect the first and last
+    makeLineBetweenPoints(grid, redTiles.get(0), redTiles.get(redTiles.size() - 1));
+
+    long rectangleArea = 0;
+    for (int i = 0; i < redTiles.size(); i++) {
+      for (int j = 1 + i; j < redTiles.size(); j++) {
+        // Check if rectangle fits inside bigger shape, recorded in grid
+        if (rectangleFits(grid, redTiles.get(i), redTiles.get(j))) {
+          // Get size between these two and compare to previous max
+          rectangleArea = Math.max(rectangleArea, getRectangleSize(redTiles.get(i), redTiles.get(j)));
+        }
+        // Otherwise it's ignored
+      }
+    }
+    System.out.println(rectangleArea);
+  }
+
+  private boolean rectangleFits(Set<Point> boundary, Point a, Point b) {
+    int xMin = Math.min(a.x, b.x);
+    int xMax = Math.max(a.x, b.x);
+    int yMin = Math.min(a.y, b.y);
+    int yMax = Math.max(a.y, b.y);
+
+    // I always think about 0,0 being top left, with x progressing down and y right
+    // It just matches a 2D array more in my mind this way
+    Point topLeft = new Point(xMin, yMin);
+    Point topRight = new Point(xMin, yMax);
+    Point bottomLeft = new Point(xMax, yMin);
+    Point bottomRight = new Point(xMax, yMax);
+
+    Point topPoint = new Point(xMin, yMin);
+    Point bottomPoint = new Point(xMax, yMin);
+    // Continue until we've progressed all the way right
+    while (!topPoint.equals(topRight)){
+      // If the current point is not the start
+      if (!topPoint.equals(topLeft)){
+        // Check if we're going outside the boundary
+        // This is if the current one is part of boundary
+        // but the spaces before and after aren't
+        Point previous = new Point(topPoint.x, topPoint.y -1);
+        Point next = new Point(topPoint.x, topPoint.y + 1);
+        if (boundary.contains(topPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
+          // Then we are crossing the boundary
+          return false;
+        }
+      }
+      // Same for bottom row
+      if (!bottomPoint.equals(bottomLeft)){
+        // Check if we're going outside the boundary
+        // This is if the current one is part of boundary
+        // but the spaces before and after aren't
+        Point previous = new Point(bottomPoint.x, bottomPoint.y -1);
+        Point next = new Point(bottomPoint.x, bottomPoint.y + 1);
+        if (boundary.contains(bottomPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
+          // Then we are crossing the boundary
+          return false;
+        }
+      }
+      // Update points
+      topPoint = new Point(topPoint.x, topPoint.y +1);
+      bottomPoint = new Point(bottomPoint.x, bottomPoint.y + 1);
+    }
+
+    // Do the same thing for vertical edges
+    // Start at tops of rectangle
+    Point leftPoint = new Point(xMin, yMin);
+    Point rightPoint = new Point(xMin, yMax);
+    while (!leftPoint.equals(bottomLeft)){
+      if (!leftPoint.equals(topLeft)){
+        Point previous = new Point(leftPoint.x - 1, leftPoint.y);
+        Point next = new Point(leftPoint.x + 1, leftPoint.y);
+        if (boundary.contains(leftPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
+          return false;
+        }
+      }
+      if (!rightPoint.equals(topRight)){
+        Point previous = new Point(rightPoint.x - 1, rightPoint.y);
+        Point next = new Point(rightPoint.x + 1, rightPoint.y);
+        if (boundary.contains(rightPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
+          return false;
+        }
+      }
+      leftPoint = new Point(leftPoint.x + 1, leftPoint.y);
+      rightPoint = new Point(rightPoint.x + 1, rightPoint.y);
+    }
+
+    return true; // all edges are inside boundary
+  }
+
   // Bad idea for part 2
   // Tried to populate all the coordinates, but the amount is way too much
   // Ran out of RAM.
   // Wanted to use BitSet for this, but its indexes are only int-sized.
-  public void part2() {
+  public void part2v1() {
     System.out.println("Day 09, Part 2");
     // Potentially crazy solution to try and record all coordinates
     int minSize = Integer.MAX_VALUE;
@@ -48,12 +145,12 @@ public class Day09 {
     // Create grid set of coordinate points
     Set<Point> grid = new HashSet<>();
     // Populate grid with red tiles and their connections
-    for (int i = 0; i < redTiles.size() - 1; i++){
+    for (int i = 0; i < redTiles.size() - 1; i++) {
       makeLineBetweenPoints(grid, redTiles.get(i), redTiles.get(i + 1));
     }
     // Then connect the first and last
     makeLineBetweenPoints(grid, redTiles.get(0), redTiles.get(redTiles.size() - 1));
-    
+
     // Flood fill the rest of them.
     // But where to start?
     // Assumption: if we cut across the centre, we will hit the side of the shape
@@ -63,9 +160,9 @@ public class Day09 {
     int y = 0;
     boolean edgeFound = false;
     Point startingPoint = null;
-    while (!edgeFound){
+    while (!edgeFound) {
       Point testPoint = new Point(x, y);
-      if (grid.contains(testPoint)){
+      if (grid.contains(testPoint)) {
         // Found an edge. Assume the next one is where we'd start
         startingPoint = new Point(x, y + 1);
         edgeFound = true;
@@ -100,7 +197,7 @@ public class Day09 {
     return xDifference * yDifference;
   }
 
-  private void addRectangleToSet(Set<Point> grid, Point a, Point b){
+  private void addRectangleToSet(Set<Point> grid, Point a, Point b) {
     int xMin = Math.min(a.x, b.x);
     int xMax = Math.max(a.x, b.x);
 
@@ -108,35 +205,35 @@ public class Day09 {
     int yMax = Math.max(a.y, b.y);
 
     for (int y = yMin; y <= yMax; y++) {
-        for (int x = xMin; x <= xMax; x++) {
-            grid.add(new Point(x, y));
-        }
+      for (int x = xMin; x <= xMax; x++) {
+        grid.add(new Point(x, y));
+      }
     }
   }
 
-  private void floodFill(Set<Point> grid, Point start){
+  private void floodFill(Set<Point> grid, Point start) {
     Queue<Point> queue = new ArrayDeque<Point>();
     queue.add(start);
 
-    while (!queue.isEmpty()){
+    while (!queue.isEmpty()) {
       Point current = queue.poll();
       // Add to grid
       grid.add(current);
       // Check all four directions and add to queue if not in grid
-      //  Up
-      if (!grid.contains(new Point(current.x - 1, current.y))){
+      // Up
+      if (!grid.contains(new Point(current.x - 1, current.y))) {
         queue.add(new Point(current.x - 1, current.y));
       }
       // Down
-      if (!grid.contains(new Point(current.x + 1, current.y))){
+      if (!grid.contains(new Point(current.x + 1, current.y))) {
         queue.add(new Point(current.x + 1, current.y));
       }
       // Left
-      if (!grid.contains(new Point(current.x, current.y - 1))){
+      if (!grid.contains(new Point(current.x, current.y - 1))) {
         queue.add(new Point(current.x, current.y - 1));
       }
       // Right
-      if (!grid.contains(new Point(current.x, current.y + 1))){
+      if (!grid.contains(new Point(current.x, current.y + 1))) {
         queue.add(new Point(current.x, current.y + 1));
       }
     }
@@ -146,44 +243,45 @@ public class Day09 {
     return big.containsAll(small);
   }
 
-  private void makeLineBetweenPoints(Set<Point> grid, Point a, Point b){
+  private void makeLineBetweenPoints(Set<Point> grid, Point a, Point b) {
     // Line can only go one of four directions.
-    if (a.x < b.x){
+    if (a.x < b.x) {
       // Increase x as we go
-      for (int i = a.x; i <= b.x; i ++){
+      for (int i = a.x; i <= b.x; i++) {
         grid.add(new Point(i, a.y));
       }
-    } else if (a.y < b.y){
+    } else if (a.y < b.y) {
       // Increase y as we go
-      for (int i = a.y; i <= b.y; i ++){
+      for (int i = a.y; i <= b.y; i++) {
         grid.add(new Point(a.x, i));
       }
     } else if (b.x < a.x) {
       // Start at bx instead
-      for (int i = b.x; i <= a.x; i ++){
+      for (int i = b.x; i <= a.x; i++) {
         grid.add(new Point(i, b.y));
       }
     } else {
       // b.y must be smaller than a.y
-      for (int i = b.y; i <= a.y; i ++){
+      for (int i = b.y; i <= a.y; i++) {
         grid.add(new Point(b.x, i));
       }
     }
   }
 
-  private int getGridIndex(Point p, int N){
+  private int getGridIndex(Point p, int N) {
     return p.y * N + p.x;
   }
 
-  private class Point{
+  private class Point {
     int x;
     int y;
-    public Point(int x, int y){
-      this.x = x; 
+
+    public Point(int x, int y) {
+      this.x = x;
       this.y = y;
     }
 
-     @Override
+    @Override
     public boolean equals(Object other) {
       if (this == other)
         return true;
