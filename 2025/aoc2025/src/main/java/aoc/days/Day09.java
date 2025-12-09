@@ -33,99 +33,96 @@ public class Day09 {
 
   public void part2() {
     System.out.println("Day 09, Part 2");
-    // Create grid set of coordinate points
-    Set<Point> grid = new HashSet<>();
-    // Populate grid with red tiles and their connections
-    for (int i = 0; i < redTiles.size() - 1; i++) {
-      makeLineBetweenPoints(grid, redTiles.get(i), redTiles.get(i + 1));
-    }
-    // Then connect the first and last
-    makeLineBetweenPoints(grid, redTiles.get(0), redTiles.get(redTiles.size() - 1));
-
-    long rectangleArea = 0;
+    long biggestArea = 0;
     for (int i = 0; i < redTiles.size(); i++) {
       for (int j = 1 + i; j < redTiles.size(); j++) {
-        // Check if rectangle fits inside bigger shape, recorded in grid
-        if (rectangleFits(grid, redTiles.get(i), redTiles.get(j))) {
-          // Get size between these two and compare to previous max
-          rectangleArea = Math.max(rectangleArea, getRectangleSize(redTiles.get(i), redTiles.get(j)));
+        // Only check fit if it's bigger
+        if (i == 4 && j == 6) {
+          System.out.println("the biggest");
+        }
+        long rectangleSize = getRectangleSize(redTiles.get(i), redTiles.get(j));
+        if (rectangleSize > biggestArea) {
+          // Check if rectangle fits inside bigger shape, recorded in grid
+          if (rectangleFits(redTiles, redTiles.get(i), redTiles.get(j))) {
+            // Get size between these two and compare to previous max
+            biggestArea = Math.max(biggestArea, rectangleSize);
+          }
         }
         // Otherwise it's ignored
       }
     }
-    System.out.println(rectangleArea);
+    System.out.println(biggestArea);
   }
 
-  private boolean rectangleFits(Set<Point> boundary, Point a, Point b) {
+  private boolean rectangleFits(ArrayList<Point> redTiles, Point a, Point b) {
     int xMin = Math.min(a.x, b.x);
     int xMax = Math.max(a.x, b.x);
     int yMin = Math.min(a.y, b.y);
     int yMax = Math.max(a.y, b.y);
 
-    // I always think about 0,0 being top left, with x progressing down and y right
-    // It just matches a 2D array more in my mind this way
     Point topLeft = new Point(xMin, yMin);
-    Point topRight = new Point(xMin, yMax);
-    Point bottomLeft = new Point(xMax, yMin);
+    Point topRight = new Point(xMax, yMin);
+    Point bottomLeft = new Point(xMin, yMax);
     Point bottomRight = new Point(xMax, yMax);
 
-    Point topPoint = new Point(xMin, yMin);
-    Point bottomPoint = new Point(xMax, yMin);
-    // Continue until we've progressed all the way right
-    while (!topPoint.equals(topRight)){
-      // If the current point is not the start
-      if (!topPoint.equals(topLeft)){
-        // Check if we're going outside the boundary
-        // This is if the current one is part of boundary
-        // but the spaces before and after aren't
-        Point previous = new Point(topPoint.x, topPoint.y -1);
-        Point next = new Point(topPoint.x, topPoint.y + 1);
-        if (boundary.contains(topPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
-          // Then we are crossing the boundary
-          return false;
-        }
-      }
-      // Same for bottom row
-      if (!bottomPoint.equals(bottomLeft)){
-        // Check if we're going outside the boundary
-        // This is if the current one is part of boundary
-        // but the spaces before and after aren't
-        Point previous = new Point(bottomPoint.x, bottomPoint.y -1);
-        Point next = new Point(bottomPoint.x, bottomPoint.y + 1);
-        if (boundary.contains(bottomPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
-          // Then we are crossing the boundary
-          return false;
-        }
-      }
-      // Update points
-      topPoint = new Point(topPoint.x, topPoint.y +1);
-      bottomPoint = new Point(bottomPoint.x, bottomPoint.y + 1);
+    // We need to see if any section of the outer shape intersects with any section
+    // of the rectangle
+    // The rectangle fits if there is no intersection
+    for (int i = 0; i < redTiles.size(); i++) {
+      Point segmentStart = redTiles.get(i);
+      Point segmentEnd = redTiles.get((i + 1) % redTiles.size()); // wraps around
+      if (intersects(segmentStart, segmentEnd, topLeft, topRight))
+        return false;
+      if (intersects(segmentStart, segmentEnd, topLeft, bottomLeft))
+        return false;
+      if (intersects(segmentStart, segmentEnd, topRight, bottomRight))
+        return false;
+      if (intersects(segmentStart, segmentEnd, bottomLeft, bottomRight))
+        return false;
     }
 
-    // Do the same thing for vertical edges
-    // Start at tops of rectangle
-    Point leftPoint = new Point(xMin, yMin);
-    Point rightPoint = new Point(xMin, yMax);
-    while (!leftPoint.equals(bottomLeft)){
-      if (!leftPoint.equals(topLeft)){
-        Point previous = new Point(leftPoint.x - 1, leftPoint.y);
-        Point next = new Point(leftPoint.x + 1, leftPoint.y);
-        if (boundary.contains(leftPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
-          return false;
-        }
-      }
-      if (!rightPoint.equals(topRight)){
-        Point previous = new Point(rightPoint.x - 1, rightPoint.y);
-        Point next = new Point(rightPoint.x + 1, rightPoint.y);
-        if (boundary.contains(rightPoint) && (!boundary.contains(previous) && !boundary.contains(next))){
-          return false;
-        }
-      }
-      leftPoint = new Point(leftPoint.x + 1, leftPoint.y);
-      rightPoint = new Point(rightPoint.x + 1, rightPoint.y);
+    return true;
+  }
+
+  private boolean intersects(Point segA1, Point segA2, Point segB1, Point segB2) {
+    boolean aHorizontal = segA1.y == segA2.y;
+    boolean bHorizontal = segB1.y == segB2.y;
+
+    if (aHorizontal && !bHorizontal) {
+      // vertical vs horizontal
+      return (segB1.x > Math.min(segA1.x, segA2.x) && segB1.x < Math.max(segA1.x, segA2.x)) &&
+          (segA1.y > Math.min(segB1.y, segB2.y) && segA1.y < Math.max(segB1.y, segB2.y));
     }
 
-    return true; // all edges are inside boundary
+    if (!aHorizontal && bHorizontal) {
+      return (segA1.x > Math.min(segB1.x, segB2.x) && segA1.x < Math.max(segB1.x, segB2.x)) &&
+          (segB1.y > Math.min(segA1.y, segA2.y) && segB1.y < Math.max(segA1.y, segA2.y));
+    }
+
+    if (aHorizontal && bHorizontal) {
+      if (segA1.y != segB1.y)
+        return false;
+      return Math.max(segA1.x, segA2.x) > Math.min(segB1.x, segB2.x) &&
+          Math.min(segA1.x, segA2.x) < Math.max(segB1.x, segB2.x);
+    }
+
+    if (segA1.x != segB1.x)
+      return false;
+    return Math.max(segA1.y, segA2.y) > Math.min(segB1.y, segB2.y) &&
+        Math.min(segA1.y, segA2.y) < Math.max(segB1.y, segB2.y);
+  }
+
+  private boolean between(int a, int v, int b) {
+    return v > Math.min(a, b) && v < Math.max(a, b);
+  }
+
+  private boolean betweenExclusive(int a, int v, int b) {
+    return v > Math.min(a, b) && v < Math.max(a, b);
+  }
+
+  private boolean rangesOverlap(int x1, int x2, int y1, int y2) {
+    return Math.max(x1, x2) >= Math.min(y1, y2)
+        && Math.min(x1, x2) <= Math.max(y1, y2);
   }
 
   // Bad idea for part 2
