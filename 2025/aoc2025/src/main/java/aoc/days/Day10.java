@@ -61,7 +61,7 @@ public class Day10 {
       // Add each button press as the first step.
       // Each one is the start of a new timeline...
       for (ArrayList<Integer> button : m.buttons) {
-        State s = new State(m.lights);
+        State s = new State(m.lights, new ArrayList<>());
         s.pressButton(button);
         stateQueue.add(s);
       }
@@ -86,10 +86,10 @@ public class Day10 {
         }
       }
     }
-    
+
     // We've evaluated all machines. Get the total
     long sum = 0;
-    for (Integer n : fewestPresses){
+    for (Integer n : fewestPresses) {
       sum += n;
     }
 
@@ -98,26 +98,68 @@ public class Day10 {
 
   public void part2() {
     System.out.println("Day 10, Part 2");
+    // NOTE: Online discorse is to use Z3,
+    // but I'd like to avoid an external library.
+  }
+
+  // This did not work. Maybe it would eventually,
+  // but I've once again ran out of RAM.
+  public void part2v1() {
+    System.out.println("Day 10, Part 2");
     // I think we can do something similar here.
-    // Start with the joltage amounts and count down. 
-    // Split timelines around the queue, and stop a timeline if anything goes below 0
-    // NOTE: Online discorse is to use Z3, but I'd like to avoid an external library.
-    System.out.println();
+    // Start with the joltage amounts and count down.
+    // Split timelines around the queue, and stop a timeline if anything goes < 0
+    ArrayList<Integer> fewestPresses = new ArrayList<>();
+    for (Machine m : machines) {
+      Queue<State> stateQueue = new ArrayDeque<>();
+      for (ArrayList<Integer> button : m.buttons) {
+        State s = new State(new ArrayList<>(), m.joltages);
+        s.pressButtonForJoltage(button);
+        stateQueue.add(s);
+      }
+
+      // Run Queue loop
+      // We'll run this until we break....
+      while (!stateQueue.isEmpty()) {
+        State current = stateQueue.poll();
+        if (current.joltageIsZero()) {
+          fewestPresses.add(current.steps);
+          break;
+        } else {
+          for (ArrayList<Integer> button : m.buttons) {
+            State s = new State(current);
+            s.pressButtonForJoltage(button);
+            stateQueue.add(s);
+          }
+        }
+      }
+    }
+
+    // We've evaluated all machines. Get the total
+    long sum = 0;
+    for (Integer n : fewestPresses) {
+      sum += n;
+    }
+
+    System.out.println(sum);
   }
 
   private class State {
     int steps = 0;
     ArrayList<ArrayList<Integer>> buttonsPressed = new ArrayList<>();
     ArrayList<String> lights;
+    ArrayList<Integer> joltages = new ArrayList<>();
 
-    public State(ArrayList<String> lights) {
+    public State(ArrayList<String> lights, ArrayList<Integer> joltages) {
       this.lights = new ArrayList<>(lights);
+      this.joltages = new ArrayList<>(joltages);
     }
 
     public State(State original) {
       this.steps = original.steps;
       this.buttonsPressed = new ArrayList<>(original.buttonsPressed);
       this.lights = new ArrayList<>(original.lights);
+      this.joltages = new ArrayList<>(original.joltages);
     }
 
     public void incrementStep() {
@@ -125,9 +167,9 @@ public class Day10 {
     }
 
     public void pressButton(ArrayList<Integer> button) {
-      for (int i = 0; i < lights.size(); i++){
-        if (button.contains(i)){
-          if (lights.get(i).equals( "#")){
+      for (int i = 0; i < lights.size(); i++) {
+        if (button.contains(i)) {
+          if (lights.get(i).equals("#")) {
             lights.set(i, ".");
           } else {
             lights.set(i, "#");
@@ -136,6 +178,23 @@ public class Day10 {
       }
       buttonsPressed.add(button);
       this.incrementStep();
+    }
+
+    public void pressButtonForJoltage(ArrayList<Integer> button) {
+      for (int i = 0; i < button.size(); i++) {
+        int joltageIndex = button.get(i);
+        joltages.set(joltageIndex, joltages.get(joltageIndex) - 1);
+      }
+      buttonsPressed.add(button);
+      this.incrementStep();
+    }
+
+    public boolean joltageIsZero() {
+      for (int jolt : joltages) {
+        if (jolt != 0)
+          return false;
+      }
+      return true;
     }
 
     public boolean allLightsAreOff() {
