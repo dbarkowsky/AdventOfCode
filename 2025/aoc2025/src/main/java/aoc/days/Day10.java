@@ -47,6 +47,10 @@ public class Day10 {
     }
   }
 
+  // This solution isn't very elegant.
+  // We are basically trying all possible combos
+  // There's probably a way to optimize this, but more likely
+  // there's just a better way to do it.
   public void part1() {
     System.out.println("Day 10, Part 1");
     ArrayList<Integer> fewestPresses = new ArrayList<>();
@@ -94,7 +98,10 @@ public class Day10 {
 
   public void part2() {
     System.out.println("Day 10, Part 2");
-
+    // I think we can do something similar here.
+    // Start with the joltage amounts and count down. 
+    // Split timelines around the queue, and stop a timeline if anything goes below 0
+    // NOTE: Online discorse is to use Z3, but I'd like to avoid an external library.
     System.out.println();
   }
 
