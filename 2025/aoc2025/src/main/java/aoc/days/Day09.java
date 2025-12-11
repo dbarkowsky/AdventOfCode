@@ -2,7 +2,10 @@ package aoc.days;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -31,19 +34,57 @@ public class Day09 {
     System.out.println(rectangleArea);
   }
 
+  // This part was hard.
+  // Create the outside of the shape, but only check the edges of the rectangle.
+  // Edges alone should determine if it falls within the larger shape.
   public void part2() {
     System.out.println("Day 09, Part 2");
+    // Create grid set of coordinate points
+    Set<Point> boundary = new HashSet<>();
+    // Populate grid with red tiles and their connections (aka draw the shape)
+    for (int i = 0; i < redTiles.size(); i++) {
+      makeLineBetweenPoints(boundary, redTiles.get(i), redTiles.get((i + 1) % redTiles.size()));
+    }
+
+    // Now that I have this set, I eventually want to make a Map
+    // key = y aka the row, but value is a list of ranges where the shape is filled
+    // in that row
+    // Those values are really just x indexes in the grid
+
+    // Make buckets of points for each row
+    ArrayList<Point> sortedPoints = new ArrayList<>(boundary);
+    sortedPoints.sort((a, b) -> a.y - b.y);
+    Map<Integer, ArrayList<Integer>> rangeBuckets = new HashMap<>();
+    for (Point p : sortedPoints) {
+      ArrayList<Integer> currentRow = rangeBuckets.computeIfAbsent(p.y, k -> new ArrayList<>());
+      currentRow.add(p.x);
+    }
+    // These buckets will look like {1: [2,3,4,11]}
+    // But we want it to look like {1: [Range(2-11)]}
+
+    // Now coalese these into ranges
+    Map<Integer, ArrayList<Range>> boundingRanges = new HashMap<Integer, ArrayList<Range>>();
+    for (Map.Entry<Integer, ArrayList<Integer>> entry : rangeBuckets.entrySet()) {
+      ArrayList<Integer> xs = entry.getValue();
+      int minX = Collections.min(xs);
+      int maxX = Collections.max(xs);
+
+      // Originally I thought there would be multiple ranges.
+      // that would be the case if the big shape had more cutouts...
+      // but we got away with a single one per entry, which makes the list obsolete.
+      ArrayList<Range> list = new ArrayList<>();
+      list.add(new Range(minX, maxX));
+      boundingRanges.put(entry.getKey(), list);
+    }
+
     long biggestArea = 0;
     for (int i = 0; i < redTiles.size(); i++) {
       for (int j = 1 + i; j < redTiles.size(); j++) {
         // Only check fit if it's bigger
-        if (i == 4 && j == 6) {
-          System.out.println("the biggest");
-        }
         long rectangleSize = getRectangleSize(redTiles.get(i), redTiles.get(j));
         if (rectangleSize > biggestArea) {
           // Check if rectangle fits inside bigger shape, recorded in grid
-          if (rectangleFits(redTiles, redTiles.get(i), redTiles.get(j))) {
+          if (rectangleFits(boundingRanges, redTiles.get(i), redTiles.get(j))) {
             // Get size between these two and compare to previous max
             biggestArea = Math.max(biggestArea, rectangleSize);
           }
@@ -54,75 +95,127 @@ public class Day09 {
     System.out.println(biggestArea);
   }
 
-  private boolean rectangleFits(ArrayList<Point> redTiles, Point a, Point b) {
-    int xMin = Math.min(a.x, b.x);
-    int xMax = Math.max(a.x, b.x);
-    int yMin = Math.min(a.y, b.y);
-    int yMax = Math.max(a.y, b.y);
+  // Determines if a rectangle fits based on its edges.
+  private boolean rectangleFits(Map<Integer, ArrayList<Range>> boundingRanges, Point a, Point b) {
 
-    Point topLeft = new Point(xMin, yMin);
-    Point topRight = new Point(xMax, yMin);
-    Point bottomLeft = new Point(xMin, yMax);
-    Point bottomRight = new Point(xMax, yMax);
+    int minX = Math.min(a.x, b.x);
+    int maxX = Math.max(a.x, b.x);
+    int minY = Math.min(a.y, b.y);
+    int maxY = Math.max(a.y, b.y);
 
-    // We need to see if any section of the outer shape intersects with any section
-    // of the rectangle
-    // The rectangle fits if there is no intersection
-    for (int i = 0; i < redTiles.size(); i++) {
-      Point segmentStart = redTiles.get(i);
-      Point segmentEnd = redTiles.get((i + 1) % redTiles.size()); // wraps around
-      if (intersects(segmentStart, segmentEnd, topLeft, topRight))
+    // Top row: horizontal segment between minX..maxX must be inside
+    ArrayList<Range> topRanges = boundingRanges.get(minY);
+    if (topRanges == null || !rowCovers(topRanges, minX, maxX)) {
+      return false;
+    }
+
+    // Bottom row: same
+    ArrayList<Range> bottomRanges = boundingRanges.get(maxY);
+    if (bottomRanges == null || !rowCovers(bottomRanges, minX, maxX)) {
+      return false;
+    }
+
+    // Vertical edges: for every row between minY and maxY,
+    // left X and right X must lie inside some range on that row.
+    for (int y = minY; y <= maxY; y++) {
+      ArrayList<Range> row = boundingRanges.get(y);
+      if (row == null)
         return false;
-      if (intersects(segmentStart, segmentEnd, topLeft, bottomLeft))
+
+      if (!rowContainsX(row, minX))
         return false;
-      if (intersects(segmentStart, segmentEnd, topRight, bottomRight))
-        return false;
-      if (intersects(segmentStart, segmentEnd, bottomLeft, bottomRight))
+      if (!rowContainsX(row, maxX))
         return false;
     }
 
     return true;
   }
 
-  private boolean intersects(Point segA1, Point segA2, Point segB1, Point segB2) {
-    boolean aHorizontal = segA1.y == segA2.y;
-    boolean bHorizontal = segB1.y == segB2.y;
-
-    if (aHorizontal && !bHorizontal) {
-      // vertical vs horizontal
-      return (segB1.x > Math.min(segA1.x, segA2.x) && segB1.x < Math.max(segA1.x, segA2.x)) &&
-          (segA1.y > Math.min(segB1.y, segB2.y) && segA1.y < Math.max(segB1.y, segB2.y));
+  private boolean rowContainsX(ArrayList<Range> ranges, int x) {
+    for (Range r : ranges) {
+      if (x >= r.start && x <= r.end) {
+        return true;
+      }
     }
-
-    if (!aHorizontal && bHorizontal) {
-      return (segA1.x > Math.min(segB1.x, segB2.x) && segA1.x < Math.max(segB1.x, segB2.x)) &&
-          (segB1.y > Math.min(segA1.y, segA2.y) && segB1.y < Math.max(segA1.y, segA2.y));
-    }
-
-    if (aHorizontal && bHorizontal) {
-      if (segA1.y != segB1.y)
-        return false;
-      return Math.max(segA1.x, segA2.x) > Math.min(segB1.x, segB2.x) &&
-          Math.min(segA1.x, segA2.x) < Math.max(segB1.x, segB2.x);
-    }
-
-    if (segA1.x != segB1.x)
-      return false;
-    return Math.max(segA1.y, segA2.y) > Math.min(segB1.y, segB2.y) &&
-        Math.min(segA1.y, segA2.y) < Math.max(segB1.y, segB2.y);
+    return false;
   }
 
-  private boolean between(int a, int v, int b) {
-    return v > Math.min(a, b) && v < Math.max(a, b);
+  private boolean rowCovers(ArrayList<Range> ranges, int start, int end) {
+    for (Range r : ranges) {
+      if (start >= r.start && end <= r.end) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  private boolean betweenExclusive(int a, int v, int b) {
-    return v > Math.min(a, b) && v < Math.max(a, b);
+  // This was originally to try and get multiranges from a single list... 
+  // Ended up not being used.
+  ArrayList<ArrayList<Integer>> splitRanges(ArrayList<Integer> values) {
+    ArrayList<ArrayList<Integer>> ranges = new ArrayList<>();
+    if (values.isEmpty())
+      return ranges;
+
+    values.sort(Integer::compareTo);
+
+    ArrayList<Integer> current = new ArrayList<>();
+    current.add(values.get(0));
+
+    for (int i = 1; i < values.size(); i++) {
+      int prev = values.get(i - 1);
+      int curr = values.get(i);
+
+      boolean consecutive = (curr == prev + 1);
+
+      if (consecutive) {
+        // Continue current range
+        current.add(curr);
+      } else {
+        // Not consecutive: check if curr is isolated or starts a new cluster
+        boolean isolated = true;
+
+        if (i + 1 < values.size()) {
+          int next = values.get(i + 1);
+          if (next == curr + 1) {
+            // curr starts a new consecutive cluster
+            isolated = false;
+          }
+        }
+
+        if (isolated) {
+          // Absorb isolated value into current range
+          current.add(curr);
+        } else {
+          // End current range, start new one
+          ranges.add(new ArrayList<>(current));
+          current.clear();
+          current.add(curr);
+        }
+      }
+    }
+
+    // Add final range
+    ranges.add(new ArrayList<>(current));
+
+    return ranges;
   }
 
-  private boolean rangesOverlap(int x1, int x2, int y1, int y2) {
-    return Math.max(x1, x2) >= Math.min(y1, y2)
-        && Math.min(x1, x2) <= Math.max(y1, y2);
+  private class Range {
+    public final int start, end;
+
+    public Range(int start, int end) {
+      this.start = start;
+      this.end = end;
+    }
+
+    public boolean contains(int x) {
+      return x >= start && x <= end;
+    }
+
+    @Override
+    public String toString() {
+      return "[" + start + "," + end + "]";
+    }
   }
 
   // Bad idea for part 2
