@@ -4,9 +4,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -49,10 +46,9 @@ public class Day11 {
   }
 
   // This didn't work using the same approach but storing the state.
-  // Going to just store markers instead of the whole path in state
-  // Also going to work my way from the bottom up, to avoid paths that don't go
-  // "out"
-  public void part2() {
+  // Runs out of memory even if I go the other way from end to start
+  // and not tracking the path in full.
+  public void part2v1() {
     System.out.println("Day 11, Part 2");
     long count = 0;
     State currentState = new State("svr");
@@ -76,39 +72,6 @@ public class Day11 {
       // At end but doesn't contain devices? We let this path die.
     }
     System.out.println(count);
-  }
-
-  public static Map<String, List<String>> invertAdjacency(Map<String, List<String>> graph) {
-    // Use LinkedHashMap to preserve iteration order of insertion (optional; can use
-    // HashMap).
-    Map<String, LinkedHashSet<String>> temp = new LinkedHashMap<>();
-
-    // First ensure every node that appears as a key is present in temp
-    for (String node : graph.keySet()) {
-      temp.putIfAbsent(node, new LinkedHashSet<>());
-    }
-
-    // For each edge src -> dst, add src to dst's predecessor set
-    for (Map.Entry<String, List<String>> e : graph.entrySet()) {
-      String src = e.getKey();
-      List<String> outs = e.getValue();
-      if (outs == null)
-        continue;
-      for (String dst : outs) {
-        // ensure dst exists (covers nodes that only appear as targets)
-        temp.putIfAbsent(dst, new LinkedHashSet<>());
-        // add src as a predecessor of dst (set prevents duplicates)
-        temp.get(dst).add(src);
-      }
-    }
-
-    // Convert LinkedHashSet<String> -> List<String> for the final result
-    Map<String, List<String>> inverted = new LinkedHashMap<>();
-    for (Map.Entry<String, LinkedHashSet<String>> e : temp.entrySet()) {
-      inverted.put(e.getKey(), new ArrayList<>(e.getValue()));
-    }
-
-    return inverted;
   }
 
   private class State {
