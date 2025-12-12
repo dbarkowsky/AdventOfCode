@@ -1,6 +1,9 @@
 package aoc;
 
 import aoc.utils.FileReader;
+
+import java.util.ArrayList;
+
 import aoc.days.*;
 
 public class Main {
@@ -16,7 +19,7 @@ public class Main {
     int dayNum = Integer.parseInt(args[0]);
     boolean test = args.length > 1 && args[1].equals("test");
     // Load file
-    String filePath =  String.format(test ? "input/%02d_test.txt" : "input/%02d.txt", dayNum);
+    String filePath = String.format(test ? "input/%02d_test.txt" : "input/%02d.txt", dayNum);
     FileReader fileReader = new FileReader(filePath);
     // Start timer
     long startingMillis = System.currentTimeMillis();
@@ -71,6 +74,21 @@ public class Main {
         Day10 day10 = new Day10(fileReader.lines);
         day10.part1();
         day10.part2();
+        break;
+      case 11:
+        // This one annoyingly has two different test inputs
+        if (!test) {
+          Day11 day11 = new Day11(fileReader.lines);
+          day11.part1();
+          day11.part2();
+        } else {
+          Day11 day11part1 = new Day11(fileReader.lines);
+          day11part1.part1();
+          String filePathDay11Part2 = String.format("input/%02d_test2.txt", dayNum);
+          FileReader fileReaderDay11Part2 = new FileReader(filePathDay11Part2);
+          Day11 day11part2 = new Day11(fileReaderDay11Part2.lines);
+          day11part2.part2();
+        }
         break;
       // Add more cases for other days
       default:

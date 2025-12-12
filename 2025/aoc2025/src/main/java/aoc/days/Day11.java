@@ -4,8 +4,10 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 public class Day11 {
   Map<String, ArrayList<String>> graph = new HashMap<>();
@@ -21,6 +23,7 @@ public class Day11 {
   }
 
   // Find all possible paths from `you` to `out`
+  // This is basically a BFS. Works well enough for this small size
   public void part1() {
     System.out.println("Day 11, Part 1");
     long count = 0;
@@ -43,6 +46,60 @@ public class Day11 {
       }
     }
     System.out.println(count);
+  }
+
+  public void part2() {
+    System.out.println("Day 11, Part 2");
+    // Going to try to break this up and use DFS instead
+    long a = countPaths("svr", "fft");
+    long b = countPaths("fft", "dac");
+    long c = countPaths("dac", "out");
+
+    long d = countPaths("svr", "dac");
+    long e = countPaths("dac", "fft");
+    long f = countPaths("fft", "out");
+
+    // The concept here is that we can take all the separate parts and get the final answer
+    // This hopefully prevents any single part from exceeding memory, etc.
+    long total = (a * b * c) + (d * e * f);
+
+    System.out.println(total);
+  }
+
+  // Just a helper to start the DFS for a section
+  private long countPaths(String start, String end) {
+    return dfsCount(start, end, new HashSet<>(), new HashMap<>());
+  }
+
+  // Depth-first search to count number of ways from current to end.
+  // The memoization was key here. It never finished without it.
+  // The int vs long issue also messed me up here for a while. Another overflow.
+  private long dfsCount(String current, String end, Set<String> visited, Map<String, Long> memo) {
+    if (current.equals(end)) {
+      return 1;
+    }
+    if (visited.contains(current))
+      return 0;
+
+    // If we've seen this one before, use known value.
+    if (memo.containsKey(current))
+      return memo.get(current);
+
+    visited.add(current);
+
+    long total = 0;
+    // Shouldn't even need this check.. but just in case
+    if (graph.containsKey(current)) {
+      for (String next : graph.get(current)) {
+        total += dfsCount(next, end, visited, memo);
+      }
+    }
+
+    visited.remove(current);
+    // Store known endings from this node
+    // If we encounter it in the future, we don't have to recalculate.
+    memo.put(current, total);
+    return total;
   }
 
   // This didn't work using the same approach but storing the state.
