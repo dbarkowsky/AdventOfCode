@@ -35,7 +35,7 @@ public class Day12 {
     for (Space s : spaces) {
       if (everythingFits(s))
         count++;
-      System.out.println(String.format("%d,%d", s.grid.width, s.grid.height));
+      // System.out.println(String.format("%d,%d", s.grid.width, s.grid.height));
 
     }
     System.out.println(count);
@@ -67,8 +67,6 @@ public class Day12 {
 
     // As long as there are presents to insert
     while (requirementsRemain(requirementsCopy)) {
-      // System.out.println(requirementsCopy.toString());
-      // s.grid.print();
       // We'll track the best-scoring option and insert that one
       int maxScore = Integer.MIN_VALUE;
       Point bestPoint = null;
