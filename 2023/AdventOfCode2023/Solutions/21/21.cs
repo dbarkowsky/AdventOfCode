@@ -30,7 +30,7 @@ namespace Solutions
       }
     }
 
-    public int PartOne(int maxSteps = 6)
+    public int PartOne(int maxSteps = 64)
     {
       // BFS tracking actual step distance per cell
       Queue<((int, int) pos, int dist)> queue = new Queue<((int, int), int)>();
@@ -92,9 +92,65 @@ namespace Solutions
       }
     }
 
-    public int PartTwo()
+    // Same idea as part 1 but the grid repeats forever
+    public int PartTwo(long maxSteps = 26501365)
     {
-      return -1;
+      // BFS tracking actual step distance per cell
+      Queue<((int, int) pos, int dist)> queue = new Queue<((int, int), int)>();
+      queue.Enqueue((start, 0));
+      // Map from position to actual BFS distance
+      Dictionary<(int, int), int> distances = new Dictionary<(int, int), int>();
+      distances[start] = 0;
+
+      while (queue.Count > 0)
+      {
+        var (current, dist) = queue.Dequeue();
+
+        if (dist >= maxSteps) continue;
+
+        var neighbors = new List<(int, int)>
+        {
+          (current.Item1, current.Item2 - 1), // Up
+          (current.Item1, current.Item2 + 1), // Down
+          (current.Item1 - 1, current.Item2), // Left
+          (current.Item1 + 1, current.Item2)  // Right
+        };
+
+        foreach (var neighbor in neighbors)
+        {
+          // If the space contains a rock, skip it
+          (int, int) rockCoordinates = CheckOriginalGrid(neighbor.Item1, neighbor.Item2);
+          if (rockLocations.Contains(rockCoordinates))
+            continue;
+          // Only visit each cell once (BFS guarantees shortest path)
+          if (!distances.ContainsKey(neighbor))
+          {
+            distances[neighbor] = dist + 1;
+            queue.Enqueue((neighbor, dist + 1));
+          }
+        }
+      }
+
+      // A plot is reachable in exactly maxSteps if its shortest path distance
+      // has the same parity as maxSteps (we can always "waste" 2 steps by stepping back and forth)
+      return distances.Count(kvp => kvp.Value % 2 == maxSteps % 2);
+    }
+
+    // Use this function to check for rocks and wraparound when calculating neighbors, instead of doing it in the main BFS loop
+    private (int, int) CheckOriginalGrid(int x, int y){
+      // Get original grid dimensions
+      int width = strings[0].Length;
+      int height = strings.Count;
+
+      // If coordinates are out of bounds, add or subtract width/height to wrap around
+      // Repeat until coordinates are within bounds
+      while (x < 0) x += width;
+      while (x >= width) x -= width;
+      while (y < 0) y += height;
+      while (y >= height) y -= height;
+
+      // Return the wrapped coordinates
+      return (x, y);
     }
   }
 }
