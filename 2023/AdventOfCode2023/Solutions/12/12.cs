@@ -25,6 +25,7 @@ namespace Solutions
       return Solve(records, damagedGroups);
     }
 
+    // This didn't work. The search space is huge, and it will run forever.
     public int PartTwo()
     {
       // Multiply lists times 5
@@ -55,6 +56,7 @@ namespace Solutions
       return Solve(bigRecords, bigDamagedGroups);
     }
 
+    // This works for small sizes (Part 1), but it's just too brute-forcey to work for larger inputs (Part 2).
     private int Solve(List<string> records, List<int[]> damagedGroups)
     {
       int goodArrangements = 0;
@@ -67,7 +69,7 @@ namespace Solutions
           if (character == '?') sum++;
           return sum;
         });
-        Console.WriteLine($"Start {records[i]}, numberUnknown: {numberUnknown}");
+        // Console.WriteLine($"Start {records[i]}, numberUnknown: {numberUnknown}");
         // TODO: This next part takes way too long.
         // Create list of possible arrangements
         Queue<string> possibleArrangements = new();
@@ -79,7 +81,7 @@ namespace Solutions
           possibleArrangements.Enqueue(current + ".");
           possibleArrangements.Enqueue(current + "#");
         }
-        Console.WriteLine("Got possible arrangements");
+        // Console.WriteLine("Got possible arrangements");
         // For each possible arrangement, create the full arrangement combined with original record
         List<string> arrangements = new();
         foreach (string possibleArrangement in possibleArrangements)
@@ -99,7 +101,7 @@ namespace Solutions
           // Console.WriteLine(new string(tempRecord));
           arrangements.Add(new string(tempRecord));
         }
-        Console.WriteLine("Got arrangements");
+        // Console.WriteLine("Got arrangements");
         // Create pattern in regex from damaged groups
         string pattern = "^[^#]*";
         foreach ((int numOfBroken, int index) in damagedGroups[i].WithIndex())
@@ -118,9 +120,111 @@ namespace Solutions
             goodArrangements++;
           }
         }
-        Console.WriteLine($"{records[i]}: {goodArrangements}");
+        // Console.WriteLine($"{records[i]}: {goodArrangements}");
       }
       return goodArrangements;
+    }
+
+    public int PartTwov2()
+    {
+      // Multiply lists times 5
+      List<string> bigRecords = records.Select(record =>
+      {
+        string bigRecord = "";
+        for (int i = 0; i < 5; i++)
+        {
+          bigRecord += record;
+          if (i < 4)
+          {
+            bigRecord += "?";
+          }
+        }
+        return bigRecord;
+      }).ToList();
+
+      List<int[]> bigDamagedGroups = damagedGroups.Select(group =>
+      {
+        int[] bigGroup = new int[group.Length * 5];
+        for (int i = 0; i < bigGroup.Length; i++)
+        {
+          bigGroup[i] = group[i % group.Length];
+        }
+        return bigGroup;
+      }).ToList();
+
+      int count = 0;
+      for (int i = 0; i < bigRecords.Count; i++)
+      {
+        count += CountValidSolutions(bigRecords[i], bigDamagedGroups[i].ToList());
+      }
+      return count;
+    }
+
+    private int CountValidSolutions(string row, List<int> groups)
+    {
+      // If the row has been trimmed down to nothing, 
+      // we have no more spots to check.
+      // So it's either good (1 - all groups satisfied) or bad (0 - still unsatisfied groups)
+      if (string.IsNullOrEmpty(row))
+      {
+        return groups.Count == 0 ? 1 : 0;
+      }
+
+      // There are no more groups to check, but we still have part of a row.
+      // If there are still broken springs, this is not good (0)
+      // Otherwise, we can accept a row portion with known good springs, the . (return 1)
+      if (groups.Count == 0)
+      {
+        return row.Contains('#') ? 0 : 1;
+      }
+
+      // What's our recursion path?
+      // First, break up the record
+      string firstChar = row[..1];
+      string restOfRow = row[1..];
+
+      // A . is a known not-spring. We can actually ignore this case
+      // Recurse with the remainder of the row
+      if (firstChar.Equals("."))
+      {
+        return CountValidSolutions(restOfRow, groups);
+      }
+
+      // Are we at the start of a group of broken springs?
+      if (firstChar.Equals("#"))
+      {
+        int group = groups[0];
+        if (
+          // Does this group fit in the existing record?
+          row.Length >= group &&
+          // Are all the spring locations in this group space possibly a broken spring? (#)
+          // Can't have breaks (.)
+          !row[..group].Contains('.') &&
+          // Does this spacing work? 
+          // i.e. We're either at the end of the row (same length) OR
+          // the next character isn't another broken spring (#) that would invalidate this group.
+          (row.Length == group || !row[group].Equals('#'))
+        )
+        {
+          // Had a problem here running out of the index space when we have a situation like # - 1
+          // We'll just return a blank here in that case. 
+          string nextRow = (group + 1 < row.Length) ? row[(group + 1)..] : "";
+          // Otherwise, we recurse with the remainder of the row and the rest of the groups
+          return CountValidSolutions(nextRow, groups.GetRange(1, groups.Count - 1));
+        }
+        // It's not a good match for this group
+        return 0;
+      }
+
+      // What if the character is unknown? (?)
+      if (firstChar.Equals("?"))
+      {
+        // We add possible solutions as if it were a '.' and as if it were a '#'
+        return CountValidSolutions("#" + restOfRow, groups) + CountValidSolutions("." + restOfRow, groups);
+      }
+
+      // This should never actually get triggered
+      return 0;
     }
 
   }
