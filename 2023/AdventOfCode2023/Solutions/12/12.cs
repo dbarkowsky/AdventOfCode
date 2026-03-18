@@ -125,7 +125,7 @@ namespace Solutions
       return goodArrangements;
     }
 
-    public int PartTwov2()
+    public long PartTwov2()
     {
       // Multiply lists times 5
       List<string> bigRecords = records.Select(record =>
@@ -152,16 +152,26 @@ namespace Solutions
         return bigGroup;
       }).ToList();
 
-      int count = 0;
+      // Dictionary to use as cache, so we don't repeat calculations
+      Dictionary<string, long> results = new Dictionary<string, long>();
+
+      long count = 0;
       for (int i = 0; i < bigRecords.Count; i++)
       {
-        count += CountValidSolutions(bigRecords[i], bigDamagedGroups[i].ToList());
+        count += CountValidSolutions(bigRecords[i], bigDamagedGroups[i].ToList(), results);
       }
       return count;
     }
 
-    private int CountValidSolutions(string row, List<int> groups)
+    // Based on this write up here: https://advent-of-code.xavd.id/writeups/2023/day/12/
+    // The caching is very necessary. 
+    private long CountValidSolutions(string row, List<int> groups, Dictionary<string, long> results)
     {
+      string cacheKey = row + "-" + string.Join(",", groups);
+      // Cache out if we've done this before...
+      if (results.ContainsKey(cacheKey)){
+        return results[cacheKey];
+      }
       // If the row has been trimmed down to nothing, 
       // we have no more spots to check.
       // So it's either good (1 - all groups satisfied) or bad (0 - still unsatisfied groups)
@@ -187,7 +197,9 @@ namespace Solutions
       // Recurse with the remainder of the row
       if (firstChar.Equals("."))
       {
-        return CountValidSolutions(restOfRow, groups);
+        long result = CountValidSolutions(restOfRow, groups, results);
+        results.Add(cacheKey, result);
+        return result;
       }
 
       // Are we at the start of a group of broken springs?
@@ -210,7 +222,9 @@ namespace Solutions
           // We'll just return a blank here in that case. 
           string nextRow = (group + 1 < row.Length) ? row[(group + 1)..] : "";
           // Otherwise, we recurse with the remainder of the row and the rest of the groups
-          return CountValidSolutions(nextRow, groups.GetRange(1, groups.Count - 1));
+          long result = CountValidSolutions(nextRow, groups.GetRange(1, groups.Count - 1), results);
+          results.Add(cacheKey, result);
+          return result;
         }
         // It's not a good match for this group
         return 0;
@@ -220,7 +234,9 @@ namespace Solutions
       if (firstChar.Equals("?"))
       {
         // We add possible solutions as if it were a '.' and as if it were a '#'
-        return CountValidSolutions("#" + restOfRow, groups) + CountValidSolutions("." + restOfRow, groups);
+        long result = CountValidSolutions("#" + restOfRow, groups, results) + CountValidSolutions("." + restOfRow, groups, results);
+        results.Add(cacheKey, result);
+        return result;
       }
 
       // This should never actually get triggered
