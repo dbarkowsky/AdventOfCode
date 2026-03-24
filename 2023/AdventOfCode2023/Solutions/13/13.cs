@@ -61,13 +61,82 @@ namespace Solutions
       return sum;
     }
 
-    private int FindHorizontalMirror(List<string> grid)
+    public long PartTwov2()
+    {
+      long sum = 0;
+      grids.ForEach(grid =>
+      {
+        int horizontalScore = FindHorizontalMirror(grid, 1) * 100;
+        if (horizontalScore > 0)
+        {
+          sum += horizontalScore;
+          return;
+        }
+        // We'll just rotate the grid instead of writing a different mirror function.
+        int verticalScore = FindHorizontalMirror(RotateGrid(grid), 1);
+        if (verticalScore > 0)
+        {
+          sum += verticalScore;
+          return;
+        }
+      });
+      return sum;
+    }
+
+    // Rotates the grid clockwise
+    private List<string> RotateGrid(List<string> grid)
+    {
+      List<string> newGrid = new List<string>();
+      // Start at right edge.  After rotation, this edge will be the top.
+      for (int col = 0; col < grid[0].Length; col++)
+      {
+        // Then progress downwards
+        string newRow = "";
+        for (int row = grid.Count - 1; row >= 0; row--)
+        {
+          newRow += grid[row][col];
+        }
+        newGrid.Add(newRow);
+      }
+      return newGrid;
+    }
+
+    private int FindHorizontalMirror(List<string> grid, int differenceTarget)
     {
       // Move through indices of grid. Get all lines on either side of split, and compare to find if there's a off-by-one error.
       for (int i = 1; i < grid.Count; i++)
       {
-        
+        // Find how many rows in each direction we are looking for.
+        // We can only check for a mirror in sub-grids of the same size, so we use the smallest division and ignore the extra
+        int rowCount = Math.Min(i, grid.Count - i);
+        List<string> upperRows = grid.GetRange(i - rowCount, rowCount);
+        upperRows.Reverse(); // Because we're looking from centre up!
+        List<string> lowerRows = grid.GetRange(i, rowCount);
+        int differenceCount = CompareRowLists(upperRows, lowerRows);
+        if (differenceCount == differenceTarget)
+        {
+          return i;
+        }
       }
+      return 0;
+    }
+    
+    private int CompareRowLists(List<string> rl1, List<string> rl2)
+    {
+      int differenceCount = 0;
+      // Turn lists into big string
+      string combinedString1 = String.Join("", rl1.ToArray());
+      string combinedString2 = String.Join("", rl2.ToArray());
+
+      // Both strings should be the same length, so just count differences
+      for (int i = 0; i < combinedString1.Length; i++)
+      {
+        if (combinedString1[i] != combinedString2[i])
+        {
+          differenceCount++;
+        }
+      }
+      return differenceCount;
     }
 
     
