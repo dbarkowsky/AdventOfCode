@@ -35,7 +35,7 @@ namespace Solutions
     List<string> strings = new List<string>();
     Dictionary<string, long> mins = new Dictionary<string, long>();
     Dictionary<string, long> maxes = new Dictionary<string, long>();
-      List<Dictionary<string, (int, int)>> listOfAcceptedRanges = new List<Dictionary<string, (int, int)>>();
+    List<Dictionary<string, (int, int)>> listOfAcceptedRanges = new List<Dictionary<string, (int, int)>>();
 
 
 
@@ -137,19 +137,11 @@ namespace Solutions
       return totalSum;
     }
 
+    // Finding out how many possible combinations of the xmas ranges make it to the Accepted node
     public long PartTwo()
     {
       // The input is already a graph of how nodes connect
 
-      // foreach (string workflowKey in workflows.Keys)
-      // {
-      //   var workflow = workflows[workflowKey];
-      //   Console.WriteLine(workflowKey);
-      //   Console.WriteLine(workflow.conditions[0]["outcome"]);
-      //   Console.WriteLine(workflow.conditions[0]["partLetter"]);
-      //   Console.WriteLine(workflow.conditions[0]["operator"]);
-      //   Console.WriteLine(workflow.conditions[0]["value"]);
-      // }
       // Then, DFS down the entirety of the graph, staring from the imaginary "in" node.
       // For each node of the graph, we have an input set of ranges, one for each in 'xmas'
       Dictionary<string, (int, int)> startingRanges = new Dictionary<string, (int, int)>
@@ -167,14 +159,16 @@ namespace Solutions
 
       int entryNum = 1;
       long sum = 0;
+
       foreach (Dictionary<string, (int, int)> entry in listOfAcceptedRanges)
       {
         long partValue = 1;
-        Console.WriteLine("Entry Number: " + entryNum);
+        // Console.WriteLine("Entry Number: " + entryNum);
+        // Number of combinations from each set of ranges is just range of each letter multiplied together
         foreach (KeyValuePair<string, (int, int)> kvp in entry)
         {
-          //textBox3.Text += ("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
-          Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+          // Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+          if (kvp.Value.Item2 <= kvp.Value.Item1) continue;
           int sizeOfRange = kvp.Value.Item2 - kvp.Value.Item1 + 1;
           partValue *= sizeOfRange;
         }
@@ -184,6 +178,7 @@ namespace Solutions
       return sum;
     }
 
+    // Recursive function to narrow down all ranges while traversing to the A node
     private void FindCombos(string key, Dictionary<string, (int, int)> ranges)
     {
       // If the key is one of the terminal nodes (A or R), we can stop recursing.
@@ -195,32 +190,72 @@ namespace Solutions
       if (key == "R") return;
 
       Instructions nodeInstructions = workflows[key];
-      var conditions = nodeInstructions.conditions;
+      List<Dictionary<string, string>> conditions = nodeInstructions.conditions;
       // Check every condition in that node. Modify the original range and send recurse to the resulting node.
+      for (int i = 0; i < conditions.Count; i++)
+      {
+        Dictionary<string, string> condition = conditions[i];
+        // There will be two recurses from each condition: one for pass and one for fail. We travel both regardless.
+        Dictionary<string, (int, int)> modifiedRange = GetModifiedRange(i, conditions, ranges);
+        // Send it to the next outcome
+        string trueOutcome = condition["outcome"];
+        FindCombos(trueOutcome, modifiedRange);
+      }
+      // Also send the ranges down to the default node
+      Dictionary<string, (int, int)> modifiedRanges = new Dictionary<string, (int, int)>(ranges);
       foreach (var condition in conditions)
       {
-        string letter = condition["partLetter"];
-        string greaterOrLess = condition["operator"];
-        int value = int.Parse(condition["value"]);
-        // There will be two recurses from each condition: one for pass and one for fail. We travel both regardless.
-        Dictionary<string, (int, int)> trueRange = new Dictionary<string, (int, int)>(ranges);
-        Dictionary<string, (int, int)> falseRange = new Dictionary<string, (int, int)>(ranges);
-        // How we modify the ranges depends on the operator, but it will always split it into two new ranges
+        // Apply the previous ones in reverse
+        ApplyConditionToRange(condition, modifiedRanges, true);
+      }
+      FindCombos(nodeInstructions.defaultOutcome, modifiedRanges);
+    }
+
+    private Dictionary<string, (int, int)> GetModifiedRange(int currentConditionIndex, List<Dictionary<string, string>> conditions, Dictionary<string, (int, int)> previousRanges)
+    {
+      Dictionary<string, (int, int)> modifiedRanges = new Dictionary<string, (int, int)>(previousRanges);
+      // Identify which conditions need to be applied in reverse. These are the ones we've already gone past, but now need the other half of the slice applied.
+      List<Dictionary<string, string>> previousConditions = conditions.GetRange(0, currentConditionIndex); // Assuming exclusive of end
+      foreach (var condition in previousConditions)
+      {
+        // Apply the previous ones in reverse
+        ApplyConditionToRange(condition, modifiedRanges, true);
+      }
+      // Then apply the current one in the regular direction
+      Dictionary<string, string> currentCondition = conditions[currentConditionIndex];
+      ApplyConditionToRange(currentCondition, modifiedRanges);
+      return modifiedRanges;
+    }
+
+    private void ApplyConditionToRange(Dictionary<string, string> condition, Dictionary<string, (int, int)> range, bool reverse = false)
+    {
+      string letter = condition["partLetter"];
+      string greaterOrLess = condition["operator"];
+      int value = int.Parse(condition["value"]);
+      // Reverse for getting the remainder after the range restriction. Used for cascading range restrictions in part 2
+      if (reverse)
+      {
+        // Tricky to wrap head around...but if the original was x>5, then here we need to assume the opposite (1-5)
         if (greaterOrLess == ">")
         {
-          trueRange[letter] = (Math.Max(trueRange[letter].Item1, value + 1), trueRange[letter].Item2);
-          falseRange[letter] = (trueRange[letter].Item1, Math.Min(trueRange[letter].Item2, value));
+          range[letter] = (range[letter].Item1, Math.Min(range[letter].Item2, value));
         }
         else
         {
-          trueRange[letter] = (trueRange[letter].Item1, Math.Min(trueRange[letter].Item2, value - 1));
-          falseRange[letter] = (Math.Max(falseRange[letter].Item1, value), falseRange[letter].Item2);
+          range[letter] = (Math.Max(range[letter].Item1, value), range[letter].Item2);
         }
-        // Now send it to both possible outcomes.
-        string trueOutcome = condition["outcome"];
-        string falseOutcome = nodeInstructions.defaultOutcome;
-        FindCombos(trueOutcome, trueRange);
-        FindCombos(falseOutcome, falseRange);
+      }
+      else
+      {
+        // How we modify the ranges depends on the operator, but it will always split it into two new ranges
+        if (greaterOrLess == ">")
+        {
+          range[letter] = (Math.Max(range[letter].Item1, value + 1), range[letter].Item2);
+        }
+        else
+        {
+          range[letter] = (range[letter].Item1, Math.Min(range[letter].Item2, value - 1));
+        }
       }
     }
 
