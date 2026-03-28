@@ -35,6 +35,7 @@ namespace Solutions
     List<string> strings = new List<string>();
     Dictionary<string, long> mins = new Dictionary<string, long>();
     Dictionary<string, long> maxes = new Dictionary<string, long>();
+      List<Dictionary<string, (int, int)>> listOfAcceptedRanges = new List<Dictionary<string, (int, int)>>();
 
 
 
@@ -118,7 +119,7 @@ namespace Solutions
           }
           if (current == originalCurrent)
           {
-            Console.WriteLine($"at default outcome: {instructions.defaultOutcome}");
+            // Console.WriteLine($"at default outcome: {instructions.defaultOutcome}");
             // Else no conditions were true, 
             //// Go to default outcome
             current = instructions.defaultOutcome;
@@ -136,17 +137,91 @@ namespace Solutions
       return totalSum;
     }
 
-    public int PartTwo()
+    public long PartTwo()
     {
-      return -1;
+      // The input is already a graph of how nodes connect
+
+      // foreach (string workflowKey in workflows.Keys)
+      // {
+      //   var workflow = workflows[workflowKey];
+      //   Console.WriteLine(workflowKey);
+      //   Console.WriteLine(workflow.conditions[0]["outcome"]);
+      //   Console.WriteLine(workflow.conditions[0]["partLetter"]);
+      //   Console.WriteLine(workflow.conditions[0]["operator"]);
+      //   Console.WriteLine(workflow.conditions[0]["value"]);
+      // }
+      // Then, DFS down the entirety of the graph, staring from the imaginary "in" node.
+      // For each node of the graph, we have an input set of ranges, one for each in 'xmas'
+      Dictionary<string, (int, int)> startingRanges = new Dictionary<string, (int, int)>
+      {
+        { "x", (1, 4000) },
+        { "m", (1, 4000) },
+        { "a", (1, 4000) },
+        { "s", (1, 4000) }
+      };
+
+      string startingNode = "in";
+      FindCombos(startingNode, startingRanges);
+      // At this point, we should have the list of ranges that made it to the A nodes filled.
+      // We need to calculate how many potential combinations there are for each surviving range.
+
+      int entryNum = 1;
+      long sum = 0;
+      foreach (Dictionary<string, (int, int)> entry in listOfAcceptedRanges)
+      {
+        long partValue = 1;
+        Console.WriteLine("Entry Number: " + entryNum);
+        foreach (KeyValuePair<string, (int, int)> kvp in entry)
+        {
+          //textBox3.Text += ("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+          Console.WriteLine("Key = {0}, Value = {1}", kvp.Key, kvp.Value);
+          int sizeOfRange = kvp.Value.Item2 - kvp.Value.Item1 + 1;
+          partValue *= sizeOfRange;
+        }
+        entryNum++;
+        sum += partValue;
+      }
+      return sum;
     }
 
-    private void AdjustMinMaxes(Instructions instructions)
+    private void FindCombos(string key, Dictionary<string, (int, int)> ranges)
     {
-      // Check each instruction
-      // If it leads to an accepted, check against current min for this value
-      // Depending on < or >, might have to check for maxes
-      // If it leads to a rejection, do the opposite...
+      // If the key is one of the terminal nodes (A or R), we can stop recursing.
+      if (key == "A")
+      {
+        listOfAcceptedRanges.Add(ranges);
+        return;
+      }
+      if (key == "R") return;
+
+      Instructions nodeInstructions = workflows[key];
+      var conditions = nodeInstructions.conditions;
+      // Check every condition in that node. Modify the original range and send recurse to the resulting node.
+      foreach (var condition in conditions)
+      {
+        string letter = condition["partLetter"];
+        string greaterOrLess = condition["operator"];
+        int value = int.Parse(condition["value"]);
+        // There will be two recurses from each condition: one for pass and one for fail. We travel both regardless.
+        Dictionary<string, (int, int)> trueRange = new Dictionary<string, (int, int)>(ranges);
+        Dictionary<string, (int, int)> falseRange = new Dictionary<string, (int, int)>(ranges);
+        // How we modify the ranges depends on the operator, but it will always split it into two new ranges
+        if (greaterOrLess == ">")
+        {
+          trueRange[letter] = (Math.Max(trueRange[letter].Item1, value + 1), trueRange[letter].Item2);
+          falseRange[letter] = (trueRange[letter].Item1, Math.Min(trueRange[letter].Item2, value));
+        }
+        else
+        {
+          trueRange[letter] = (trueRange[letter].Item1, Math.Min(trueRange[letter].Item2, value - 1));
+          falseRange[letter] = (Math.Max(falseRange[letter].Item1, value), falseRange[letter].Item2);
+        }
+        // Now send it to both possible outcomes.
+        string trueOutcome = condition["outcome"];
+        string falseOutcome = nodeInstructions.defaultOutcome;
+        FindCombos(trueOutcome, trueRange);
+        FindCombos(falseOutcome, falseRange);
+      }
     }
 
     public long GetPartSum(Dictionary<string, int> part)
@@ -163,11 +238,11 @@ namespace Solutions
     {
       if (option["operator"] == "<")
       {
-        return comparedValue < int.Parse(option["value"]) ? true : false;
+        return comparedValue < int.Parse(option["value"]);
       }
       else
       {
-        return comparedValue > int.Parse(option["value"]) ? true : false;
+        return comparedValue > int.Parse(option["value"]);
       }
     }
   }
