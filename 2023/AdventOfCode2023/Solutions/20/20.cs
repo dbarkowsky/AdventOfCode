@@ -23,15 +23,20 @@ namespace Solutions
       public Dictionary<string, Pulse> sources = new();
       public Type type;
       public bool isOn;
-      public Pulse pulseLastReceived;
-      public Pulse pulseLastSent;
       public Node(string[] d, Type t)
       {
         destinations = d.ToList();
         type = t;
         isOn = false;
-        pulseLastReceived = Pulse.LOW;
-        pulseLastSent = Pulse.LOW;
+      }
+
+      public void Reset()
+      {
+        isOn = false;
+        foreach (string key in sources.Keys.ToList())
+        {
+          sources[key] = Pulse.LOW;
+        }
       }
 
       public List<(string node, Pulse pulse, string from)> GetNext(string from, Pulse p)
@@ -154,8 +159,19 @@ namespace Solutions
       return lows * highs;
     }
 
+    private void Reset()
+    {
+      foreach (Node node in nodes.Values)
+      {
+        node.Reset();
+      }
+    }
+
     public long PartTwo()
     {
+      // This screwed me up for a long time. Part 1 left the nodes in a altered state.
+      // So running part 2 already had a number of button presses completed...
+      Reset();
       // rx will only get a low pulse when its source (conjunctor) remembers all high pulses from its sources
       // What is the rx source?
       string rxSource = nodes.Keys.Where(key => nodes[key].destinations.Contains("rx")).ToList().First();
@@ -171,15 +187,15 @@ namespace Solutions
       long buttonPresses = 0;
       bool solutionFound = false;
 
+      // This set tracks which nodes we want to watch for HIGH pulses.
       HashSet<string> watchSet = new(sources);
 
       while (!solutionFound){
         HashSet<string> firedHigh = PressButton(watchSet).firedHigh;
         buttonPresses++;
-        foreach (string source in firedHigh){
-          if (sourceTracker[source] == long.MaxValue){
+        foreach (string source in sources){
+          if (firedHigh.Contains(source) && sourceTracker[source] == long.MaxValue){
             sourceTracker[source] = buttonPresses;
-            Console.WriteLine($"first high for {source}: {sourceTracker[source]}");
           }
         }
         solutionFound = sourceTracker.Values.All(value => value != long.MaxValue);
@@ -187,6 +203,7 @@ namespace Solutions
       return sourceTracker.Values.Aggregate(Lcm);
     }
 
+    // quick functions for finding the lowest common multiple
     private static long Gcd(long a, long b) => b == 0 ? a : Gcd(b, a % b);
     private static long Lcm(long a, long b) => a / Gcd(a, b) * b;
 
@@ -202,8 +219,6 @@ namespace Solutions
       {
         // Get first action in queue
         (string key, Pulse pulse, string from) current = pulseQueue.Dequeue();
-        // Record received pulse
-        nodes[current.key].pulseLastReceived = current.pulse;
         // Increment counters
         if (current.pulse == Pulse.HIGH) highs++;
         else lows++;
@@ -212,7 +227,6 @@ namespace Solutions
         List<(string node, Pulse pulse, string from)> refinedNodes = new();
         foreach ((string node, Pulse pulse, string from) nextNode in nextNodes)
         {
-          nodes[current.key].pulseLastSent = nextNode.pulse;
           if (nextNode.pulse == Pulse.HIGH && watch != null && watch.Contains(current.key))
           {
             firedHigh.Add(current.key);
