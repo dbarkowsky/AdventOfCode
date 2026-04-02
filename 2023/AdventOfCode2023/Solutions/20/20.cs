@@ -24,12 +24,14 @@ namespace Solutions
       public Type type;
       public bool isOn;
       public Pulse pulseLastReceived;
+      public Pulse pulseLastSent;
       public Node(string[] d, Type t)
       {
         destinations = d.ToList();
         type = t;
         isOn = false;
         pulseLastReceived = Pulse.LOW;
+        pulseLastSent = Pulse.LOW;
       }
 
       public List<(string node, Pulse pulse, string from)> GetNext(string from, Pulse p)
@@ -97,7 +99,7 @@ namespace Solutions
     {
       strings = FileReader.AsStringArray(fileName).ToList();
       // Add terminal nodes here
-      nodes["output"] = new Node(new string[0], Type.TERMINAL); // for example
+      // nodes["output"] = new Node(new string[0], Type.TERMINAL); // for example
       nodes["rx"] = new Node(new string[0], Type.TERMINAL); // Output my input required
 
       // Add source nodes
@@ -145,9 +147,9 @@ namespace Solutions
 
       for (int i = 1; i <= buttonPresses; i++)
       {
-        (int newLows, int newHighs, bool rxReceivedLowPulse) counts = PressButton();
-        lows += counts.newLows;
-        highs += counts.newHighs;
+        var counts = PressButton();
+        lows += counts.lows;
+        highs += counts.highs;
       }
       return lows * highs;
     }
@@ -169,27 +171,28 @@ namespace Solutions
       long buttonPresses = 0;
       bool solutionFound = false;
 
+      HashSet<string> watchSet = new(sources);
+
       while (!solutionFound){
-        (int newLows, int newHighs, bool rxReceivedLowPulse) counts = PressButton();
+        HashSet<string> firedHigh = PressButton(watchSet).firedHigh;
         buttonPresses++;
-        // Check if any of the sources are HIGH. Log their value, keeping the smallest one.
-        foreach (string source in nodes[rxSource].sources.Keys){
-          // Console.WriteLine($"source: {source}");
-          if (nodes[rxSource].sources[source] == Pulse.HIGH){
-            sourceTracker[source] = Math.Min(buttonPresses, sourceTracker[source]);
-            Console.WriteLine($"new min for {source}: {sourceTracker[source]}");
+        foreach (string source in firedHigh){
+          if (sourceTracker[source] == long.MaxValue){
+            sourceTracker[source] = buttonPresses;
+            Console.WriteLine($"first high for {source}: {sourceTracker[source]}");
           }
         }
         solutionFound = sourceTracker.Values.All(value => value != long.MaxValue);
       }
-      Console.WriteLine($"all hits {buttonPresses}");
-      // TODO: Find LCM of minimum button presses
-      return buttonPresses;
+      return sourceTracker.Values.Aggregate(Lcm);
     }
 
-    private (int lows, int highs, bool rx) PressButton()
+    private static long Gcd(long a, long b) => b == 0 ? a : Gcd(b, a % b);
+    private static long Lcm(long a, long b) => a / Gcd(a, b) * b;
+
+    private (int lows, int highs, HashSet<string> firedHigh) PressButton(HashSet<string>? watch = null)
     {
-      bool rxReceivedLowPulse = false;
+      HashSet<string> firedHigh = new();
       int lows = 0;
       int highs = 0;
       Queue<(string key, Pulse pulse, string from)> pulseQueue = new();
@@ -209,17 +212,16 @@ namespace Solutions
         List<(string node, Pulse pulse, string from)> refinedNodes = new();
         foreach ((string node, Pulse pulse, string from) nextNode in nextNodes)
         {
-          // Console.WriteLine($"{current.key} -{nextNode.pulse}-> {nextNode.node}");
-          refinedNodes.Add((nextNode.node, nextNode.pulse, current.key));
-          // Check if it's the rx low pulse
-          if (nextNode.pulse == Pulse.LOW && nextNode.node == "rx")
+          nodes[current.key].pulseLastSent = nextNode.pulse;
+          if (nextNode.pulse == Pulse.HIGH && watch != null && watch.Contains(current.key))
           {
-            rxReceivedLowPulse = true;
+            firedHigh.Add(current.key);
           }
+          refinedNodes.Add((nextNode.node, nextNode.pulse, current.key));
         }
         refinedNodes.ForEach(pulseQueue.Enqueue);
       }
-      return (lows, highs, rxReceivedLowPulse);
+      return (lows, highs, firedHigh);
     }
   }
 }
