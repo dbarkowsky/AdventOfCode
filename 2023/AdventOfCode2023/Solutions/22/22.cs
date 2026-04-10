@@ -75,8 +75,12 @@ namespace Solutions
     private class Block
     {
       public HashSet<Cube> cubes = new HashSet<Cube>();
+      private static int nextBlockId = 0;
+      public int id;
       public Block(string line)
       {
+        id = nextBlockId;
+        nextBlockId++;
         // Build cubes based on this line input: 0,0,2~2,0,2
         string left = line.Split('~').First();
         string right = line.Split('~').Last();
@@ -100,6 +104,7 @@ namespace Solutions
       public Block(Block b)
       {
         cubes = cubes.Union(b.cubes).ToHashSet();
+        id = b.id;
       }
 
       public int GetLowestZ()
@@ -135,37 +140,35 @@ namespace Solutions
         // Copy so we don't alter the original
         Block copy = new Block(this);
         // First, drop it to the rough location, one block above known highest fallen cube.
-        // TODO: Track this as we drop instead of recalculating each time
-        // int highestZInFallenCubes = 1;
-        // foreach (Cube cube in fallenCubes)
-        // {
-        //   highestZInFallenCubes = Math.Max(highestZInFallenCubes, cube.z);
-        // }
-        // int distance = GetLowestZ() - highestZInFallenCubes - 1;
-        // Console.WriteLine(highestZInFallenCubes);
-        //           Console.WriteLine(distance);
-
-        // DropCubeSetBy(distance, copy);
+        HashSet<(int x, int y)> footprint = copy.cubes.Select(c => (c.x, c.y)).ToHashSet();
+        int highestZInFallenCubes = 1;
+        foreach (Cube cube in fallenCubes)
+        {
+          if (footprint.Contains((cube.x, cube.y)))
+            highestZInFallenCubes = Math.Max(highestZInFallenCubes, cube.z);
+        }
+        int distance = copy.GetLowestZ() - highestZInFallenCubes - 1;
+        if (distance > 0)
+          DropCubeSetBy(distance, copy);
         // Then loop the slow fall until blocked
         bool blocked = false;
         while (!blocked)
         {
-          // Console.WriteLine(copy.GetLowestZ());
           // Stop if lowest point is at 1
           if (copy.GetLowestZ() <= 1)
           {
             blocked = true;
-            Console.WriteLine("hit bottom");
+            // Console.WriteLine("hit bottom");
             continue;
           }
           // Stop if the the next point down would intersect with fallen blocks.
           HashSet<Cube> nextCubesPosition = copy.GetNextCubeSet();
-          Console.WriteLine("next position");
-          Console.WriteLine(string.Join("\n", nextCubesPosition));
+          // Console.WriteLine("next position");
+          // Console.WriteLine(string.Join("\n", nextCubesPosition));
           if (nextCubesPosition.Intersect(fallenCubes).Any())
           {
             blocked = true;
-            Console.WriteLine("interecept");
+            // Console.WriteLine("interecept");
             continue;
           }
           // Otherwise, fall once more
@@ -173,11 +176,11 @@ namespace Solutions
           {
             cube.Fall();
           }
-          Console.WriteLine("fall");
+          // Console.WriteLine("fall");
         }
         // Print locations of blocked fallen cubes
-        Console.WriteLine("final coords");
-        this.PrintCoords();
+        // Console.WriteLine("final coords");
+        // PrintCoords();
         return copy;
       }
 
@@ -193,6 +196,7 @@ namespace Solutions
     readonly List<string> strings = new List<string>();
     HashSet<Cube> fallenCubes = new HashSet<Cube>();
     List<Block> blocks = new List<Block>();
+    List<Block> fallenBlocks = new List<Block>();
     public Day22(string fileName)
     {
       strings = FileReader.AsStringArray(fileName).ToList();
@@ -202,7 +206,6 @@ namespace Solutions
       }
       // Sort these by z position. It's going to determine how we drop them.
       blocks.Sort((a, b) => a.GetLowestZ().CompareTo(b.GetLowestZ()));
-      // TODO: Check that these are sorted!
     }
 
     // This feels a lot like how we build Tetris. Drop blocks, and they become part of fallen blocks once stopped.
@@ -220,13 +223,66 @@ namespace Solutions
         {
           fallenCubes.Add(cube);
         }
+        // And add to the list of fallen blocks
+        fallenBlocks.Add(block);
       }
-      // Console.WriteLine(fallenCubes);
-      Console.WriteLine(fallenCubes.Count);
       bool matchesTest = fallenCubes.SetEquals(exampleWhenSettled);
       Console.WriteLine(matchesTest);
-      // FIXME: This might not work... I need to be able to remove individual blocks, so lumping them all into fallenCubes doesn't work.
-      return -1;
+      // Now that the blocks have fallen, I need a way to check if any block supports any other blocks.
+      // For that, I want an adjacency list, where each key is a block id, and the values are blocks that hold it up: so { 1: [2, 3] }
+      // Any entry with only one block holding it up means it can't be removed without disrupting the tower
+      // This means I might also need a lookup table where the key is the cube and the value is the block id.
+      Dictionary<Cube, int> lookup = new Dictionary<Cube, int>();
+      foreach (Block block in fallenBlocks)
+      {
+        foreach (Cube cube in block.cubes)
+        {
+          lookup[cube] = block.id;
+        }
+      }
+      // Then we can build the adjacency list
+      // remember: { block: [blocks holding it up] }
+      Dictionary<int, List<int>> supportGraph = new Dictionary<int, List<int>>();
+      foreach (Cube cube in fallenCubes)
+      {
+        // Check above it.
+        Cube locationAbove = new Cube(cube.x, cube.y, cube.z + 1);
+        // If there's a cube directly above...
+        if (fallenCubes.Contains(locationAbove))
+        {
+          int aboveBlockId = lookup[locationAbove];
+          int currentBlockId = lookup[cube];
+          // If it's from a different block...
+          if (currentBlockId != aboveBlockId)
+          {
+            // Add this to the supportGraph
+            if (supportGraph.ContainsKey(aboveBlockId))
+            {
+              // Just add it to the list if it doesn't exist
+              if (!supportGraph[aboveBlockId].Contains(currentBlockId))
+              {
+                supportGraph[aboveBlockId].Add(currentBlockId);
+              }
+            }
+            else
+            {
+              // Add a new list
+              supportGraph.Add(aboveBlockId, new List<int>() { currentBlockId });
+            }
+          }
+        }
+      }
+      // Now we have a list of which blocks hold up other blocks
+      // If a block has only one other block supporting it, it cannot go. 
+      // We'll figure that out, then subtract that amount from the total number of blocks to know how many can go
+      HashSet<int> blocksThatWillDistruptTower = new();
+      foreach (KeyValuePair<int, List<int>> kvp in supportGraph){
+        if (kvp.Value.Count == 1){
+          blocksThatWillDistruptTower.Add(kvp.Value[0]);
+        }
+      }
+      int totalBlocks = blocks.Count;
+      return totalBlocks - blocksThatWillDistruptTower.Count;
     }
 
     public int PartTwo()
