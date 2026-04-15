@@ -242,7 +242,7 @@ namespace Solutions
       }
       // Then we can build the adjacency list
       // remember: { block: [blocks holding it up] }
-      Dictionary<int, List<int>> supportGraph = new Dictionary<int, List<int>>();
+      Dictionary<int, HashSet<int>> supportGraph = new Dictionary<int, HashSet<int>>();
       foreach (Cube cube in fallenCubes)
       {
         // Check above it.
@@ -258,16 +258,12 @@ namespace Solutions
             // Add this to the supportGraph
             if (supportGraph.ContainsKey(aboveBlockId))
             {
-              // Just add it to the list if it doesn't exist
-              if (!supportGraph[aboveBlockId].Contains(currentBlockId))
-              {
                 supportGraph[aboveBlockId].Add(currentBlockId);
-              }
             }
             else
             {
               // Add a new list
-              supportGraph.Add(aboveBlockId, new List<int>() { currentBlockId });
+              supportGraph.Add(aboveBlockId, new HashSet<int>() { currentBlockId });
             }
           }
         }
@@ -276,9 +272,9 @@ namespace Solutions
       // If a block has only one other block supporting it, it cannot go. 
       // We'll figure that out, then subtract that amount from the total number of blocks to know how many can go
       HashSet<int> blocksThatWillDistruptTower = new();
-      foreach (KeyValuePair<int, List<int>> kvp in supportGraph){
+      foreach (KeyValuePair<int, HashSet<int>> kvp in supportGraph){
         if (kvp.Value.Count == 1){
-          blocksThatWillDistruptTower.Add(kvp.Value[0]);
+          blocksThatWillDistruptTower.Add(kvp.Value.ToArray()[0]);
         }
       }
       int totalBlocks = blocks.Count;
@@ -287,6 +283,7 @@ namespace Solutions
 
     public int PartTwo()
     {
+      // 
       return -1;
     }
   }
