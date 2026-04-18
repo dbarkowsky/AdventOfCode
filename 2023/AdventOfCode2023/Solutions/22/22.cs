@@ -191,12 +191,27 @@ namespace Solutions
           Console.WriteLine(cube);
         }
       }
+
+      public override bool Equals(object obj)
+      {
+        if (obj == null) return false;
+        Block b = (obj as Block)!;
+        return b.id == id;
+      }
+
+      public override int GetHashCode()
+      {
+        return id.GetHashCode();
+      }
     }
 
     readonly List<string> strings = new List<string>();
     HashSet<Cube> fallenCubes = new HashSet<Cube>();
     List<Block> blocks = new List<Block>();
     List<Block> fallenBlocks = new List<Block>();
+
+    Dictionary<int, HashSet<int>> supportGraph = new Dictionary<int, HashSet<int>>();
+
     public Day22(string fileName)
     {
       strings = FileReader.AsStringArray(fileName).ToList();
@@ -226,8 +241,7 @@ namespace Solutions
         // And add to the list of fallen blocks
         fallenBlocks.Add(block);
       }
-      bool matchesTest = fallenCubes.SetEquals(exampleWhenSettled);
-      Console.WriteLine(matchesTest);
+
       // Now that the blocks have fallen, I need a way to check if any block supports any other blocks.
       // For that, I want an adjacency list, where each key is a block id, and the values are blocks that hold it up: so { 1: [2, 3] }
       // Any entry with only one block holding it up means it can't be removed without disrupting the tower
@@ -242,7 +256,6 @@ namespace Solutions
       }
       // Then we can build the adjacency list
       // remember: { block: [blocks holding it up] }
-      Dictionary<int, HashSet<int>> supportGraph = new Dictionary<int, HashSet<int>>();
       foreach (Cube cube in fallenCubes)
       {
         // Check above it.
@@ -281,9 +294,18 @@ namespace Solutions
       return totalBlocks - blocksThatWillDistruptTower.Count;
     }
 
+    // When a block is destroyed, how many above it will fall?
     public int PartTwo()
     {
-      // 
+      // Treat this like a graph, but a Priority Queue will control which block we check next.
+      PriorityQueue<Block, int> queue = new PriorityQueue<Block, int>();
+      foreach (Block block in fallenBlocks)
+      {
+        // Make a copy of the fallen blocks list so we don't alter the original
+        List<Block> fallenBlocksCopy = new (fallenBlocks);
+        // Add the current block to the queue.
+        queue.Enqueue(block, block.GetLowestZ());
+      }
       return -1;
     }
   }
