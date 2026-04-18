@@ -210,7 +210,7 @@ namespace Solutions
     List<Block> blocks = new List<Block>();
     List<Block> fallenBlocks = new List<Block>();
 
-    Dictionary<int, HashSet<int>> supportGraph = new Dictionary<int, HashSet<int>>();
+    Dictionary<int, HashSet<int>> supportedByGraph = new Dictionary<int, HashSet<int>>();
 
     public Day22(string fileName)
     {
@@ -269,14 +269,14 @@ namespace Solutions
           if (currentBlockId != aboveBlockId)
           {
             // Add this to the supportGraph
-            if (supportGraph.ContainsKey(aboveBlockId))
+            if (supportedByGraph.ContainsKey(aboveBlockId))
             {
-                supportGraph[aboveBlockId].Add(currentBlockId);
+              supportedByGraph[aboveBlockId].Add(currentBlockId);
             }
             else
             {
               // Add a new list
-              supportGraph.Add(aboveBlockId, new HashSet<int>() { currentBlockId });
+              supportedByGraph.Add(aboveBlockId, new HashSet<int>() { currentBlockId });
             }
           }
         }
@@ -285,8 +285,10 @@ namespace Solutions
       // If a block has only one other block supporting it, it cannot go. 
       // We'll figure that out, then subtract that amount from the total number of blocks to know how many can go
       HashSet<int> blocksThatWillDistruptTower = new();
-      foreach (KeyValuePair<int, HashSet<int>> kvp in supportGraph){
-        if (kvp.Value.Count == 1){
+      foreach (KeyValuePair<int, HashSet<int>> kvp in supportedByGraph)
+      {
+        if (kvp.Value.Count == 1)
+        {
           blocksThatWillDistruptTower.Add(kvp.Value.ToArray()[0]);
         }
       }
@@ -295,18 +297,74 @@ namespace Solutions
     }
 
     // When a block is destroyed, how many above it will fall?
-    public int PartTwo()
+    public long PartTwo()
     {
+      long sum = 0;
+      // I need the previous look up table of [block]:[blocks that support it], that's supportedByGraph built in part 1
+      // I also want two other look up tables. One is [block]:[blocks it supports], that's supportsGraph
+      // And another is just a map with the block id: block for quick reference because the other lookups only use the block id
+      Dictionary<int, HashSet<int>> supportsGraph = new();
+      foreach (KeyValuePair<int, HashSet<int>> kvp in supportedByGraph)
+      {
+        foreach (int supportId in kvp.Value)
+        {
+          if (!supportsGraph.ContainsKey(supportId))
+          {
+            supportsGraph.Add(supportId, new HashSet<int>());
+          }
+          supportsGraph[supportId].Add(kvp.Key);
+        }
+      }
+
+      Dictionary<int, Block> blockLookup = new();
+      foreach (Block block in fallenBlocks)
+      {
+        blockLookup.Add(block.id, block);
+      }
+
       // Treat this like a graph, but a Priority Queue will control which block we check next.
       PriorityQueue<Block, int> queue = new PriorityQueue<Block, int>();
       foreach (Block block in fallenBlocks)
       {
-        // Make a copy of the fallen blocks list so we don't alter the original
-        List<Block> fallenBlocksCopy = new (fallenBlocks);
-        // Add the current block to the queue.
-        queue.Enqueue(block, block.GetLowestZ());
+        long brickCount = 0;
+        // Track blocks that are deleted
+        // The starting block is always forcibly disintegrated. Don't check its supports.
+        HashSet<int> deletedBlocks = new() { block.id };
+        if (supportsGraph.ContainsKey(block.id))
+        {
+          foreach (int blockId in supportsGraph[block.id])
+          {
+            Block b = blockLookup[blockId];
+            queue.Enqueue(b, b.GetLowestZ());
+          }
+        }
+
+        while (queue.Count > 0)
+        {
+          Block current = queue.Dequeue();
+          if (deletedBlocks.Contains(current.id)) continue;
+          // Check if ALL supporting blocks have already been added to the set of deleted blocks
+          if (supportedByGraph[current.id].All(deletedBlocks.Contains))
+          {
+            // If so, it's fine to delete this block as well.
+            deletedBlocks.Add(current.id);
+            brickCount++;
+            // It was supporting other blocks, add them to the queue to see if we need to cascade delete more
+            if (supportsGraph.ContainsKey(current.id))
+            {
+              HashSet<int> blocksItSupports = supportsGraph[current.id];
+              foreach (int blockId in blocksItSupports)
+              {
+                Block b = blockLookup[blockId];
+                queue.Enqueue(b, b.GetLowestZ());
+              }
+            }
+          }
+        }
+        // Queue is empty, we're done deleting blocks in this chain
+        sum += brickCount;
       }
-      return -1;
+      return sum;
     }
   }
 }
