@@ -57,23 +57,91 @@ namespace Solutions
         }
       });
       // The longest path will be the value at the end, but inverted
-      // Console.WriteLine(distances);
-      // foreach (KeyValuePair<Point, int> kvp in distances)
-      // {
-      //   Console.WriteLine(kvp.Key + ": " + kvp.Value);
-      // }
       return distances[end] * -1;
     }
 
     // Same concept, finding longest path, but this time the > restrictions don't matter.
     // This maybe creates a problem of cyclic graphs, which a topological sort can't handle.
-    // Either use a DFS and brute force, or use BFS and track a bunch of independant states
-    // In either case there's a potential limit to maximum memory usage. I think I can reduce that with BFS by tracking paths
+    // Compress graph to just junction nodes, then DFS with backtracking.
+    // Essentially, make a high-level graph to eliminate all the 1-distance edges.
     public int PartTwo()
     {
-      return -1;
+      // First, we only care about places where the path can split, aka junctions
+      // Everywhere else is just a series of nodes in the grid with only one path
+      // Why start and end? They are the first and last nodes in our new graph
+      HashSet<Point> junctions = new() { start, end };
+      foreach (KeyValuePair<Point, string> kvp in maze)
+      {
+        if (kvp.Value == "#") continue;
+        if (GetNextTiles(kvp.Key, ignoreSlopes: true).Count >= 3)
+          junctions.Add(kvp.Key);
+      }
+
+      // BFS from each junction to find adjacent junctions and their distances
+      // We're finding these so that we can make a superset graph, where each junction is a node, 
+      // and the edges now have bigger weights (distances)
+      Dictionary<Point, List<(Point neighbor, int distance)>> graph = new();
+      foreach (Point junction in junctions)
+      {
+        graph[junction] = new List<(Point, int)>();
+        Queue<(Point, int)> queue = new();
+        HashSet<Point> seen = new() { junction };
+        queue.Enqueue((junction, 0));
+
+        while (queue.Count > 0)
+        {
+          (Point currentTile, int distance) = queue.Dequeue();
+          // If we've reached a different junction, record the edge and stop expanding from here
+          if (distance > 0 && junctions.Contains(currentTile))
+          {
+            graph[junction].Add((currentTile, distance));
+            continue;
+          }
+          foreach ((Point next, _) in GetNextTiles(currentTile, ignoreSlopes: true))
+          {
+            // If we haven't visited this yet, mark it as so and track the distance.
+            // Remember, seen set is reset each junction, so we're not carrying it over between BFS runs
+            if (!seen.Contains(next))
+            {
+              seen.Add(next);
+              queue.Enqueue((next, distance + 1));
+            }
+          }
+        }
+      }
+
+      // DFS with backtracking on the compressed graph
+      HashSet<Point> visited = new();
+      return LongestPath(graph, visited, start);
     }
 
+    // Just a simple DFS based on high-level graph of junctions
+    private int LongestPath(Dictionary<Point, List<(Point, int)>> graph, HashSet<Point> visited, Point current)
+    {
+      if (current == end) return 0;
+
+      visited.Add(current);
+      int best = int.MinValue;
+
+      foreach ((Point next, int dist) in graph[current])
+      {
+        if (!visited.Contains(next))
+        {
+          // Recurse if we haven't checked this route yet
+          int sub = LongestPath(graph, visited, next);
+          if (sub != int.MinValue)
+            best = Math.Max(best, sub + dist); // Keep the longest found route
+        }
+      }
+
+      // This is the backtracking key. 
+      // Remove this from visited before returning, then another path can always visit it again.
+      visited.Remove(current);
+      return best;
+    }
+
+    // Sort designed to order all tile (nodes) in the maze (graph)
+    // Learned this in the graph theory course
     private List<Point> TopologicalSort()
     {
       // Only one starting node, so we can shortcut this a bit
@@ -86,6 +154,9 @@ namespace Solutions
       return ordering;
     }
 
+    // A simple DFS to work with the topological sort.
+    // Always appends new nodes to the start, because this was supposed to be a queue-like structure,
+    // but C# doesn't do .unshift like Javascript does.
     private void DFS(Point at, HashSet<Point> visited, List<Point> ordering)
     {
       visited.Add(at);
@@ -101,6 +172,8 @@ namespace Solutions
       ordering.Insert(0, at);
     }
 
+    // Just gets adjacent tiles from a specified point.
+    // Had to add the ignoreSlopes argument because of part 2
     private List<(Point, string)> GetNextTiles(Point from, bool ignoreSlopes = false)
     {
       List<(Point, string)> tiles = new();
