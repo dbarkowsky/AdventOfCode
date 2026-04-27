@@ -11,13 +11,26 @@ namespace Solutions
     {
       public Vector3 start;
       public Vector3 velocity;
+      public long px, py, pz;
+      public long vx, vy, vz;
 
       public Hailstone(string line)
       {
         string[] positionParts = line.Split(" @ ")[0].Split(", ");
-        start = new Vector3(long.Parse(positionParts[0]), long.Parse(positionParts[1]), long.Parse(positionParts[2]));
+        px = long.Parse(positionParts[0].Trim());
+        py = long.Parse(positionParts[1].Trim());
+        pz = long.Parse(positionParts[2].Trim());
+        start = new Vector3(px, py, pz);
         string[] velocityParts = line.Split(" @ ")[1].Split(", ");
-        velocity = new Vector3(long.Parse(velocityParts[0]), long.Parse(velocityParts[1]), long.Parse(velocityParts[2]));
+        vx = long.Parse(velocityParts[0].Trim());
+        vy = long.Parse(velocityParts[1].Trim());
+        vz = long.Parse(velocityParts[2].Trim());
+        velocity = new Vector3(vx, vy, vz);
+      }
+
+      public override string ToString()
+      {
+        return start.ToString() + " @ " + velocity.ToString();
       }
     }
     List<string> strings = new List<string>();
@@ -59,9 +72,92 @@ namespace Solutions
       return count;
     }
 
+    // Really struggled with this. I had the thought that we could just find points and
+    // find a line that would hit all those points, but the range is too big.
+    // Instead, used this example to try and get this done:
+    // https://old.reddit.com/r/adventofcode/comments/18pnycy/2023_day_24_solutions/keqf8uq/
     public long PartTwo()
     {
-      return -1;
+      hailstones.Sort((Hailstone a, Hailstone b) => { return a.ToString().CompareTo(b.ToString());});
+
+      HashSet<long>? xSet = null;
+      HashSet<long>? ySet = null;
+      HashSet<long>? zSet = null;
+
+      for (int i = 0; i < hailstones.Count - 1; i++)
+      {
+        for (int j = i + 1; j < hailstones.Count; j++)
+        {
+          Hailstone currentA = hailstones[i];
+          Hailstone currentB = hailstones[j];
+          
+          // X
+          if (currentA.vx == currentB.vx && currentA.vx != 0){
+            HashSet<long> tempSet = new();
+            long difference = currentB.px - currentA.px;
+            for (long v = -1000; v < 1000; v++){
+              if (v == currentA.vx) continue;
+              if (difference % (v - currentA.vx) == 0){
+                tempSet.Add(v);
+              }
+            }
+            if (xSet == null) xSet = tempSet;
+            else xSet.IntersectWith(tempSet);
+          }
+          // Y
+          if (currentA.vy == currentB.vy && currentA.vy != 0){
+            HashSet<long> tempSet = new();
+            long difference = currentB.py - currentA.py;
+            for (long v = -1000; v < 1000; v++){
+              if (v == currentA.vy) continue;
+              if (difference % (v - currentA.vy) == 0){
+                tempSet.Add(v);
+              }
+            }
+            if (ySet == null) ySet = tempSet;
+            else ySet.IntersectWith(tempSet);
+          }
+          // Z
+          if (currentA.vz == currentB.vz && currentA.vz != 0){
+            HashSet<long> tempSet = new();
+            long difference = currentB.pz - currentA.pz;
+            for (long v = -1000; v < 1000; v++){
+              if (v == currentA.vz) continue;
+              if (difference % (v - currentA.vz) == 0){
+                tempSet.Add(v);
+              }
+            }
+            if (zSet == null) zSet = tempSet;
+            else zSet.IntersectWith(tempSet);
+          }
+        }
+      }
+
+      // Print our sets to see the results for debugging
+      Console.WriteLine(string.Join(", ", xSet!));
+      Console.WriteLine(string.Join(", ", ySet!));
+      Console.WriteLine(string.Join(", ", zSet!));
+
+      long relativeVelocityX = xSet!.First();
+      long relativeVelocityY = ySet!.First();
+      long relativeVelocityZ = zSet!.First();
+
+      Hailstone hailstoneA = hailstones[0];
+      Hailstone hailstoneB = hailstones[1];
+
+      long mA = (hailstoneA.vy - relativeVelocityY) / (hailstoneA.vx - relativeVelocityX);
+      long mB = (hailstoneB.vy - relativeVelocityY) / (hailstoneB.vx - relativeVelocityX);
+
+      long interceptA = hailstoneA.py - (mA * hailstoneA.px);
+      long interceptB = hailstoneB.py - (mB * hailstoneB.px);
+
+      long xPosition = (interceptB-interceptA)/(mA-mB);
+      long yPosition = (mA * xPosition) + interceptA;
+      long time = (xPosition - hailstoneA.px) / (hailstoneA.vx - relativeVelocityX);
+      long zPosition = hailstoneA.pz + (hailstoneA.vz - relativeVelocityZ) * time;
+
+      Console.WriteLine(string.Join(", ", xPosition, yPosition, zPosition));
+      return xPosition + yPosition + zPosition;
     }
 
     private (bool, double, double) DoTheyIntersect2D(Hailstone a, Hailstone b, long lowerBound, long upperBound, bool futureOnly = true)
@@ -157,18 +253,6 @@ namespace Solutions
       }
 
       return (true, sharedX, sharedY);
-    }
-
-
-    // Thought I would need these, but hasn't come up yet...
-    private long GetManhattanDistance2D(Vector3 a, Vector3 b)
-    {
-      return (long)(Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y));
-    }
-
-    private long GetManhattanDistance3D(Vector3 a, Vector3 b)
-    {
-      return (long)(Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) + Math.Abs(a.Z - b.Z));
     }
   }
 }
