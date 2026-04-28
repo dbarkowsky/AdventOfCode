@@ -6,8 +6,9 @@ namespace Solutions
   {
     List<string> strings = new List<string>();
     Dictionary<string, List<string>> nodes = new Dictionary<string, List<string>>();
-    List<string> nodeKeys = new List<string>();
-    private int currentNodeKeyIndex = 0;
+    Dictionary<string, List<FlowEdge>> flowGraph = new();
+    HashSet<string> visited = new();
+
 
     public Day25(string fileName)
     {
@@ -36,89 +37,165 @@ namespace Solutions
           nodes[connection].Add(nodeName);
         }
       }
-      nodeKeys.AddRange(nodes.Keys);
+
+      BuildFlowGraph();
     }
 
-    private class Bridge
+    private class FlowEdge
     {
       public string from { get; }
       public string to { get; }
-      public Bridge(string from, string to)
+      public int capacity { get; }
+      public int flow { get; set; }
+      public FlowEdge? residual { get; set; }
+
+      public FlowEdge(string from, string to, int capacity)
       {
         this.from = from;
         this.to = to;
+        this.capacity = capacity;
+        this.flow = 0;
       }
 
-      public override string ToString()
+      public int RemainingCapacity() => capacity - flow;
+
+      public void AugmentFlow(int amount)
       {
-        return from + ":" + to;
+        flow += amount;
+        residual!.flow -= amount;
       }
     }
 
     // Had an original attempt where I tried to see what nodes possibly connected to each other but didn't share other neighbours
     // That surprisingly gets the correct edges, but it also falsely identifies other edges.
-    // Luckily, I did the graph theory course since then and learned this: https://github.com/dbarkowsky/GraphTheoryAlgorithms/blob/main/3_Classic_Algorithms/findBridgesAndArticulationPoints.ts
-    private Dictionary<string, int> lowLink = new();
-    private Dictionary<string, int> ids = new();
-    private Dictionary<string, bool> visited = new();
-    private List<Bridge> bridges = new();
+    // Then I thought this would work: https://github.com/dbarkowsky/GraphTheoryAlgorithms/blob/main/3_Classic_Algorithms/findBridgesAndArticulationPoints.ts
+    // But it looks for points where a single cut would separate the graph. The question needs a minimum of 3 (maybe exactly 3).
+    // So new approach: Get the flow of the entire graph. Find the edges that would carry the max flow together. Those must be the bridges.
+    // This is also the Ford-Fulkerson method: https://github.com/dbarkowsky/GraphTheoryAlgorithms/blob/main/4_Network_Flow/fordFulkerson.ts
+    // One thing that helps: there can't be any leaves in this graph by puzzle design. Otherwise, it would be too easy to cut those edges to separate the graph.
     public int PartOne()
     {
-      // Make sure there are default values for the visited and lowlink lookups.
-      foreach (string key in nodeKeys)
+      // We can start on any node
+      string source = nodes.Keys.First();
+      // We know the max flow we need is 3, because that's how many the cut requirement is.
+      int targetBridges = 3;
+      // So we try different sink options until it reveals itself
+      string sink = "";
+      // First time seeing this skip syntax! How often is this useful?
+      foreach (string potentialSink in nodes.Keys.Skip(1))
       {
-        visited[key] = false;
-      }
-      
-      // Then run dfs for bridge detection
-      foreach(string key in nodeKeys)
-      {
-        if (!visited[key])
+        // Start with a reset flow each time
+        foreach (List<FlowEdge> edgeList in flowGraph.Values)
         {
-          DFS(key, "");
-        }
-      }
-      Console.WriteLine(string.Join(", ", bridges));
-      return -1;
-    }
-
-    private void DFS(string at, string parent)
-    {
-      visited[at] = true;
-      // Lowlink value initialized to current key index
-      lowLink[at] = currentNodeKeyIndex;
-      ids[at] = currentNodeKeyIndex;
-      currentNodeKeyIndex++;
-
-      // Check each neighbour
-      nodes[at].ForEach((string neighbour) =>
-      {
-        // skip if parent
-        if (parent.Equals(neighbour)) return;
-        if (!visited[neighbour])
-        {
-          // Recursive dfs
-          DFS(neighbour, at);
-          // At this point, we've gone all the way to the end and are starting to recurse back up.
-          // Set the lowlink value
-          lowLink[at] = Math.Min(lowLink[at], lowLink[neighbour]);
-          // This is where things are weird. We need to check their indexes. This would have been an id in another system.
-          if (ids[at] < lowLink[neighbour])
+          foreach (FlowEdge edge in edgeList)
           {
-            bridges.Add(new Bridge(at, neighbour));
+            edge.flow = 0;
           }
-        } else
-        {
-          // It's been visited before. Update the lowlink value
-          lowLink[at] = Math.Min(lowLink[at], ids[neighbour]);
         }
-      });
+
+        // then see if it matches our goal
+        if (MaxFlow(source, potentialSink) == targetBridges)
+        {
+          sink = potentialSink;
+          break;
+        }
+      }
+
+      // Now we have our sink figured out, we must BFS only the edges that still have capacity.
+      HashSet<string> visited = new();
+      Queue<string> queue = new();
+      queue.Enqueue(source);
+      visited.Add(source);
+
+      // Continue until queue is empty, doing BFS. We'll record which nodes we visit along the way.
+      // This will be all the nodes which connecting edges with capacity...
+      while (queue.Count > 0)
+      {
+        string current = queue.Dequeue();
+        foreach (FlowEdge edge in flowGraph[current])
+        {
+          if (edge.RemainingCapacity() > 0 && !visited.Contains(edge.to))
+          {
+            visited.Add(edge.to);
+            queue.Enqueue(edge.to);
+          }
+        }
+      }
+
+      // But it's the sizes we want
+      int groupASize = visited.Count;
+      int groupBSize = nodes.Count - groupASize;
+
+      return groupASize * groupBSize;
     }
 
     // Part 2 is a freebie if you've already got all other puzzles solved.
     public int PartTwo()
     {
       return -1;
+    }
+
+    private void BuildFlowGraph()
+    {
+      // New list of edges for every node
+      foreach (string key in nodes.Keys)
+      {
+        flowGraph[key] = new();
+      }
+      // Undirected edges, so we'll add a forward and residual edge
+      foreach (string from in nodes.Keys)
+      {
+        foreach (string to in nodes[from])
+        {
+          // Add the edges
+          FlowEdge forward = new FlowEdge(from, to, 1); // All forward edges have capacity of 1.
+          FlowEdge backward = new FlowEdge(to, from, 0); // But residuals are 0 at first...
+
+          forward.residual = backward;
+          backward.residual = forward;
+
+          flowGraph[from].Add(forward);
+          flowGraph[to].Add(backward);
+        }
+      }
+    }
+
+    private int DFS(string at, string sink, int flow)
+    {
+      // We reach the sink? It's over
+      if (at == sink) return flow;
+
+      visited.Add(at);
+
+      foreach (FlowEdge edge in flowGraph[at])
+      {
+        if (edge.RemainingCapacity() > 0 && !visited.Contains(edge.to))
+        {
+          int bottleneck = Math.Min(flow, edge.RemainingCapacity()); // Keep either previous bottleneck or new smaller capacity.
+          int resultFlow = DFS(edge.to, sink, bottleneck); // Continue DFS to find the sink
+
+          // At this point, we must have made it to the sink.
+          if (resultFlow > 0)
+          {
+            edge.AugmentFlow(resultFlow);
+            return resultFlow;
+          }
+        }
+      }
+      return 0; // Did not reach sink.
+    }
+
+    private int MaxFlow(string source, string sink)
+    {
+      int total = 0;
+      int flow;
+      do
+      {
+        visited.Clear();
+        flow = DFS(source, sink, int.MaxValue);
+        total += flow;
+      } while (flow > 0);
+      return total;
     }
   }
 }
