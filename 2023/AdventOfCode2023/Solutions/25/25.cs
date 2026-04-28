@@ -6,7 +6,8 @@ namespace Solutions
   {
     List<string> strings = new List<string>();
     Dictionary<string, List<string>> nodes = new Dictionary<string, List<string>>();
-
+    List<string> nodeKeys = new List<string>();
+    private int currentNodeKeyIndex = 0;
 
     public Day25(string fileName)
     {
@@ -35,57 +36,89 @@ namespace Solutions
           nodes[connection].Add(nodeName);
         }
       }
+      nodeKeys.AddRange(nodes.Keys);
     }
 
+    private class Bridge
+    {
+      public string from { get; }
+      public string to { get; }
+      public Bridge(string from, string to)
+      {
+        this.from = from;
+        this.to = to;
+      }
+
+      public override string ToString()
+      {
+        return from + ":" + to;
+      }
+    }
+
+    // Had an original attempt where I tried to see what nodes possibly connected to each other but didn't share other neighbours
+    // That surprisingly gets the correct edges, but it also falsely identifies other edges.
+    // Luckily, I did the graph theory course since then and learned this: https://github.com/dbarkowsky/GraphTheoryAlgorithms/blob/main/3_Classic_Algorithms/findBridgesAndArticulationPoints.ts
+    private Dictionary<string, int> lowLink = new();
+    private Dictionary<string, int> ids = new();
+    private Dictionary<string, bool> visited = new();
+    private List<Bridge> bridges = new();
     public int PartOne()
     {
-      // Need to find which nodes connect to each other but have no other shared connections
-      HashSet<(string, string)> connectionPairs = new HashSet<(string, string)>();
-      //// So for each node
-      foreach (string key in nodes.Keys)
+      // Make sure there are default values for the visited and lowlink lookups.
+      foreach (string key in nodeKeys)
       {
-        // Check each connection
-        foreach (string connectionKey in nodes[key])
+        visited[key] = false;
+      }
+      
+      // Then run dfs for bridge detection
+      foreach(string key in nodeKeys)
+      {
+        if (!visited[key])
         {
-          // If the current node and the connected node don't share any connections
-          if (NumberOfMatchedConnections(nodes[key], nodes[connectionKey]) == 0)
-          {
-            // Need to sort these so they're always inserted the same. 
-            // AKA (a, b) always, never (b, a)
-            List<string> pair = new List<string> { key, connectionKey };
-            pair.Sort();
-            connectionPairs.Add((pair.First(), pair.Last()));
-          }
+          DFS(key, "");
         }
       }
-      foreach ((string, string) pair in connectionPairs)
-      {
-        Console.WriteLine($"{pair.Item1}, {pair.Item2}");
-      }
-      // With that list, remember one from each side of a pair for later
-      // But cut the connections by removing them from each other's lists
-
-      // Then, step through all connected nodes on both sides to get the counts
-      // Multiply those counts
+      Console.WriteLine(string.Join(", ", bridges));
       return -1;
     }
 
+    private void DFS(string at, string parent)
+    {
+      visited[at] = true;
+      // Lowlink value initialized to current key index
+      lowLink[at] = currentNodeKeyIndex;
+      ids[at] = currentNodeKeyIndex;
+      currentNodeKeyIndex++;
+
+      // Check each neighbour
+      nodes[at].ForEach((string neighbour) =>
+      {
+        // skip if parent
+        if (parent.Equals(neighbour)) return;
+        if (!visited[neighbour])
+        {
+          // Recursive dfs
+          DFS(neighbour, at);
+          // At this point, we've gone all the way to the end and are starting to recurse back up.
+          // Set the lowlink value
+          lowLink[at] = Math.Min(lowLink[at], lowLink[neighbour]);
+          // This is where things are weird. We need to check their indexes. This would have been an id in another system.
+          if (ids[at] < lowLink[neighbour])
+          {
+            bridges.Add(new Bridge(at, neighbour));
+          }
+        } else
+        {
+          // It's been visited before. Update the lowlink value
+          lowLink[at] = Math.Min(lowLink[at], ids[neighbour]);
+        }
+      });
+    }
+
+    // Part 2 is a freebie if you've already got all other puzzles solved.
     public int PartTwo()
     {
       return -1;
-    }
-
-    private int NumberOfMatchedConnections(List<string> l1, List<string> l2)
-    {
-      int numOfMatches = 0;
-      foreach (string node in l1)
-      {
-        if (l2.Contains(node))
-        {
-          numOfMatches++;
-        }
-      }
-      return numOfMatches;
     }
   }
 }
