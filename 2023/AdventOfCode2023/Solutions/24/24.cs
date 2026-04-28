@@ -76,10 +76,12 @@ namespace Solutions
     // find a line that would hit all those points, but the range is too big.
     // Instead, used this example to try and get this done:
     // https://old.reddit.com/r/adventofcode/comments/18pnycy/2023_day_24_solutions/keqf8uq/
+    // But even that didn't get the correct answer. It was off by hundreds due to floating point percision issues
+    // And I had integer division issues that resulted in things like 7 / 3 == 2.
+    // And I had issues with overflow, even with the long number type. Had to use BigInteger
     public long PartTwo()
     {
-      hailstones.Sort((Hailstone a, Hailstone b) => { return a.ToString().CompareTo(b.ToString());});
-
+      // This first part is about finding a relative velocity that we can hit all stones with
       HashSet<long>? xSet = null;
       HashSet<long>? ySet = null;
       HashSet<long>? zSet = null;
@@ -90,6 +92,9 @@ namespace Solutions
         {
           Hailstone currentA = hailstones[i];
           Hailstone currentB = hailstones[j];
+
+          // For every pair, we'll see if they have an identical velocity in one of the dimensions.
+          // If so, we track that. We'll only keep the velocities that work for every hailstone pair.
           
           // X
           if (currentA.vx == currentB.vx && currentA.vx != 0){
@@ -134,29 +139,55 @@ namespace Solutions
       }
 
       // Print our sets to see the results for debugging
-      Console.WriteLine(string.Join(", ", xSet!));
-      Console.WriteLine(string.Join(", ", ySet!));
-      Console.WriteLine(string.Join(", ", zSet!));
+      // Console.WriteLine(string.Join(", ", xSet!));
+      // Console.WriteLine(string.Join(", ", ySet!));
+      // Console.WriteLine(string.Join(", ", zSet!));
+      // {-63} {-263} {195}
 
+      // Now we know the x,y,z velocity that our collision rock needs to have. 
+      // We just need a place to start when we launch it.
+      // For the real input, there's only one correct relative velocity for each axis
+      // For the test input, there are many that get flagged. The site-provided one is in there, but I don't think it's the only valid option.
       long relativeVelocityX = xSet!.First();
       long relativeVelocityY = ySet!.First();
       long relativeVelocityZ = zSet!.First();
 
+      // We only need to line up two hailstones. If those work, we also hit all the others.
       Hailstone hailstoneA = hailstones[0];
       Hailstone hailstoneB = hailstones[1];
+      
+      // Below here, slopes didn't work. This is where I deviated from the reddit example above.
+      // Cramer's Rule was the recommendation for this part, which was something new to me.
+      // This video was helpful: https://www.youtube.com/watch?v=RdLo-9jh2EM
+      // Thankfully, our problem is just a 2x2 matrix.
 
-      long mA = (hailstoneA.vy - relativeVelocityY) / (hailstoneA.vx - relativeVelocityX);
-      long mB = (hailstoneB.vy - relativeVelocityY) / (hailstoneB.vx - relativeVelocityX);
+      // We still need the adjusted velocities by base-lining the stones' velocities based on the relative measurement.
+      long relDirAX = hailstoneA.vx - relativeVelocityX;
+      long relDirAY = hailstoneA.vy - relativeVelocityY;
+      long relDirBX = hailstoneB.vx - relativeVelocityX;
+      long relDirBY = hailstoneB.vy - relativeVelocityY;
 
-      long interceptA = hailstoneA.py - (mA * hailstoneA.px);
-      long interceptB = hailstoneB.py - (mB * hailstoneB.px);
+      // I was really stuck here. I kept getting a division by 0 error. That was an integer division problem at first.
+      // Plus the overflow problem that required BigInteger
+      // This part confused me, but if you use the video as an example, this is the part after the = in the example section.
+      // We're just using the relative velocities of the hailstones to fill the unknown gaps, but the are our "x"
+      BigInteger constantA = (BigInteger)relDirAX * hailstoneA.py - (BigInteger)relDirAY * hailstoneA.px;
+      BigInteger constantB = (BigInteger)relDirBX * hailstoneB.py - (BigInteger)relDirBY * hailstoneB.px;
+      // So matrix is something like | relDirAx  relDirAY | I think. Cross multiply and subtract to get determinant.
+      //                             | relDirBX  relDirBY |
+      BigInteger determinant = (BigInteger)relDirAX * relDirBY - (BigInteger)relDirAY * relDirBX;
 
-      long xPosition = (interceptB-interceptA)/(mA-mB);
-      long yPosition = (mA * xPosition) + interceptA;
-      long time = (xPosition - hailstoneA.px) / (hailstoneA.vx - relativeVelocityX);
+      // Then this is the part that goes on top. We're replacing part of the matrix with our constants.
+      // The division could be its own step, but it was done as one here.
+      // It's still the cross-multiply and subtract pattern.
+      long xPosition = (long)((constantA * relDirBX - constantB * relDirAX) / determinant);
+      long yPosition = (long)((constantA * relDirBY - constantB * relDirAY) / determinant);
+      // So we only needed the two dimensions. At this point, there's only one possible Z it could be,
+      // and we calculate that based on the time that was needed for the X axis to align.
+      long time = (xPosition - hailstoneA.px) / relDirAX;
       long zPosition = hailstoneA.pz + (hailstoneA.vz - relativeVelocityZ) * time;
 
-      Console.WriteLine(string.Join(", ", xPosition, yPosition, zPosition));
+      // Console.WriteLine(string.Join(", ", xPosition, yPosition, zPosition));
       return xPosition + yPosition + zPosition;
     }
 
