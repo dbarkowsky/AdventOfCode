@@ -19,9 +19,9 @@ So far:
 - 2015: Swift (Ongoing)
 - 2016: Rust (Ongoing)
 - 2022: JavaScript
-- 2023: C# (Ongoing)
+- 2023: C#
 - 2024: Dart
-- 2025: Java (Ongoing)
+- 2025: Java
 
 Languages I would still like to try for other years:
 
